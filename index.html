@@ -752,6 +752,7 @@
                 const result = await response.json();
                 
                 if (result.success) {
+                    // Just update the data silently, don't trigger any celebrations
                     data.totalStars = result.data.totalStars || 0;
                     data.totalGamePoints = result.data.totalGamePoints || 0;
                     data.events = result.data.events || [];
@@ -796,6 +797,28 @@
                 // Don't wait for response or reload
             } catch (error) {
                 console.error('Error saving to sheets:', error);
+            }
+        }
+
+        async function updateGameStatsToSheets() {
+            if (!sheetUrl) return;
+            
+            try {
+                // Update just the stars and points, not events
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'updateGameStats',
+                        totalStars: data.totalStars,
+                        totalGamePoints: data.totalGamePoints
+                    })
+                });
+            } catch (error) {
+                console.error('Error updating game stats:', error);
             }
         }
 
@@ -1268,7 +1291,14 @@
             data.totalGamePoints += finalScore;
             data.totalStars -= 5;
             
-            saveData();
+            // Save to localStorage immediately
+            localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+            
+            // Update only stars and points to sheets (not full data)
+            if (sheetUrl) {
+                updateGameStatsToSheets();
+            }
+            
             updateUI();
             
             document.getElementById('finalScore').textContent = finalScore;
