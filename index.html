@@ -649,10 +649,23 @@
                     data.totalStars = result.data.totalStars || 0;
                     data.totalGamePoints = result.data.totalGamePoints || 0;
                     data.events = result.data.events || [];
+                    
+                    // Also save to localStorage
+                    localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+                    
                     updateUI();
                 }
             } catch (error) {
                 console.error('Error loading from sheets:', error);
+                // Fall back to localStorage
+                const saved = localStorage.getItem('pottyTrackerData');
+                if (saved) {
+                    data = JSON.parse(saved);
+                    if (data.totalGamePoints === undefined || isNaN(data.totalGamePoints)) {
+                        data.totalGamePoints = 0;
+                    }
+                    updateUI();
+                }
             }
             hideLoading();
         }
@@ -660,9 +673,9 @@
         async function saveDataToSheets() {
             if (!sheetUrl) return;
             
-            showLoading();
             try {
-                const response = await fetch(sheetUrl, {
+                // Don't show loading or disable buttons - do it in background
+                fetch(sheetUrl, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: {
@@ -674,22 +687,18 @@
                     })
                 });
                 
-                // Note: no-cors mode doesn't allow reading response, so we assume success
-                setTimeout(() => {
-                    loadDataFromSheets();
-                }, 1000);
+                // Don't wait for response or reload
             } catch (error) {
                 console.error('Error saving to sheets:', error);
             }
-            hideLoading();
         }
 
         async function addEventToSheets(event) {
             if (!sheetUrl) return;
             
-            showLoading();
             try {
-                await fetch(sheetUrl, {
+                // Don't show loading or disable buttons - do it in background
+                fetch(sheetUrl, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: {
@@ -701,13 +710,10 @@
                     })
                 });
                 
-                setTimeout(() => {
-                    loadDataFromSheets();
-                }, 1000);
+                // Don't wait for response or reload
             } catch (error) {
                 console.error('Error adding event:', error);
             }
-            hideLoading();
         }
 
         function loadData() {
@@ -727,10 +733,10 @@
         }
 
         function saveData() {
-            // Save to localStorage as backup
+            // Save to localStorage immediately (instant)
             localStorage.setItem('pottyTrackerData', JSON.stringify(data));
             
-            // Save to sheets if configured
+            // Save to sheets in background (non-blocking)
             if (sheetUrl) {
                 saveDataToSheets();
             }
@@ -775,10 +781,14 @@
             }
             
             celebrate(type, method);
-            saveData();
+            
+            // Update UI immediately
             updateUI();
             
-            // Add to sheets
+            // Save to local storage immediately
+            localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+            
+            // Sync to sheets in background (non-blocking)
             if (sheetUrl) {
                 addEventToSheets(event);
             }
@@ -1229,12 +1239,12 @@
         checkSheetUrl();
         loadData();
         
-        // Auto-refresh data every 30 seconds
+        // Auto-refresh data every 1 hour
         setInterval(() => {
             if (sheetUrl && !gameActive) {
                 loadDataFromSheets();
             }
-        }, 30000);
+        }, 3600000); // 1 hour = 3600000 milliseconds
     </script>
 </body>
 </html>
