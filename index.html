@@ -822,6 +822,30 @@
             }
         }
 
+        async function addRedemptionToSheets(redemption) {
+            if (!sheetUrl) return;
+            
+            try {
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addRedemption',
+                        redemption: {
+                            label: redemption.label,
+                            cost: redemption.cost,
+                            emoji: redemption.emoji
+                        }
+                    })
+                });
+            } catch (error) {
+                console.error('Error adding redemption:', error);
+            }
+        }
+
         async function addEventToSheets(event) {
             if (!sheetUrl) return;
             
@@ -1090,8 +1114,19 @@
             
             if (confirm(`Redeem ${reward.label} for ${reward.cost} points?`)) {
                 data.totalGamePoints -= reward.cost;
-                saveData();
+                
+                // Save locally immediately
+                localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+                
+                // Update UI
                 updateUI();
+                
+                // Log redemption to Google Sheets (permanent record)
+                if (sheetUrl) {
+                    addRedemptionToSheets(reward);
+                    // Also update the points total
+                    updateGameStatsToSheets();
+                }
                 
                 const celebration = document.getElementById('celebration');
                 celebration.textContent = `${reward.emoji} ${reward.label}! ${reward.emoji}`;
