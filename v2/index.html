@@ -123,45 +123,29 @@
             opacity: 0.9;
         }
 
-        .potty-tier-1 {
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+        /* Category-based button colors */
+        .cat-potty {
+            background: linear-gradient(135deg, #34d399 0%, #059669 100%);
             color: white;
         }
 
-        .potty-tier-2 {
-            background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
-            color: #000000;
+        .cat-hygiene {
+            background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+            color: white;
         }
 
-        .potty-tier-3 {
+        .cat-chores {
             background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
             color: white;
         }
 
-        .pee-reminder {
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-            color: white;
-        }
-
-        .pee-own {
-            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
-            color: white;
-        }
-
-        .poop-reminder {
-            background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%);
-            color: #000000;
-        }
-
-        .poop-own {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        .cat-bonus {
+            background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
             color: white;
         }
 
         .school-button {
             grid-column: 1 / -1;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
         }
 
         .rewards-section {
@@ -769,7 +753,8 @@
         const categories = [
             { id: 'potty', label: '🚽 Potty' },
             { id: 'hygiene', label: '🧼 Hygiene' },
-            { id: 'chores', label: '🧺 Chores' }
+            { id: 'chores', label: '🧺 Chores' },
+            { id: 'bonus', label: '🌟 Bonus' }
         ];
 
         let activeCategory = 'potty';
@@ -777,29 +762,30 @@
         // Configuration for every way to earn stars, grouped by category (tab).
         // To add a new way to earn stars later, just add a new object here —
         // no other code needs to change. cssClass controls color:
-        // potty-tier-1 = blue (1 star), potty-tier-2 = gold (2 stars),
-        // potty-tier-3 = purple (3 stars), school-button = green, full-width
+        // cat-potty = green, cat-hygiene = blue, cat-chores = purple, cat-bonus = pink
+        // cssClass controls color by category: cat-potty = green, cat-hygiene = blue,
+        // cat-chores = purple, cat-bonus = pink
         const starActions = [
             // ---- Potty ----
             {
-                id: 'tier1',
+                id: 'pee',
                 category: 'potty',
-                method: 'reminder',
+                method: 'pee',
                 stars: 1,
-                emoji: '💧💩',
-                label: 'Pee/Poop',
-                subLabel: 'With Reminder',
-                cssClass: 'potty-tier-1'
+                emoji: '💧',
+                label: 'Pee',
+                subLabel: 'Nice Job!',
+                cssClass: 'cat-potty'
             },
             {
-                id: 'tier2',
+                id: 'poop',
                 category: 'potty',
-                method: 'own',
+                method: 'poop',
                 stars: 2,
-                emoji: '💧💩',
-                label: 'Pee/Poop',
-                subLabel: 'On My Own!',
-                cssClass: 'potty-tier-2'
+                emoji: '💩',
+                label: 'Poop',
+                subLabel: 'Way To Go!',
+                cssClass: 'cat-potty'
             },
             {
                 id: 'tier3',
@@ -809,18 +795,7 @@
                 emoji: '🧠',
                 label: 'Remembered to Go!',
                 subLabel: 'All By Myself',
-                cssClass: 'potty-tier-3'
-            },
-            {
-                id: 'school',
-                category: 'potty',
-                method: 'school',
-                stars: 5,
-                emoji: '🏫',
-                label: 'Used Potty at School!',
-                subLabel: 'Super Achievement!',
-                cssClass: 'school-button',
-                fullWidth: true
+                cssClass: 'cat-potty'
             },
             // ---- Hygiene ----
             {
@@ -831,7 +806,7 @@
                 emoji: '🦷',
                 label: 'Brush Teeth',
                 subLabel: 'Squeaky Clean!',
-                cssClass: 'potty-tier-1'
+                cssClass: 'cat-hygiene'
             },
             {
                 id: 'washHair',
@@ -841,7 +816,7 @@
                 emoji: '🧴',
                 label: 'Wash Hair',
                 subLabel: 'All Clean!',
-                cssClass: 'potty-tier-2'
+                cssClass: 'cat-hygiene'
             },
             {
                 id: 'washBody',
@@ -851,7 +826,7 @@
                 emoji: '🛁',
                 label: 'Wash Body',
                 subLabel: 'All Clean!',
-                cssClass: 'potty-tier-2'
+                cssClass: 'cat-hygiene'
             },
             // ---- Chores ----
             {
@@ -859,10 +834,10 @@
                 category: 'chores',
                 method: 'chore',
                 stars: 2,
-                emoji: '🧺',
+                emoji: '🗄️',
                 label: 'Put Away Your Laundry',
                 subLabel: 'Great Job!',
-                cssClass: 'potty-tier-2'
+                cssClass: 'cat-chores'
             },
             {
                 id: 'franklinLaundry',
@@ -872,17 +847,17 @@
                 emoji: '🧦',
                 label: "Put Away Franklin's Laundry",
                 subLabel: 'Helping Out!',
-                cssClass: 'potty-tier-2'
+                cssClass: 'cat-chores'
             },
             {
                 id: 'familyLaundry',
                 category: 'chores',
                 method: 'chore',
                 stars: 3,
-                emoji: '🛏️',
+                emoji: '🧻',
                 label: 'Fold/Put Away Family Laundry',
                 subLabel: 'Towels & More',
-                cssClass: 'potty-tier-3'
+                cssClass: 'cat-chores'
             },
             {
                 id: 'sortLaundry',
@@ -892,7 +867,7 @@
                 emoji: '🔀',
                 label: 'Sort the Laundry',
                 subLabel: 'Mine vs Franklin\'s',
-                cssClass: 'potty-tier-2'
+                cssClass: 'cat-chores'
             },
             {
                 id: 'getSnack',
@@ -902,7 +877,7 @@
                 emoji: '🍎',
                 label: 'Get Own Snack/Drink',
                 subLabel: 'I Did It Myself!',
-                cssClass: 'potty-tier-1'
+                cssClass: 'cat-chores'
             },
             {
                 id: 'pickUpTrash',
@@ -912,7 +887,7 @@
                 emoji: '🗑️',
                 label: 'Pick Up All the Trash',
                 subLabel: 'Whole Room!',
-                cssClass: 'potty-tier-2'
+                cssClass: 'cat-chores'
             },
             {
                 id: 'pickUpDishes',
@@ -922,7 +897,49 @@
                 emoji: '🍽️',
                 label: 'Pick Up All the Dishes',
                 subLabel: 'Whole Room!',
-                cssClass: 'potty-tier-2'
+                cssClass: 'cat-chores'
+            },
+            {
+                id: 'hangBackpack',
+                category: 'chores',
+                method: 'chore',
+                stars: 1,
+                emoji: '🎒',
+                label: 'Hang Up Backpack/Lunchbox',
+                subLabel: 'Nice and Tidy!',
+                cssClass: 'cat-chores'
+            },
+            // ---- Bonus ----
+            {
+                id: 'school',
+                category: 'bonus',
+                method: 'school',
+                stars: 5,
+                emoji: '🏫',
+                label: 'Used Potty at School!',
+                subLabel: 'Super Achievement!',
+                cssClass: 'cat-bonus',
+                fullWidth: true
+            },
+            {
+                id: 'newFood',
+                category: 'bonus',
+                method: 'bonus',
+                stars: 3,
+                emoji: '🍣',
+                label: 'Try a New Food',
+                subLabel: 'Adventurous Eater!',
+                cssClass: 'cat-bonus'
+            },
+            {
+                id: 'packBackpack',
+                category: 'bonus',
+                method: 'bonus',
+                stars: 2,
+                emoji: '🎒',
+                label: 'Pack Your Backpack',
+                subLabel: 'Ready to Go!',
+                cssClass: 'cat-bonus'
             }
         ];
 
