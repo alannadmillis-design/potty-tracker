@@ -1,0 +1,1940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Potty Star Adventure! 🌟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .stars-collected {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 20px;
+            font-size: 1.5em;
+            backdrop-filter: blur(10px);
+        }
+
+        .button-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .category-tab {
+            flex: 1;
+            min-width: 90px;
+            padding: 12px 8px;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.25);
+            color: white;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            text-align: center;
+        }
+
+        .category-tab:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        .category-tab.active {
+            background: white;
+            color: #1e3a8a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+        }
+
+        .potty-button {
+            padding: 25px 15px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+            font-weight: bold;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .potty-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+        }
+
+        .potty-button:active {
+            transform: translateY(-2px);
+        }
+
+        .potty-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .button-label {
+            font-size: 0.75em;
+            opacity: 0.9;
+        }
+
+        .potty-tier-1 {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: white;
+        }
+
+        .potty-tier-2 {
+            background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+            color: #000000;
+        }
+
+        .potty-tier-3 {
+            background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .pee-reminder {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: white;
+        }
+
+        .pee-own {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+            color: white;
+        }
+
+        .poop-reminder {
+            background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%);
+            color: #000000;
+        }
+
+        .poop-own {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .school-button {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .rewards-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .rewards-section h2 {
+            color: #1e40af;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .game-plays-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .game-plays-display h2 {
+            color: #000000;
+            margin: 0;
+        }
+
+        .game-plays-count {
+            font-size: 2em;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .play-game-button {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.5em;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .play-game-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+        }
+
+        .play-game-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            border-radius: 20px;
+            height: 30px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
+            height: 100%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .achievement {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            position: relative;
+            transition: transform 0.3s;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .achievement.locked {
+            background: #e0e0e0;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .achievement.unlocked:hover {
+            transform: scale(1.05);
+        }
+
+        .achievement-label {
+            font-size: 0.28em;
+            margin-top: 5px;
+            text-align: center;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .achievement-cost {
+            font-size: 0.35em;
+            color: #000;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+
+        .history {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .history h2 {
+            color: #1e40af;
+            margin-bottom: 15px;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5em;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 2000;
+        }
+
+        .celebration.show {
+            animation: celebrate 1s;
+        }
+
+        @keyframes celebrate {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Game Earned Modal */
+        .game-earned-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-earned-modal.show {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        .game-earned-content {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 30px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 90%;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .game-earned-emoji {
+            font-size: 5em;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .game-earned-title {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #000000;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
+        }
+
+        .game-earned-subtitle {
+            font-size: 1.5em;
+            color: #1e3a8a;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .game-earned-button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.5em;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+
+        .game-earned-button:hover {
+            transform: scale(1.05);
+        }
+
+        .game-earned-button:active {
+            transform: scale(0.95);
+        }
+
+        .reset-button {
+            background: #000000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: inherit;
+            font-weight: bold;
+        }
+
+        .reset-stars-button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-family: inherit;
+            font-weight: bold;
+            width: 100%;
+            font-size: 1em;
+        }
+
+        .reset-stars-button:hover {
+            background: #b91c1c;
+        }
+
+        .loading-indicator {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .loading-indicator.show {
+            display: block;
+        }
+
+        /* Game Modal Styles */
+        .game-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-modal.active {
+            display: flex;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .game-title {
+            color: #1e40af;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .game-canvas {
+            background: #000033;
+            border-radius: 10px;
+            margin: 20px 0;
+            cursor: crosshair;
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .game-score {
+            font-size: 1.5em;
+            color: #1e40af;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .game-timer {
+            font-size: 1.3em;
+            color: #dc2626;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .game-over-screen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .game-over-screen.show {
+            display: block;
+        }
+
+        .game-over-title {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .game-over-score {
+            font-size: 2em;
+            color: #fbbf24;
+            margin-bottom: 20px;
+        }
+
+        .close-game-button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .game-instruction {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .game-select-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .game-select-card {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 20px 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 1em;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .game-select-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .setup-notice {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: #92400e;
+        }
+
+        .setup-notice h3 {
+            margin-bottom: 10px;
+            color: #b45309;
+        }
+
+        .setup-notice code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="setup-notice" id="setupNotice">
+            <h3>⚙️ Setup Required</h3>
+            <p>Please configure your Google Sheets Web App URL below:</p>
+            <input type="text" id="sheetUrlInput" placeholder="Paste your Google Sheets Web App URL here" 
+                   style="width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc;">
+            <button onclick="saveSheetUrl()" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">Save URL</button>
+            <p style="margin-top: 10px; font-size: 0.9em;">See the setup instructions file for help.</p>
+        </div>
+
+        <div class="loading-indicator" id="loadingIndicator">⏳ Syncing with Google Sheets...</div>
+
+        <div class="header">
+            <h1>🚀 Potty Star Adventure! 🌟</h1>
+            <div class="stars-collected">
+                ⭐ <span id="totalStars">0</span> Stars Collected!
+            </div>
+        </div>
+
+        <div class="rewards-section">
+            <h3 style="color: #1e40af; margin-bottom: 10px; text-align: center;">Next Game Play Progress:</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0/5 ⭐</div>
+            </div>
+        </div>
+
+        <div class="category-tabs" id="categoryTabs">
+            <!-- Tabs generated dynamically from CATEGORIES config -->
+        </div>
+
+        <div class="button-container" id="pottyButtonsContainer">
+            <!-- Buttons generated dynamically from starActions config, filtered by active category -->
+        </div>
+
+        <div class="rewards-section">
+            <div class="game-plays-display">
+                <h2>🎮 Game Points</h2>
+                <div class="game-plays-count">
+                    <span id="gamePlays">0</span> pts
+                </div>
+            </div>
+            <div style="text-align: center; margin-bottom: 15px; color: #1e40af; font-weight: bold; font-size: 1.1em;">
+                Play the space game to earn points!
+            </div>
+            <button class="play-game-button" id="playGameBtn" onclick="openGameSelect()" disabled>
+                🚀 Play Space Laser Game! 🚀
+            </button>
+            
+            <h2 style="margin-top: 25px;">🎁 Redeem Rewards!</h2>
+            <div class="achievement-grid" id="achievementGrid"></div>
+        </div>
+
+        <div class="history">
+            <h2>📅 Today's Adventures</h2>
+            <div class="history-list" id="historyList"></div>
+            <button class="reset-button" onclick="resetData()">Start New Day</button>
+            <button class="reset-stars-button" onclick="resetStars()">⭐ Reset All Stars</button>
+        </div>
+    </div>
+
+    <div class="celebration" id="celebration"></div>
+
+    <!-- Game Earned Modal -->
+    <div class="game-earned-modal" id="gameEarnedModal">
+        <div class="game-earned-content">
+            <div class="game-earned-emoji">🎮</div>
+            <div class="game-earned-title">YOU EARNED A GAME!</div>
+            <div class="game-earned-subtitle">5 Stars Complete! 🌟</div>
+            <button class="game-earned-button" onclick="closeGameEarnedModal()">AWESOME!</button>
+        </div>
+    </div>
+
+    <!-- Game Selection Modal -->
+    <div class="game-modal" id="gameSelectModal">
+        <div class="game-container">
+            <h2 class="game-title">🎮 Pick a Game! 🎮</h2>
+            <div class="game-instruction">Choose which game to play:</div>
+            <div class="game-select-grid" id="gameSelectCards"></div>
+            <button class="close-game-button" onclick="closeGameSelect()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Game Modal -->
+    <div class="game-modal" id="gameModal">
+        <div class="game-container">
+            <h2 class="game-title" id="gameModalTitle">🚀 Space Laser Battle! 🚀</h2>
+            <div class="game-instruction" id="gameModalInstruction">Tap the asteroids to blast them with your laser!</div>
+            <div class="game-timer">Time: <span id="gameTimer">30</span>s</div>
+            <div class="game-score">Score: <span id="gameScore">0</span></div>
+            <div style="position: relative;">
+                <canvas id="gameCanvas" class="game-canvas" width="400" height="500"></canvas>
+                <div class="game-over-screen" id="gameOverScreen">
+                    <div class="game-over-title">🎉 MISSION COMPLETE! 🎉</div>
+                    <div class="game-over-score">Final Score: <span id="finalScore">0</span></div>
+                    <div style="font-size: 1.2em; margin-bottom: 20px;">Great job!</div>
+                </div>
+            </div>
+            <button class="close-game-button" onclick="closeGame()">Close Game</button>
+        </div>
+    </div>
+
+    <script>
+        // Reworked reward list - broad mix of treats, privileges, screen time, and bigger outings
+        const rewards = [
+            { emoji: '🍬', label: 'Pick a Candy', cost: 75 },
+            { emoji: '🍪', label: 'Chocolate Chip Cookie', cost: 100 },
+            { emoji: '📺', label: '30 Min Extra Screen Time', cost: 125 },
+            { emoji: '🌙', label: 'Stay Up 15 Min Late', cost: 150 },
+            { emoji: '🧸', label: 'New Stuffy', cost: 175 },
+            { emoji: '🥤', label: 'Coke from McDonalds', cost: 200 },
+            { emoji: '🍦', label: 'Ice Cream', cost: 225 },
+            { emoji: '🛏️', label: 'Sleepover in Living Room', cost: 250 },
+            { emoji: '🎨', label: 'New Clay/Paint', cost: 300 },
+            { emoji: '👑', label: 'Pick Dinner for the Family', cost: 325 },
+            { emoji: '📚', label: 'New Book', cost: 350 },
+            { emoji: '🚗', label: 'New Hot Wheels Car', cost: 400 },
+            { emoji: '🎬', label: 'Play Show Night', cost: 450 },
+            { emoji: '⚽', label: 'New Ball', cost: 500 },
+            { emoji: '🍗', label: 'Nuggie Party', cost: 600 },
+            { emoji: '🎨', label: 'Paint Your Own Pottery', cost: 650 },
+            { emoji: '🎮', label: 'Download a Game', cost: 750 },
+            { emoji: '🍿', label: 'Movie Theater Trip', cost: 850 },
+            { emoji: '🕹️', label: 'Play a Mall Game', cost: 1000 },
+            { emoji: '🎡', label: 'Trip to an Amusement Park', cost: 1500 }
+        ];
+
+        // Tabs shown above the star-earning buttons
+        const categories = [
+            { id: 'potty', label: '🚽 Potty' },
+            { id: 'hygiene', label: '🧼 Hygiene' },
+            { id: 'chores', label: '🧺 Chores' }
+        ];
+
+        let activeCategory = 'potty';
+
+        // Configuration for every way to earn stars, grouped by category (tab).
+        // To add a new way to earn stars later, just add a new object here —
+        // no other code needs to change. cssClass controls color:
+        // potty-tier-1 = blue (1 star), potty-tier-2 = gold (2 stars),
+        // potty-tier-3 = purple (3 stars), school-button = green, full-width
+        const starActions = [
+            // ---- Potty ----
+            {
+                id: 'tier1',
+                category: 'potty',
+                method: 'reminder',
+                stars: 1,
+                emoji: '💧💩',
+                label: 'Pee/Poop',
+                subLabel: 'With Reminder',
+                cssClass: 'potty-tier-1'
+            },
+            {
+                id: 'tier2',
+                category: 'potty',
+                method: 'own',
+                stars: 2,
+                emoji: '💧💩',
+                label: 'Pee/Poop',
+                subLabel: 'On My Own!',
+                cssClass: 'potty-tier-2'
+            },
+            {
+                id: 'tier3',
+                category: 'potty',
+                method: 'remembered',
+                stars: 3,
+                emoji: '🧠',
+                label: 'Remembered to Go!',
+                subLabel: 'All By Myself',
+                cssClass: 'potty-tier-3'
+            },
+            {
+                id: 'school',
+                category: 'potty',
+                method: 'school',
+                stars: 5,
+                emoji: '🏫',
+                label: 'Used Potty at School!',
+                subLabel: 'Super Achievement!',
+                cssClass: 'school-button',
+                fullWidth: true
+            },
+            // ---- Hygiene ----
+            {
+                id: 'brushTeeth',
+                category: 'hygiene',
+                method: 'hygiene',
+                stars: 1,
+                emoji: '🦷',
+                label: 'Brush Teeth',
+                subLabel: 'Squeaky Clean!',
+                cssClass: 'potty-tier-1'
+            },
+            {
+                id: 'washHair',
+                category: 'hygiene',
+                method: 'hygiene',
+                stars: 2,
+                emoji: '🧴',
+                label: 'Wash Hair',
+                subLabel: 'All Clean!',
+                cssClass: 'potty-tier-2'
+            },
+            {
+                id: 'washBody',
+                category: 'hygiene',
+                method: 'hygiene',
+                stars: 2,
+                emoji: '🛁',
+                label: 'Wash Body',
+                subLabel: 'All Clean!',
+                cssClass: 'potty-tier-2'
+            },
+            // ---- Chores ----
+            {
+                id: 'ownLaundry',
+                category: 'chores',
+                method: 'chore',
+                stars: 2,
+                emoji: '🧺',
+                label: 'Put Away Your Laundry',
+                subLabel: 'Great Job!',
+                cssClass: 'potty-tier-2'
+            },
+            {
+                id: 'franklinLaundry',
+                category: 'chores',
+                method: 'chore',
+                stars: 2,
+                emoji: '🧦',
+                label: "Put Away Franklin's Laundry",
+                subLabel: 'Helping Out!',
+                cssClass: 'potty-tier-2'
+            },
+            {
+                id: 'familyLaundry',
+                category: 'chores',
+                method: 'chore',
+                stars: 3,
+                emoji: '🛏️',
+                label: 'Fold/Put Away Family Laundry',
+                subLabel: 'Towels & More',
+                cssClass: 'potty-tier-3'
+            },
+            {
+                id: 'sortLaundry',
+                category: 'chores',
+                method: 'chore',
+                stars: 2,
+                emoji: '🔀',
+                label: 'Sort the Laundry',
+                subLabel: 'Mine vs Franklin\'s',
+                cssClass: 'potty-tier-2'
+            },
+            {
+                id: 'getSnack',
+                category: 'chores',
+                method: 'chore',
+                stars: 1,
+                emoji: '🍎',
+                label: 'Get Own Snack/Drink',
+                subLabel: 'I Did It Myself!',
+                cssClass: 'potty-tier-1'
+            },
+            {
+                id: 'pickUpTrash',
+                category: 'chores',
+                method: 'chore',
+                stars: 2,
+                emoji: '🗑️',
+                label: 'Pick Up All the Trash',
+                subLabel: 'Whole Room!',
+                cssClass: 'potty-tier-2'
+            },
+            {
+                id: 'pickUpDishes',
+                category: 'chores',
+                method: 'chore',
+                stars: 2,
+                emoji: '🍽️',
+                label: 'Pick Up All the Dishes',
+                subLabel: 'Whole Room!',
+                cssClass: 'potty-tier-2'
+            }
+        ];
+
+        function renderCategoryTabs() {
+            const tabsContainer = document.getElementById('categoryTabs');
+            tabsContainer.innerHTML = '';
+            
+            categories.forEach(cat => {
+                const tab = document.createElement('button');
+                tab.className = 'category-tab' + (cat.id === activeCategory ? ' active' : '');
+                tab.textContent = cat.label;
+                tab.onclick = () => switchCategory(cat.id);
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        function switchCategory(categoryId) {
+            activeCategory = categoryId;
+            renderCategoryTabs();
+            renderPottyButtons();
+        }
+
+        function renderPottyButtons() {
+            const container = document.getElementById('pottyButtonsContainer');
+            container.innerHTML = '';
+            
+            const visibleActions = starActions.filter(action => action.category === activeCategory);
+            
+            visibleActions.forEach(action => {
+                const btn = document.createElement('button');
+                btn.className = 'potty-button ' + action.cssClass;
+                btn.id = 'btn-' + action.id;
+                if (action.fullWidth) {
+                    btn.style.gridColumn = '1 / -1';
+                }
+                btn.onclick = () => trackEvent(action.id);
+                
+                const starEmoji = '⭐'.repeat(action.stars);
+                btn.innerHTML = `
+                    <div style="font-size: 1.5em;">${action.emoji}${starEmoji}</div>
+                    <div>${action.label}</div>
+                    <div class="button-label">${action.subLabel}</div>
+                `;
+                
+                container.appendChild(btn);
+            });
+        }
+        // Available mini-games. To add another later, add an entry here plus
+        // a rendering branch in gameLoop()/spawnBubble() for its visuals.
+        const GAMES = [
+            { id: 'space', name: 'Space Laser Battle', emoji: '🚀', instruction: 'Tap the asteroids to blast them with your laser!' },
+            { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', instruction: 'Tap the balloons before they float away!' },
+            { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', instruction: 'Tap the moles as they pop up from their holes!' }
+        ];
+        let currentGame = 'space';
+        let moleHoles = [];
+
+        let data = {
+            events: [],
+            totalStars: 0,
+            totalGamePoints: 0
+        };
+
+        let gameActive = false;
+        let gameScore = 0;
+        let bubbles = [];
+        let gameInterval;
+        let timerInterval;
+        let timeRemaining = 30;
+        let canvas, ctx;
+        let lasers = [];
+        let explosions = [];
+        let sheetUrl = '';
+
+        // Google Sheets Functions
+        function saveSheetUrl() {
+            const url = document.getElementById('sheetUrlInput').value.trim();
+            if (url) {
+                localStorage.setItem('pottyTrackerSheetUrl', url);
+                sheetUrl = url;
+                document.getElementById('setupNotice').style.display = 'none';
+                loadData();
+            } else {
+                alert('Please enter a valid URL');
+            }
+        }
+
+        function checkSheetUrl() {
+            sheetUrl = localStorage.getItem('pottyTrackerSheetUrl');
+            if (sheetUrl) {
+                document.getElementById('setupNotice').style.display = 'none';
+                document.getElementById('sheetUrlInput').value = sheetUrl;
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loadingIndicator').classList.add('show');
+            disableButtons(true);
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingIndicator').classList.remove('show');
+            disableButtons(false);
+        }
+
+        function disableButtons(disabled) {
+            starActions.forEach(action => {
+                const btn = document.getElementById('btn-' + action.id);
+                if (btn) btn.disabled = disabled;
+            });
+        }
+
+        async function loadDataFromSheets() {
+            if (!sheetUrl) return;
+            
+            showLoading();
+            try {
+                const response = await fetch(sheetUrl + '?action=getData');
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Just update the data silently, don't trigger any celebrations
+                    data.totalStars = result.data.totalStars || 0;
+                    data.totalGamePoints = result.data.totalGamePoints || 0;
+                    data.events = result.data.events || [];
+                    
+                    // Also save to localStorage
+                    localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+                    
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Error loading from sheets:', error);
+                // Fall back to localStorage
+                const saved = localStorage.getItem('pottyTrackerData');
+                if (saved) {
+                    data = JSON.parse(saved);
+                    if (data.totalGamePoints === undefined || isNaN(data.totalGamePoints)) {
+                        data.totalGamePoints = 0;
+                    }
+                    updateUI();
+                }
+            }
+            hideLoading();
+        }
+
+        async function saveDataToSheets() {
+            if (!sheetUrl) return;
+            
+            try {
+                // Don't show loading or disable buttons - do it in background
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'saveData',
+                        data: data
+                    })
+                });
+                
+                // Don't wait for response or reload
+            } catch (error) {
+                console.error('Error saving to sheets:', error);
+            }
+        }
+
+        async function updateGameStatsToSheets() {
+            if (!sheetUrl) return;
+            
+            try {
+                // Update just the stars and points, not events
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'updateGameStats',
+                        totalStars: data.totalStars,
+                        totalGamePoints: data.totalGamePoints
+                    })
+                });
+            } catch (error) {
+                console.error('Error updating game stats:', error);
+            }
+        }
+
+        async function addRedemptionToSheets(redemption) {
+            if (!sheetUrl) return;
+            
+            try {
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addRedemption',
+                        redemption: {
+                            label: redemption.label,
+                            cost: redemption.cost,
+                            emoji: redemption.emoji
+                        }
+                    })
+                });
+            } catch (error) {
+                console.error('Error adding redemption:', error);
+            }
+        }
+
+        async function addEventToSheets(event) {
+            if (!sheetUrl) return;
+            
+            try {
+                // Don't show loading or disable buttons - do it in background
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addEvent',
+                        event: event
+                    })
+                });
+                
+                // Don't wait for response or reload
+            } catch (error) {
+                console.error('Error adding event:', error);
+            }
+        }
+
+        function loadData() {
+            if (sheetUrl) {
+                loadDataFromSheets();
+            } else {
+                // Fallback to localStorage if no sheet URL
+                const saved = localStorage.getItem('pottyTrackerData');
+                if (saved) {
+                    data = JSON.parse(saved);
+                    if (data.totalGamePoints === undefined || isNaN(data.totalGamePoints)) {
+                        data.totalGamePoints = 0;
+                    }
+                }
+                updateUI();
+            }
+        }
+
+        function saveData() {
+            // Save to localStorage immediately (instant)
+            localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+            
+            // Save to sheets in background (non-blocking)
+            if (sheetUrl) {
+                saveDataToSheets();
+            }
+        }
+
+        function trackEvent(actionId) {
+            const action = starActions.find(a => a.id === actionId);
+            if (!action) return;
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            
+            const starsEarned = action.stars;
+            
+            const event = { 
+                actionId: action.id,
+                category: action.category,
+                method: action.method,
+                label: action.label,
+                subLabel: action.subLabel,
+                emoji: action.emoji,
+                time: timeStr, 
+                stars: starsEarned,
+                timestamp: new Date().toISOString()
+            };
+            
+            data.events.push(event);
+            data.totalStars += starsEarned;
+            
+            // Check if earned a game play
+            const prevGamePlays = Math.floor((data.totalStars - starsEarned) / 5);
+            const newGamePlays = Math.floor(data.totalStars / 5);
+            const gamePlaysEarned = newGamePlays - prevGamePlays;
+            
+            if (gamePlaysEarned > 0) {
+                showGamePlayEarned();
+            }
+            
+            celebrate(action);
+            
+            // Update UI immediately
+            updateUI();
+            
+            // Save to local storage immediately
+            localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+            
+            // Sync to sheets in background (non-blocking)
+            if (sheetUrl) {
+                addEventToSheets(event);
+            }
+        }
+
+        function showGamePlayEarned() {
+            // Show the game earned modal
+            const modal = document.getElementById('gameEarnedModal');
+            modal.classList.add('show');
+            
+            // Play exciting sound
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Play a sequence of tones for fanfare
+            [0, 0.15, 0.3].forEach((delay, i) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 400 + (i * 200); // Rising tones
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime + delay);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + delay + 0.3);
+                
+                oscillator.start(audioContext.currentTime + delay);
+                oscillator.stop(audioContext.currentTime + delay + 0.3);
+            });
+        }
+
+        function closeGameEarnedModal() {
+            const modal = document.getElementById('gameEarnedModal');
+            modal.classList.remove('show');
+        }
+
+        function celebrate(action) {
+            const celebration = document.getElementById('celebration');
+            let emojis;
+            
+            if (action.stars >= 5) {
+                emojis = ['🌟🌟🌟🌟🌟', '🏫⭐⭐⭐⭐⭐', '🎉🎊🎉🎊🎉'];
+            } else if (action.stars >= 3) {
+                emojis = ['🧠🌟🌟🌟', '⭐⭐⭐', '🎉🎊🎉'];
+            } else if (action.stars === 2) {
+                emojis = ['🌟🌟', '⭐⭐', '🎉🎊', '💫💫'];
+            } else {
+                emojis = ['💧', '💩', '⭐', '🎉'];
+            }
+            
+            celebration.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            celebration.classList.add('show');
+            
+            setTimeout(() => {
+                celebration.classList.remove('show');
+            }, 1000);
+
+            // Play a sound effect - pitch rises with more stars
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 700 + (action.stars * 100);
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        function updateUI() {
+            document.getElementById('totalStars').textContent = data.totalStars;
+
+            if (data.totalGamePoints === undefined || isNaN(data.totalGamePoints)) {
+                data.totalGamePoints = 0;
+            }
+
+            document.getElementById('gamePlays').textContent = data.totalGamePoints;
+            
+            const availableGamePlays = Math.floor(data.totalStars / 5);
+            
+            const playBtn = document.getElementById('playGameBtn');
+            if (availableGamePlays > 0) {
+                playBtn.disabled = false;
+            } else {
+                playBtn.disabled = true;
+            }
+
+            const starsToNextGame = data.totalStars % 5;
+            const progress = (starsToNextGame / 5) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressFill').textContent = `${starsToNextGame}/5 ⭐`;
+
+            const grid = document.getElementById('achievementGrid');
+            grid.innerHTML = '';
+            
+            rewards.forEach(reward => {
+                const div = document.createElement('div');
+                div.className = 'achievement';
+                
+                if (data.totalGamePoints >= reward.cost) {
+                    div.classList.add('unlocked');
+                    div.onclick = () => redeemReward(reward);
+                    div.innerHTML = `${reward.emoji}<div class="achievement-label">${reward.label}</div><div class="achievement-cost">${reward.cost} pts</div>`;
+                } else {
+                    div.classList.add('locked');
+                    div.innerHTML = `${reward.emoji}<div class="achievement-label">${reward.label}</div><div class="achievement-cost">🔒 ${reward.cost} pts</div>`;
+                }
+                
+                grid.appendChild(div);
+            });
+
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            
+            if (data.events.length === 0) {
+                historyList.innerHTML = '<div class="history-item">No potty visits yet today! 🌟</div>';
+            } else {
+                [...data.events].reverse().forEach(event => {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    
+                    let emoji, description, subLabel;
+                    
+                    if (event.label) {
+                        // New-format event (has label/emoji/subLabel from pottyActions config)
+                        emoji = event.emoji || '⭐';
+                        description = event.label;
+                        subLabel = event.subLabel || '';
+                    } else if (event.method === 'school') {
+                        // Old-format fallback
+                        emoji = '🏫';
+                        description = 'School Potty';
+                        subLabel = 'Super Achievement!';
+                    } else {
+                        // Old-format fallback
+                        emoji = event.type === 'pee' ? '💧' : '💩';
+                        description = event.type === 'pee' ? 'Pee' : 'Poop';
+                        subLabel = event.method === 'own' ? 'On My Own!' : 'With Reminder';
+                    }
+                    
+                    const stars = event.stars || 1;
+                    const starEmoji = '⭐'.repeat(stars);
+                    div.innerHTML = `<span>${emoji} ${description} - ${subLabel}</span><span>${starEmoji} ${event.time}</span>`;
+                    historyList.appendChild(div);
+                });
+            }
+        }
+
+        function resetData() {
+            if (confirm('Start a new day? This will save your stars and game points but clear today\'s visits!')) {
+                data = { 
+                    events: [], 
+                    totalStars: data.totalStars, 
+                    totalGamePoints: data.totalGamePoints,
+                    date: new Date().toDateString() 
+                };
+                saveData();
+                updateUI();
+            }
+        }
+
+        function resetStars() {
+            if (confirm('Are you sure you want to reset ALL stars and game points? This will clear everything!')) {
+                data = { events: [], totalStars: 0, totalGamePoints: 0, date: new Date().toDateString() };
+                saveData();
+                updateUI();
+            }
+        }
+
+        function redeemReward(reward) {
+            if (data.totalGamePoints < reward.cost) return;
+            
+            if (confirm(`Redeem ${reward.label} for ${reward.cost} points?`)) {
+                data.totalGamePoints -= reward.cost;
+                
+                // Save locally immediately
+                localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+                
+                // Update UI
+                updateUI();
+                
+                // Log redemption to Google Sheets (permanent record)
+                if (sheetUrl) {
+                    addRedemptionToSheets(reward);
+                    // Also update the points total
+                    updateGameStatsToSheets();
+                }
+                
+                const celebration = document.getElementById('celebration');
+                celebration.textContent = `${reward.emoji} ${reward.label}! ${reward.emoji}`;
+                celebration.classList.add('show');
+                
+                setTimeout(() => {
+                    celebration.classList.remove('show');
+                }, 2000);
+                
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            }
+        }
+
+        // Game Functions
+        function openGameSelect() {
+            const availableGamePlays = Math.floor(data.totalStars / 5);
+            if (availableGamePlays <= 0) return;
+            
+            renderGameSelectCards();
+            document.getElementById('gameSelectModal').classList.add('active');
+        }
+
+        function closeGameSelect() {
+            document.getElementById('gameSelectModal').classList.remove('active');
+        }
+
+        function renderGameSelectCards() {
+            const container = document.getElementById('gameSelectCards');
+            container.innerHTML = '';
+            
+            GAMES.forEach(game => {
+                const card = document.createElement('button');
+                card.className = 'game-select-card';
+                card.onclick = () => {
+                    closeGameSelect();
+                    startGame(game.id);
+                };
+                card.innerHTML = `<div style="font-size: 2.2em;">${game.emoji}</div><div>${game.name}</div>`;
+                container.appendChild(card);
+            });
+        }
+
+        function startGame(gameId) {
+            const availableGamePlays = Math.floor(data.totalStars / 5);
+            if (availableGamePlays <= 0) return;
+            
+            currentGame = gameId || 'space';
+            const game = GAMES.find(g => g.id === currentGame) || GAMES[0];
+            
+            document.getElementById('gameModalTitle').textContent = `${game.emoji} ${game.name}! ${game.emoji}`;
+            document.getElementById('gameModalInstruction').textContent = game.instruction;
+            
+            document.getElementById('gameModal').classList.add('active');
+            gameScore = 0;
+            bubbles = [];
+            lasers = [];
+            explosions = [];
+            gameActive = true;
+            timeRemaining = 30;
+            
+            // Set up fixed hole positions for Whack-a-Mole
+            if (currentGame === 'mole') {
+                moleHoles = [
+                    { x: 80, y: 180, occupied: false },
+                    { x: 200, y: 180, occupied: false },
+                    { x: 320, y: 180, occupied: false },
+                    { x: 80, y: 360, occupied: false },
+                    { x: 200, y: 360, occupied: false },
+                    { x: 320, y: 360, occupied: false }
+                ];
+            }
+            
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            resizeCanvas();
+            
+            document.getElementById('gameScore').textContent = gameScore;
+            document.getElementById('gameTimer').textContent = timeRemaining;
+            document.getElementById('gameOverScreen').classList.remove('show');
+            
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                document.getElementById('gameTimer').textContent = timeRemaining;
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+            
+            const spawnRate = currentGame === 'mole' ? 800 : 1000;
+            gameInterval = setInterval(spawnBubble, spawnRate);
+            
+            setTimeout(() => {
+                endGame();
+            }, 30000);
+            
+            gameLoop();
+        }
+
+        function spawnBubble() {
+            if (!gameActive) return;
+            
+            if (currentGame === 'mole') {
+                spawnMole();
+                return;
+            }
+            
+            const sizeTypes = [
+                { size: 'large', points: 10 },
+                { size: 'medium', points: 5 },
+                { size: 'small', points: 3 }
+            ];
+            
+            const type = sizeTypes[Math.floor(Math.random() * sizeTypes.length)];
+            const baseRadius = type.size === 'large' ? 35 : type.size === 'medium' ? 25 : 18;
+            const radius = baseRadius + Math.random() * 8;
+            
+            if (currentGame === 'balloon') {
+                const balloonColors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#a855f7', '#ec4899'];
+                bubbles.push({
+                    x: Math.random() * (canvas.width - 60) + 30,
+                    y: canvas.height + 40,
+                    radius: radius,
+                    color: balloonColors[Math.floor(Math.random() * balloonColors.length)],
+                    speed: 2 + Math.random() * 3,
+                    dy: -1,
+                    popped: false,
+                    points: type.points
+                });
+            } else {
+                // Space asteroid (default)
+                const asteroidColors = ['#808080', '#a0a0a0', '#606060'];
+                bubbles.push({
+                    x: Math.random() * (canvas.width - 60) + 30,
+                    y: -40,
+                    radius: radius,
+                    color: asteroidColors[Math.floor(Math.random() * asteroidColors.length)],
+                    speed: 2 + Math.random() * 3,
+                    dy: 1,
+                    popped: false,
+                    points: type.points,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() - 0.5) * 0.1
+                });
+            }
+        }
+
+        function spawnMole() {
+            const freeHoles = moleHoles.filter(h => !h.occupied);
+            if (freeHoles.length === 0) return;
+            
+            const hole = freeHoles[Math.floor(Math.random() * freeHoles.length)];
+            hole.occupied = true;
+            
+            const pointOptions = [10, 5, 3];
+            
+            bubbles.push({
+                x: hole.x,
+                y: hole.y,
+                radius: 28,
+                color: '#8b5e3c',
+                speed: 0,
+                dy: 0,
+                popped: false,
+                points: pointOptions[Math.floor(Math.random() * pointOptions.length)],
+                life: 70,
+                isMole: true,
+                holeRef: hole
+            });
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+            
+            // Background per game theme
+            if (currentGame === 'balloon') {
+                ctx.fillStyle = '#87ceeb';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                for (let i = 0; i < 4; i++) {
+                    const cx = (i * 110 + 40) % canvas.width;
+                    const cy = 50 + (i * 70) % 150;
+                    ctx.beginPath();
+                    ctx.ellipse(cx, cy, 30, 14, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (currentGame === 'mole') {
+                ctx.fillStyle = '#4d7c0f';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                moleHoles.forEach(hole => {
+                    ctx.beginPath();
+                    ctx.ellipse(hole.x, hole.y + 10, 32, 14, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = '#3f2d1d';
+                    ctx.fill();
+                });
+            } else {
+                ctx.fillStyle = '#000033';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ffffff';
+                for (let i = 0; i < 50; i++) {
+                    const x = (i * 73) % canvas.width;
+                    const y = (i * 97) % canvas.height;
+                    const size = (i % 3) + 1;
+                    ctx.fillRect(x, y, size, size);
+                }
+            }
+            
+            // Lasers only make sense for the space game
+            if (currentGame === 'space') {
+                lasers = lasers.filter(laser => {
+                    laser.life--;
+                    if (laser.life <= 0) return false;
+                    
+                    const alpha = laser.life / 10;
+                    ctx.strokeStyle = `rgba(0, 255, 0, ${alpha})`;
+                    ctx.lineWidth = 4;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#00ff00';
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width / 2, canvas.height);
+                    ctx.lineTo(laser.x, laser.y);
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                    
+                    return true;
+                });
+            } else {
+                lasers = [];
+            }
+            
+            explosions = explosions.filter(explosion => {
+                explosion.life--;
+                if (explosion.life <= 0) return false;
+                
+                const alpha = explosion.life / 15;
+                ctx.fillStyle = `rgba(255, 150, 0, ${alpha})`;
+                
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2;
+                    const dist = (15 - explosion.life) * 3;
+                    const expX = explosion.x + Math.cos(angle) * dist;
+                    const expY = explosion.y + Math.sin(angle) * dist;
+                    ctx.beginPath();
+                    ctx.arc(expX, expY, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                return true;
+            });
+            
+            bubbles = bubbles.filter(obj => {
+                if (obj.popped) {
+                    if (obj.isMole && obj.holeRef) obj.holeRef.occupied = false;
+                    return false;
+                }
+                
+                // Whack-a-Mole: fixed position, disappears after its lifespan
+                if (obj.isMole) {
+                    obj.life--;
+                    if (obj.life <= 0) {
+                        if (obj.holeRef) obj.holeRef.occupied = false;
+                        return false;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.ellipse(obj.x, obj.y, obj.radius, obj.radius * 0.9, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = obj.color;
+                    ctx.fill();
+                    ctx.strokeStyle = '#5c3d24';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.arc(obj.x - 8, obj.y - 5, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(obj.x + 8, obj.y - 5, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#ec4899';
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y + 5, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    return true;
+                }
+                
+                obj.y += obj.speed * obj.dy;
+                if (obj.rotation !== undefined) obj.rotation += obj.rotationSpeed;
+                
+                if (currentGame === 'balloon') {
+                    if (obj.y + obj.radius < 0) return false;
+                } else {
+                    if (obj.y - obj.radius > canvas.height) return false;
+                }
+                
+                if (currentGame === 'balloon') {
+                    ctx.beginPath();
+                    ctx.ellipse(obj.x, obj.y, obj.radius * 0.85, obj.radius, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = obj.color;
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(obj.x - 4, obj.y + obj.radius);
+                    ctx.lineTo(obj.x + 4, obj.y + obj.radius);
+                    ctx.lineTo(obj.x, obj.y + obj.radius + 8);
+                    ctx.closePath();
+                    ctx.fillStyle = obj.color;
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(obj.x, obj.y + obj.radius + 8);
+                    ctx.lineTo(obj.x, obj.y + obj.radius + 30);
+                    ctx.strokeStyle = '#888888';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.ellipse(obj.x - obj.radius * 0.3, obj.y - obj.radius * 0.4, obj.radius * 0.2, obj.radius * 0.3, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                    ctx.fill();
+                    
+                    return true;
+                }
+                
+                // Space asteroid (default)
+                ctx.save();
+                ctx.translate(obj.x, obj.y);
+                ctx.rotate(obj.rotation);
+                
+                ctx.beginPath();
+                const points = 8;
+                for (let i = 0; i < points; i++) {
+                    const angle = (i / points) * Math.PI * 2;
+                    const variance = 0.7 + Math.random() * 0.3;
+                    const r = obj.radius * variance;
+                    const x = Math.cos(angle) * r;
+                    const y = Math.sin(angle) * r;
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.closePath();
+                ctx.fillStyle = obj.color;
+                ctx.fill();
+                ctx.strokeStyle = '#404040';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.restore();
+                
+                return true;
+            });
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            
+            const finalScore = gameScore;
+            
+            if (data.totalGamePoints === undefined || isNaN(data.totalGamePoints)) {
+                data.totalGamePoints = 0;
+            }
+            
+            data.totalGamePoints += finalScore;
+            data.totalStars -= 5;
+            
+            // Save to localStorage immediately
+            localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+            
+            // Update only stars and points to sheets (not full data)
+            if (sheetUrl) {
+                updateGameStatsToSheets();
+            }
+            
+            updateUI();
+            
+            document.getElementById('finalScore').textContent = finalScore;
+            document.getElementById('gameOverScreen').classList.add('show');
+            
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = `🎉 +${finalScore} Points! 🎉`;
+            celebration.classList.add('show');
+            
+            setTimeout(() => {
+                celebration.classList.remove('show');
+            }, 2000);
+        }
+
+        function closeGame() {
+            gameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            document.getElementById('gameModal').classList.remove('active');
+            document.getElementById('gameOverScreen').classList.remove('show');
+        }
+
+        const gameCanvas = document.getElementById('gameCanvas');
+        
+        function resizeCanvas() {
+            const container = document.querySelector('.game-container');
+            const maxWidth = Math.min(400, container.clientWidth - 40);
+            gameCanvas.style.width = maxWidth + 'px';
+            gameCanvas.style.height = (maxWidth * 1.25) + 'px';
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        
+        gameCanvas.addEventListener('click', (e) => {
+            if (!gameActive) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            
+            if (currentGame === 'space') {
+                lasers.push({ x: x, y: y, life: 10 });
+            }
+            
+            let hit = false;
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const obj = bubbles[i];
+                const distance = Math.sqrt((x - obj.x) ** 2 + (y - obj.y) ** 2);
+                
+                if (distance < obj.radius) {
+                    obj.popped = true;
+                    gameScore += obj.points;
+                    hit = true;
+                    document.getElementById('gameScore').textContent = gameScore;
+                    
+                    explosions.push({ x: obj.x, y: obj.y, life: 15 });
+                    
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 150;
+                    oscillator.type = 'square';
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                    
+                    break;
+                }
+            }
+            
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = hit ? 800 : 600;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.08);
+        });
+
+        // Initialize
+        renderCategoryTabs();
+        renderPottyButtons();
+        checkSheetUrl();
+        loadData();
+        
+        // Auto-refresh data every 1 hour
+        setInterval(() => {
+            if (sheetUrl && !gameActive) {
+                loadDataFromSheets();
+            }
+        }, 3600000); // 1 hour = 3600000 milliseconds
+    </script>
+</body>
+</html>
