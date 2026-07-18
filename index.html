@@ -48,7 +48,7 @@
 
         .button-container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 15px;
             margin-bottom: 30px;
         }
@@ -87,6 +87,21 @@
         .button-label {
             font-size: 0.75em;
             opacity: 0.9;
+        }
+
+        .potty-tier-1 {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: white;
+        }
+
+        .potty-tier-2 {
+            background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+            color: #000000;
+        }
+
+        .potty-tier-3 {
+            background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+            color: white;
         }
 
         .pee-reminder {
@@ -587,32 +602,8 @@
             </div>
         </div>
 
-        <div class="button-container">
-            <button class="potty-button pee-reminder" onclick="trackEvent('pee', 'reminder')" id="btnPeeReminder">
-                <div style="font-size: 1.5em;">💧⭐</div>
-                <div>Pee</div>
-                <div class="button-label">With Reminder</div>
-            </button>
-            <button class="potty-button poop-reminder" onclick="trackEvent('poop', 'reminder')" id="btnPoopReminder">
-                <div style="font-size: 1.5em;">💩⭐</div>
-                <div>Poop</div>
-                <div class="button-label">With Reminder</div>
-            </button>
-            <button class="potty-button pee-own" onclick="trackEvent('pee', 'own')" id="btnPeeOwn">
-                <div style="font-size: 1.5em;">💧⭐⭐</div>
-                <div>Pee</div>
-                <div class="button-label">On My Own!</div>
-            </button>
-            <button class="potty-button poop-own" onclick="trackEvent('poop', 'own')" id="btnPoopOwn">
-                <div style="font-size: 1.5em;">💩⭐⭐</div>
-                <div>Poop</div>
-                <div class="button-label">On My Own!</div>
-            </button>
-            <button class="potty-button school-button" onclick="trackEvent('school', 'school')" id="btnSchool">
-                <div style="font-size: 1.5em;">🏫⭐⭐⭐⭐⭐</div>
-                <div>Used Potty at School!</div>
-                <div class="button-label">Super Achievement!</div>
-            </button>
+        <div class="button-container" id="pottyButtonsContainer">
+            <!-- Buttons generated dynamically from pottyActions config -->
         </div>
 
         <div class="rewards-section">
@@ -688,6 +679,72 @@
             { emoji: '🕹️', label: 'Play a Mall Game', cost: 1000 }
         ];
 
+        // Configuration for ways to earn stars. To add a new way to earn stars later
+        // (e.g. "Helped a sibling", "Stayed dry all night"), just add a new object here —
+        // no other code needs to change.
+        const pottyActions = [
+            {
+                id: 'tier1',
+                method: 'reminder',
+                stars: 1,
+                emoji: '💧💩',
+                label: 'Pee/Poop',
+                subLabel: 'With Reminder',
+                cssClass: 'potty-tier-1'
+            },
+            {
+                id: 'tier2',
+                method: 'own',
+                stars: 2,
+                emoji: '💧💩',
+                label: 'Pee/Poop',
+                subLabel: 'On My Own!',
+                cssClass: 'potty-tier-2'
+            },
+            {
+                id: 'tier3',
+                method: 'remembered',
+                stars: 3,
+                emoji: '🧠',
+                label: 'Remembered to Go!',
+                subLabel: 'All By Myself',
+                cssClass: 'potty-tier-3'
+            },
+            {
+                id: 'school',
+                method: 'school',
+                stars: 5,
+                emoji: '🏫',
+                label: 'Used Potty at School!',
+                subLabel: 'Super Achievement!',
+                cssClass: 'school-button',
+                fullWidth: true
+            }
+        ];
+
+        function renderPottyButtons() {
+            const container = document.getElementById('pottyButtonsContainer');
+            container.innerHTML = '';
+            
+            pottyActions.forEach(action => {
+                const btn = document.createElement('button');
+                btn.className = 'potty-button ' + action.cssClass;
+                btn.id = 'btn-' + action.id;
+                if (action.fullWidth) {
+                    btn.style.gridColumn = '1 / -1';
+                }
+                btn.onclick = () => trackEvent(action.id);
+                
+                const starEmoji = '⭐'.repeat(action.stars);
+                btn.innerHTML = `
+                    <div style="font-size: 1.5em;">${action.emoji}${starEmoji}</div>
+                    <div>${action.label}</div>
+                    <div class="button-label">${action.subLabel}</div>
+                `;
+                
+                container.appendChild(btn);
+            });
+        }
         let data = {
             events: [],
             totalStars: 0,
@@ -737,9 +794,9 @@
         }
 
         function disableButtons(disabled) {
-            const buttons = ['btnPeeReminder', 'btnPoopReminder', 'btnPeeOwn', 'btnPoopOwn', 'btnSchool'];
-            buttons.forEach(id => {
-                document.getElementById(id).disabled = disabled;
+            pottyActions.forEach(action => {
+                const btn = document.getElementById('btn-' + action.id);
+                if (btn) btn.disabled = disabled;
             });
         }
 
@@ -895,7 +952,10 @@
             }
         }
 
-        function trackEvent(type, method) {
+        function trackEvent(actionId) {
+            const action = pottyActions.find(a => a.id === actionId);
+            if (!action) return;
+            
             const now = new Date();
             const timeStr = now.toLocaleTimeString('en-US', { 
                 hour: 'numeric', 
@@ -903,19 +963,14 @@
                 hour12: true 
             });
             
-            // Award stars based on method
-            let starsEarned;
-            if (method === 'school') {
-                starsEarned = 5;
-            } else if (method === 'own') {
-                starsEarned = 2;
-            } else {
-                starsEarned = 1;
-            }
+            const starsEarned = action.stars;
             
             const event = { 
-                type, 
-                method, 
+                actionId: action.id,
+                method: action.method,
+                label: action.label,
+                subLabel: action.subLabel,
+                emoji: action.emoji,
                 time: timeStr, 
                 stars: starsEarned,
                 timestamp: new Date().toISOString()
@@ -933,7 +988,7 @@
                 showGamePlayEarned();
             }
             
-            celebrate(type, method);
+            celebrate(action);
             
             // Update UI immediately
             updateUI();
@@ -979,16 +1034,18 @@
             modal.classList.remove('show');
         }
 
-        function celebrate(type, method) {
+        function celebrate(action) {
             const celebration = document.getElementById('celebration');
             let emojis;
             
-            if (method === 'school') {
+            if (action.stars >= 5) {
                 emojis = ['🌟🌟🌟🌟🌟', '🏫⭐⭐⭐⭐⭐', '🎉🎊🎉🎊🎉'];
-            } else if (method === 'own') {
+            } else if (action.stars >= 3) {
+                emojis = ['🧠🌟🌟🌟', '⭐⭐⭐', '🎉🎊🎉'];
+            } else if (action.stars === 2) {
                 emojis = ['🌟🌟', '⭐⭐', '🎉🎊', '💫💫'];
             } else {
-                emojis = type === 'pee' ? ['💧', '⭐', '🎉'] : ['💩', '⭐', '🎊'];
+                emojis = ['💧', '💩', '⭐', '🎉'];
             }
             
             celebration.textContent = emojis[Math.floor(Math.random() * emojis.length)];
@@ -998,7 +1055,7 @@
                 celebration.classList.remove('show');
             }, 1000);
 
-            // Play a sound effect
+            // Play a sound effect - pitch rises with more stars
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
@@ -1006,7 +1063,7 @@
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            oscillator.frequency.value = method === 'school' ? 1200 : method === 'own' ? 1000 : 800;
+            oscillator.frequency.value = 700 + (action.stars * 100);
             oscillator.type = 'sine';
             
             gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
@@ -1068,21 +1125,28 @@
                     const div = document.createElement('div');
                     div.className = 'history-item';
                     
-                    let emoji, description, method;
+                    let emoji, description, subLabel;
                     
-                    if (event.method === 'school') {
+                    if (event.label) {
+                        // New-format event (has label/emoji/subLabel from pottyActions config)
+                        emoji = event.emoji || '⭐';
+                        description = event.label;
+                        subLabel = event.subLabel || '';
+                    } else if (event.method === 'school') {
+                        // Old-format fallback
                         emoji = '🏫';
                         description = 'School Potty';
-                        method = 'Super Achievement!';
+                        subLabel = 'Super Achievement!';
                     } else {
+                        // Old-format fallback
                         emoji = event.type === 'pee' ? '💧' : '💩';
                         description = event.type === 'pee' ? 'Pee' : 'Poop';
-                        method = event.method === 'own' ? 'On My Own!' : 'With Reminder';
+                        subLabel = event.method === 'own' ? 'On My Own!' : 'With Reminder';
                     }
                     
                     const stars = event.stars || 1;
                     const starEmoji = '⭐'.repeat(stars);
-                    div.innerHTML = `<span>${emoji} ${description} - ${method}</span><span>${starEmoji} ${event.time}</span>`;
+                    div.innerHTML = `<span>${emoji} ${description} - ${subLabel}</span><span>${starEmoji} ${event.time}</span>`;
                     historyList.appendChild(div);
                 });
             }
@@ -1429,6 +1493,7 @@
         });
 
         // Initialize
+        renderPottyButtons();
         checkSheetUrl();
         loadData();
         
