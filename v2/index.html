@@ -571,7 +571,7 @@
             font-size: 1.1em;
         }
 
-        .game-select-grid {
+        .game-buttons-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
@@ -596,8 +596,23 @@
             gap: 8px;
         }
 
-        .game-select-card:hover {
+        .game-select-card:hover:not(:disabled) {
             transform: translateY(-4px);
+        }
+
+        .game-select-card:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .game-select-card.battle-card:not(:disabled) {
+            background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+        }
+
+        .game-card-cost {
+            font-size: 0.75em;
+            opacity: 0.9;
         }
 
         .setup-notice {
@@ -665,11 +680,11 @@
                 </div>
             </div>
             <div style="text-align: center; margin-bottom: 15px; color: #1e40af; font-weight: bold; font-size: 1.1em;">
-                Play the space game to earn points!
+                Pick a game to earn points!
             </div>
-            <button class="play-game-button" id="playGameBtn" onclick="openGameSelect()" disabled>
-                🚀 Play Space Laser Game! 🚀
-            </button>
+            <div class="game-buttons-grid" id="gameButtonsGrid">
+                <!-- Buttons generated dynamically from GAMES config -->
+            </div>
             
             <h2 style="margin-top: 25px;">🎁 Redeem Rewards!</h2>
             <div class="achievement-grid" id="achievementGrid"></div>
@@ -692,16 +707,6 @@
             <div class="game-earned-title">YOU EARNED A GAME!</div>
             <div class="game-earned-subtitle">5 Stars Complete! 🌟</div>
             <button class="game-earned-button" onclick="closeGameEarnedModal()">AWESOME!</button>
-        </div>
-    </div>
-
-    <!-- Game Selection Modal -->
-    <div class="game-modal" id="gameSelectModal">
-        <div class="game-container">
-            <h2 class="game-title">🎮 Pick a Game! 🎮</h2>
-            <div class="game-instruction">Choose which game to play:</div>
-            <div class="game-select-grid" id="gameSelectCards"></div>
-            <button class="close-game-button" onclick="closeGameSelect()">Cancel</button>
         </div>
     </div>
 
@@ -992,10 +997,26 @@
         // Available mini-games. To add another later, add an entry here plus
         // a rendering branch in gameLoop()/spawnBubble() for its visuals.
         const GAMES = [
-            { id: 'space', name: 'Space Laser Battle', emoji: '🚀', instruction: 'Tap the asteroids to blast them with your laser!' },
-            { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', instruction: 'Tap the balloons before they float away!' },
-            { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', instruction: 'Tap the moles as they pop up from their holes!' }
+            { id: 'space', name: 'Space Laser Battle', emoji: '🚀', cost: 5, instruction: 'Tap the asteroids to blast them with your laser!' },
+            { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', cost: 5, instruction: 'Tap the balloons before they float away!' },
+            { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', cost: 5, instruction: 'Tap the moles as they pop up from their holes!' },
+            { id: 'battle', name: 'Pillow Fort Battle', emoji: '🛡️', cost: 10, instruction: 'Toss pillows at the Sock Monster to defeat it before time runs out!', isBattle: true }
         ];
+        // Polyfill for older browsers/WebViews without native roundRect support (used for pillow shapes)
+        if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (typeof r === 'undefined') r = 5;
+                this.beginPath();
+                this.moveTo(x + r, y);
+                this.arcTo(x + w, y, x + w, y + h, r);
+                this.arcTo(x + w, y + h, x, y + h, r);
+                this.arcTo(x, y + h, x, y, r);
+                this.arcTo(x, y, x + w, y, r);
+                this.closePath();
+                return this;
+            };
+        }
+
         let currentGame = 'space';
         let moleHoles = [];
 
@@ -1337,14 +1358,7 @@
 
             document.getElementById('gamePlays').textContent = data.totalGamePoints;
             
-            const availableGamePlays = Math.floor(data.totalStars / 5);
-            
-            const playBtn = document.getElementById('playGameBtn');
-            if (availableGamePlays > 0) {
-                playBtn.disabled = false;
-            } else {
-                playBtn.disabled = true;
-            }
+            updateGameButtonStates();
 
             const starsToNextGame = data.totalStars % 5;
             const progress = (starsToNextGame / 5) * 100;
@@ -1474,40 +1488,47 @@
         }
 
         // Game Functions
-        function openGameSelect() {
-            const availableGamePlays = Math.floor(data.totalStars / 5);
-            if (availableGamePlays <= 0) return;
-            
-            renderGameSelectCards();
-            document.getElementById('gameSelectModal').classList.add('active');
-        }
-
-        function closeGameSelect() {
-            document.getElementById('gameSelectModal').classList.remove('active');
-        }
-
-        function renderGameSelectCards() {
-            const container = document.getElementById('gameSelectCards');
+        function renderGameButtons() {
+            const container = document.getElementById('gameButtonsGrid');
             container.innerHTML = '';
             
             GAMES.forEach(game => {
-                const card = document.createElement('button');
-                card.className = 'game-select-card';
-                card.onclick = () => {
-                    closeGameSelect();
-                    startGame(game.id);
-                };
-                card.innerHTML = `<div style="font-size: 2.2em;">${game.emoji}</div><div>${game.name}</div>`;
-                container.appendChild(card);
+                const btn = document.createElement('button');
+                btn.className = 'game-select-card' + (game.isBattle ? ' battle-card' : '');
+                btn.id = 'game-btn-' + game.id;
+                btn.onclick = () => startGame(game.id);
+                btn.innerHTML = `
+                    <div style="font-size: 2.2em;">${game.emoji}</div>
+                    <div>${game.name}</div>
+                    <div class="game-card-cost">${game.cost}⭐ per play</div>
+                `;
+                container.appendChild(btn);
+            });
+            
+            updateGameButtonStates();
+        }
+
+        function updateGameButtonStates() {
+            GAMES.forEach(game => {
+                const btn = document.getElementById('game-btn-' + game.id);
+                if (btn) {
+                    btn.disabled = data.totalStars < game.cost;
+                }
             });
         }
 
+        let currentGameCost = 5;
+        let bossMaxHealth = 150;
+        let bossHealth = 150;
+        let bossDefeated = false;
+
         function startGame(gameId) {
-            const availableGamePlays = Math.floor(data.totalStars / 5);
-            if (availableGamePlays <= 0) return;
+            const game = GAMES.find(g => g.id === gameId) || GAMES[0];
             
-            currentGame = gameId || 'space';
-            const game = GAMES.find(g => g.id === currentGame) || GAMES[0];
+            if (data.totalStars < game.cost) return;
+            
+            currentGame = game.id;
+            currentGameCost = game.cost;
             
             document.getElementById('gameModalTitle').textContent = `${game.emoji} ${game.name}! ${game.emoji}`;
             document.getElementById('gameModalInstruction').textContent = game.instruction;
@@ -1532,6 +1553,13 @@
                 ];
             }
             
+            // Set up the boss for Pillow Fort Battle
+            if (currentGame === 'battle') {
+                bossMaxHealth = 150;
+                bossHealth = 150;
+                bossDefeated = false;
+            }
+            
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
             
@@ -1550,7 +1578,7 @@
                 }
             }, 1000);
             
-            const spawnRate = currentGame === 'mole' ? 800 : 1000;
+            const spawnRate = currentGame === 'mole' ? 800 : (currentGame === 'battle' ? 700 : 1000);
             gameInterval = setInterval(spawnBubble, spawnRate);
             
             setTimeout(() => {
@@ -1567,6 +1595,8 @@
                 spawnMole();
                 return;
             }
+            
+            if (currentGame === 'battle' && bossDefeated) return;
             
             const sizeTypes = [
                 { size: 'large', points: 10 },
@@ -1589,6 +1619,21 @@
                     dy: -1,
                     popped: false,
                     points: type.points
+                });
+            } else if (currentGame === 'battle') {
+                // Mostly pillows to throw at the boss, occasional silly decoy (worth 0, doesn't hurt)
+                const isDecoy = Math.random() < 0.15;
+                const pillowColors = ['#fef3c7', '#fbcfe8', '#bfdbfe', '#d9f99d'];
+                bubbles.push({
+                    x: Math.random() * (canvas.width - 60) + 30,
+                    y: -40,
+                    radius: isDecoy ? 20 : radius,
+                    color: isDecoy ? '#fde68a' : pillowColors[Math.floor(Math.random() * pillowColors.length)],
+                    speed: 2.5 + Math.random() * 3,
+                    dy: 1,
+                    popped: false,
+                    points: isDecoy ? 0 : type.points,
+                    isDecoy: isDecoy
                 });
             } else {
                 // Space asteroid (default)
@@ -1656,6 +1701,53 @@
                     ctx.fillStyle = '#3f2d1d';
                     ctx.fill();
                 });
+            } else if (currentGame === 'battle') {
+                ctx.fillStyle = '#ddd6fe';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Sock Monster boss (simple friendly cartoon face)
+                const bossX = canvas.width / 2;
+                const bossY = 90;
+                ctx.beginPath();
+                ctx.ellipse(bossX, bossY, 70, 60, 0, 0, Math.PI * 2);
+                ctx.fillStyle = bossDefeated ? '#facc15' : '#f472b6';
+                ctx.fill();
+                
+                // eyes
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(bossX - 22, bossY - 10, 14, 0, Math.PI * 2);
+                ctx.arc(bossX + 22, bossY - 10, 14, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#1f2937';
+                ctx.beginPath();
+                ctx.arc(bossX - 22, bossY - 10, 6, 0, Math.PI * 2);
+                ctx.arc(bossX + 22, bossY - 10, 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // mouth - smile if defeated, silly wobble otherwise
+                ctx.strokeStyle = '#1f2937';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                if (bossDefeated) {
+                    ctx.arc(bossX, bossY + 10, 20, 0, Math.PI, false);
+                } else {
+                    ctx.arc(bossX, bossY + 20, 14, 0, Math.PI, false);
+                }
+                ctx.stroke();
+                
+                // Boss health bar
+                const barWidth = 260;
+                const barX = (canvas.width - barWidth) / 2;
+                const barY = 155;
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.fillRect(barX, barY, barWidth, 16);
+                const healthPct = Math.max(0, bossHealth / bossMaxHealth);
+                ctx.fillStyle = healthPct > 0.3 ? '#22c55e' : '#ef4444';
+                ctx.fillRect(barX, barY, barWidth * healthPct, 16);
+                ctx.strokeStyle = '#1f2937';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(barX, barY, barWidth, 16);
             } else {
                 ctx.fillStyle = '#000033';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1790,6 +1882,47 @@
                     return true;
                 }
                 
+                if (currentGame === 'battle') {
+                    if (obj.isDecoy) {
+                        // Silly rubber duck decoy - harmless, worth 0 points
+                        ctx.beginPath();
+                        ctx.ellipse(obj.x, obj.y, obj.radius, obj.radius * 0.8, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = '#fde68a';
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(obj.x + obj.radius * 0.7, obj.y - obj.radius * 0.4, obj.radius * 0.4, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#f97316';
+                        ctx.beginPath();
+                        ctx.moveTo(obj.x + obj.radius * 1.0, obj.y - obj.radius * 0.4);
+                        ctx.lineTo(obj.x + obj.radius * 1.3, obj.y - obj.radius * 0.3);
+                        ctx.lineTo(obj.x + obj.radius * 1.0, obj.y - obj.radius * 0.2);
+                        ctx.closePath();
+                        ctx.fill();
+                    } else {
+                        // Pillow - rounded rectangle
+                        const w = obj.radius * 1.6;
+                        const h = obj.radius * 1.1;
+                        ctx.beginPath();
+                        ctx.roundRect(obj.x - w / 2, obj.y - h / 2, w, h, 12);
+                        ctx.fillStyle = obj.color;
+                        ctx.fill();
+                        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                        // little quilted lines for texture
+                        ctx.beginPath();
+                        ctx.moveTo(obj.x - w / 4, obj.y - h / 2 + 4);
+                        ctx.lineTo(obj.x - w / 4, obj.y + h / 2 - 4);
+                        ctx.moveTo(obj.x + w / 4, obj.y - h / 2 + 4);
+                        ctx.lineTo(obj.x + w / 4, obj.y + h / 2 - 4);
+                        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+                        ctx.stroke();
+                    }
+                    
+                    return true;
+                }
+                
                 // Space asteroid (default)
                 ctx.save();
                 ctx.translate(obj.x, obj.y);
@@ -1825,6 +1958,7 @@
         }
 
         function endGame() {
+            if (!gameActive) return;
             gameActive = false;
             clearInterval(gameInterval);
             clearInterval(timerInterval);
@@ -1836,7 +1970,7 @@
             }
             
             data.totalGamePoints += finalScore;
-            data.totalStars -= 5;
+            data.totalStars -= currentGameCost;
             
             // Save to localStorage immediately
             localStorage.setItem('pottyTrackerData', JSON.stringify(data));
@@ -1850,6 +1984,13 @@
             
             document.getElementById('finalScore').textContent = finalScore;
             document.getElementById('gameOverScreen').classList.add('show');
+            
+            const gameOverTitle = document.querySelector('#gameOverScreen .game-over-title');
+            if (gameOverTitle) {
+                gameOverTitle.textContent = (currentGame === 'battle' && bossDefeated)
+                    ? '🎉 SOCK MONSTER DEFEATED! 🎉'
+                    : '🎉 MISSION COMPLETE! 🎉';
+            }
             
             const celebration = document.getElementById('celebration');
             celebration.textContent = `🎉 +${finalScore} Points! 🎉`;
@@ -1905,6 +2046,16 @@
                     
                     explosions.push({ x: obj.x, y: obj.y, life: 15 });
                     
+                    if (currentGame === 'battle' && !obj.isDecoy) {
+                        bossHealth = Math.max(0, bossHealth - obj.points);
+                        if (bossHealth <= 0 && !bossDefeated) {
+                            bossDefeated = true;
+                            gameScore += 50;
+                            document.getElementById('gameScore').textContent = gameScore;
+                            setTimeout(() => endGame(), 600);
+                        }
+                    }
+                    
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     const oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
@@ -1945,6 +2096,7 @@
         // Initialize
         renderCategoryTabs();
         renderPottyButtons();
+        renderGameButtons();
         checkSheetUrl();
         loadData();
         
