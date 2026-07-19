@@ -725,6 +725,11 @@
                     <div style="font-size: 1.2em; margin-bottom: 20px;">Great job!</div>
                 </div>
             </div>
+            <div id="balloonLetterWrap" style="display: none; margin-top: 15px;">
+                <div style="color: #1e40af; font-weight: bold; margin-bottom: 8px;">Type the letter on the balloon!</div>
+                <input type="text" id="balloonLetterInput" autocomplete="off" autocapitalize="characters"
+                       style="width: 100%; padding: 14px; font-size: 1.5em; text-align: center; text-transform: uppercase; border: 3px solid #3b82f6; border-radius: 12px; font-family: inherit;">
+            </div>
             <button class="close-game-button" onclick="closeGame()">Close Game</button>
         </div>
     </div>
@@ -1521,6 +1526,11 @@
         let bossMaxHealth = 150;
         let bossHealth = 150;
         let bossDefeated = false;
+        let bossX = 200;
+        let bossY = 95;
+        let bossHitRadius = 72;
+        let battleFrame = 0;
+        let pillowShots = [];
 
         function startGame(gameId) {
             const game = GAMES.find(g => g.id === gameId) || GAMES[0];
@@ -1558,12 +1568,25 @@
                 bossMaxHealth = 150;
                 bossHealth = 150;
                 bossDefeated = false;
+                bossX = 200;
+                battleFrame = 0;
+                pillowShots = [];
             }
             
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
             
             resizeCanvas();
+            
+            const balloonWrap = document.getElementById('balloonLetterWrap');
+            const balloonInput = document.getElementById('balloonLetterInput');
+            if (currentGame === 'balloon') {
+                balloonWrap.style.display = 'block';
+                balloonInput.value = '';
+                setTimeout(() => balloonInput.focus(), 300);
+            } else {
+                balloonWrap.style.display = 'none';
+            }
             
             document.getElementById('gameScore').textContent = gameScore;
             document.getElementById('gameTimer').textContent = timeRemaining;
@@ -1596,7 +1619,28 @@
                 return;
             }
             
-            if (currentGame === 'battle' && bossDefeated) return;
+            // Pillow Fort Battle is now aim-and-shoot (see click handler) - no falling spawns
+            if (currentGame === 'battle') return;
+            
+            if (currentGame === 'balloon') {
+                // Only one balloon floats at a time, slowly, with a letter to type
+                if (bubbles.some(b => !b.popped)) return;
+                
+                const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                const balloonColors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#a855f7', '#ec4899'];
+                bubbles.push({
+                    x: Math.random() * (canvas.width - 100) + 50,
+                    y: canvas.height + 50,
+                    radius: 48,
+                    color: balloonColors[Math.floor(Math.random() * balloonColors.length)],
+                    speed: 0.5 + Math.random() * 0.3,
+                    dy: -1,
+                    popped: false,
+                    points: 10,
+                    letter: letters[Math.floor(Math.random() * letters.length)]
+                });
+                return;
+            }
             
             const sizeTypes = [
                 { size: 'large', points: 10 },
@@ -1608,49 +1652,20 @@
             const baseRadius = type.size === 'large' ? 35 : type.size === 'medium' ? 25 : 18;
             const radius = baseRadius + Math.random() * 8;
             
-            if (currentGame === 'balloon') {
-                const balloonColors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#a855f7', '#ec4899'];
-                bubbles.push({
-                    x: Math.random() * (canvas.width - 60) + 30,
-                    y: canvas.height + 40,
-                    radius: radius,
-                    color: balloonColors[Math.floor(Math.random() * balloonColors.length)],
-                    speed: 2 + Math.random() * 3,
-                    dy: -1,
-                    popped: false,
-                    points: type.points
-                });
-            } else if (currentGame === 'battle') {
-                // Mostly pillows to throw at the boss, occasional silly decoy (worth 0, doesn't hurt)
-                const isDecoy = Math.random() < 0.15;
-                const pillowColors = ['#fef3c7', '#fbcfe8', '#bfdbfe', '#d9f99d'];
-                bubbles.push({
-                    x: Math.random() * (canvas.width - 60) + 30,
-                    y: -40,
-                    radius: isDecoy ? 20 : radius,
-                    color: isDecoy ? '#fde68a' : pillowColors[Math.floor(Math.random() * pillowColors.length)],
-                    speed: 2.5 + Math.random() * 3,
-                    dy: 1,
-                    popped: false,
-                    points: isDecoy ? 0 : type.points,
-                    isDecoy: isDecoy
-                });
-            } else {
-                // Space asteroid (default)
-                const asteroidColors = ['#808080', '#a0a0a0', '#606060'];
-                bubbles.push({
-                    x: Math.random() * (canvas.width - 60) + 30,
-                    y: -40,
-                    radius: radius,
-                    color: asteroidColors[Math.floor(Math.random() * asteroidColors.length)],
-                    speed: 2 + Math.random() * 3,
-                    dy: 1,
-                    popped: false,
-                    points: type.points,
-                    rotation: Math.random() * Math.PI * 2,
-                    rotationSpeed: (Math.random() - 0.5) * 0.1
-                });
-            }
+            // Space asteroid (default)
+            const asteroidColors = ['#808080', '#a0a0a0', '#606060'];
+            bubbles.push({
+                x: Math.random() * (canvas.width - 60) + 30,
+                y: -40,
+                radius: radius,
+                color: asteroidColors[Math.floor(Math.random() * asteroidColors.length)],
+                speed: 2 + Math.random() * 3,
+                dy: 1,
+                popped: false,
+                points: type.points,
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() - 0.5) * 0.1
+            });
         }
 
         function spawnMole() {
@@ -1665,7 +1680,8 @@
             bubbles.push({
                 x: hole.x,
                 y: hole.y,
-                radius: 28,
+                radius: 42,
+                hitRadius: 54,
                 color: '#8b5e3c',
                 speed: 0,
                 dy: 0,
@@ -1697,7 +1713,7 @@
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 moleHoles.forEach(hole => {
                     ctx.beginPath();
-                    ctx.ellipse(hole.x, hole.y + 10, 32, 14, 0, 0, Math.PI * 2);
+                    ctx.ellipse(hole.x, hole.y + 10, 46, 20, 0, 0, Math.PI * 2);
                     ctx.fillStyle = '#3f2d1d';
                     ctx.fill();
                 });
@@ -1705,41 +1721,64 @@
                 ctx.fillStyle = '#ddd6fe';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // Sock Monster boss (simple friendly cartoon face)
-                const bossX = canvas.width / 2;
-                const bossY = 90;
-                ctx.beginPath();
-                ctx.ellipse(bossX, bossY, 70, 60, 0, 0, Math.PI * 2);
-                ctx.fillStyle = bossDefeated ? '#facc15' : '#f472b6';
-                ctx.fill();
+                // Boss drifts side to side so aiming takes a bit of timing
+                if (!bossDefeated) {
+                    battleFrame++;
+                }
+                bossX = 200 + Math.sin(battleFrame / 45) * 50;
                 
-                // eyes
+                const cx = bossX;
+                const cy = bossY;
+                const sockColor = bossDefeated ? '#facc15' : '#f9a8d4';
+                
+                // Sock silhouette: leg + bent foot with heel and rounded toe
+                ctx.beginPath();
+                ctx.moveTo(cx - 30, cy - 40);
+                ctx.lineTo(cx + 30, cy - 40);
+                ctx.lineTo(cx + 30, cy + 25);
+                ctx.quadraticCurveTo(cx + 30, cy + 55, cx + 70, cy + 55);
+                ctx.quadraticCurveTo(cx + 100, cy + 55, cx + 100, cy + 75);
+                ctx.quadraticCurveTo(cx + 100, cy + 90, cx + 78, cy + 90);
+                ctx.lineTo(cx - 30, cy + 90);
+                ctx.quadraticCurveTo(cx - 42, cy + 55, cx - 30, cy + 25);
+                ctx.closePath();
+                ctx.fillStyle = sockColor;
+                ctx.fill();
+                ctx.strokeStyle = '#be185d';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Cuff stripes near the top opening
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(cx - 30, cy - 34, 60, 7);
+                ctx.fillRect(cx - 30, cy - 20, 60, 7);
+                
+                // Face on the leg part
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
-                ctx.arc(bossX - 22, bossY - 10, 14, 0, Math.PI * 2);
-                ctx.arc(bossX + 22, bossY - 10, 14, 0, Math.PI * 2);
+                ctx.arc(cx - 13, cy - 2, 11, 0, Math.PI * 2);
+                ctx.arc(cx + 13, cy - 2, 11, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = '#1f2937';
                 ctx.beginPath();
-                ctx.arc(bossX - 22, bossY - 10, 6, 0, Math.PI * 2);
-                ctx.arc(bossX + 22, bossY - 10, 6, 0, Math.PI * 2);
+                ctx.arc(cx - 13, cy - 2, 5, 0, Math.PI * 2);
+                ctx.arc(cx + 13, cy - 2, 5, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // mouth - smile if defeated, silly wobble otherwise
                 ctx.strokeStyle = '#1f2937';
                 ctx.lineWidth = 3;
                 ctx.beginPath();
                 if (bossDefeated) {
-                    ctx.arc(bossX, bossY + 10, 20, 0, Math.PI, false);
+                    ctx.arc(cx, cy + 12, 14, 0, Math.PI, false);
                 } else {
-                    ctx.arc(bossX, bossY + 20, 14, 0, Math.PI, false);
+                    ctx.arc(cx, cy + 16, 10, 0, Math.PI, false);
                 }
                 ctx.stroke();
                 
-                // Boss health bar
+                // Boss health bar (fixed position so it's always easy to read)
                 const barWidth = 260;
                 const barX = (canvas.width - barWidth) / 2;
-                const barY = 155;
+                const barY = 165;
                 ctx.fillStyle = 'rgba(0,0,0,0.2)';
                 ctx.fillRect(barX, barY, barWidth, 16);
                 const healthPct = Math.max(0, bossHealth / bossMaxHealth);
@@ -1748,6 +1787,29 @@
                 ctx.strokeStyle = '#1f2937';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(barX, barY, barWidth, 16);
+                
+                // Pillow shots flying from the player toward the tapped spot
+                pillowShots = pillowShots.filter(shot => {
+                    shot.life--;
+                    if (shot.life <= 0) return false;
+                    
+                    const progress = 1 - (shot.life / shot.maxLife);
+                    const px = shot.x1 + (shot.x2 - shot.x1) * progress;
+                    const py = shot.y1 + (shot.y2 - shot.y1) * progress;
+                    
+                    ctx.save();
+                    ctx.translate(px, py);
+                    ctx.beginPath();
+                    ctx.roundRect(-16, -11, 32, 22, 8);
+                    ctx.fillStyle = '#fef3c7';
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.restore();
+                    
+                    return true;
+                });
             } else {
                 ctx.fillStyle = '#000033';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1879,46 +1941,15 @@
                     ctx.fillStyle = 'rgba(255,255,255,0.4)';
                     ctx.fill();
                     
-                    return true;
-                }
-                
-                if (currentGame === 'battle') {
-                    if (obj.isDecoy) {
-                        // Silly rubber duck decoy - harmless, worth 0 points
-                        ctx.beginPath();
-                        ctx.ellipse(obj.x, obj.y, obj.radius, obj.radius * 0.8, 0, 0, Math.PI * 2);
-                        ctx.fillStyle = '#fde68a';
-                        ctx.fill();
-                        ctx.beginPath();
-                        ctx.arc(obj.x + obj.radius * 0.7, obj.y - obj.radius * 0.4, obj.radius * 0.4, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.fillStyle = '#f97316';
-                        ctx.beginPath();
-                        ctx.moveTo(obj.x + obj.radius * 1.0, obj.y - obj.radius * 0.4);
-                        ctx.lineTo(obj.x + obj.radius * 1.3, obj.y - obj.radius * 0.3);
-                        ctx.lineTo(obj.x + obj.radius * 1.0, obj.y - obj.radius * 0.2);
-                        ctx.closePath();
-                        ctx.fill();
-                    } else {
-                        // Pillow - rounded rectangle
-                        const w = obj.radius * 1.6;
-                        const h = obj.radius * 1.1;
-                        ctx.beginPath();
-                        ctx.roundRect(obj.x - w / 2, obj.y - h / 2, w, h, 12);
-                        ctx.fillStyle = obj.color;
-                        ctx.fill();
-                        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-                        ctx.lineWidth = 1;
-                        ctx.stroke();
-                        // little quilted lines for texture
-                        ctx.beginPath();
-                        ctx.moveTo(obj.x - w / 4, obj.y - h / 2 + 4);
-                        ctx.lineTo(obj.x - w / 4, obj.y + h / 2 - 4);
-                        ctx.moveTo(obj.x + w / 4, obj.y - h / 2 + 4);
-                        ctx.lineTo(obj.x + w / 4, obj.y + h / 2 - 4);
-                        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-                        ctx.stroke();
-                    }
+                    // Big letter to type, with dark outline for legibility over any balloon color
+                    ctx.font = 'bold 40px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.lineWidth = 4;
+                    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+                    ctx.strokeText(obj.letter, obj.x, obj.y);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(obj.letter, obj.x, obj.y);
                     
                     return true;
                 }
@@ -1962,6 +1993,10 @@
             gameActive = false;
             clearInterval(gameInterval);
             clearInterval(timerInterval);
+            
+            if (currentGame === 'balloon') {
+                document.getElementById('balloonLetterInput').blur();
+            }
             
             const finalScore = gameScore;
             
@@ -2007,9 +2042,56 @@
             clearInterval(timerInterval);
             document.getElementById('gameModal').classList.remove('active');
             document.getElementById('gameOverScreen').classList.remove('show');
+            
+            const balloonWrap = document.getElementById('balloonLetterWrap');
+            const balloonInput = document.getElementById('balloonLetterInput');
+            balloonWrap.style.display = 'none';
+            balloonInput.value = '';
+            balloonInput.blur();
         }
 
         const gameCanvas = document.getElementById('gameCanvas');
+        
+        const balloonLetterInput = document.getElementById('balloonLetterInput');
+        balloonLetterInput.addEventListener('input', (e) => {
+            if (currentGame !== 'balloon' || !gameActive) return;
+            
+            const typed = e.target.value.slice(-1).toUpperCase();
+            e.target.value = '';
+            if (!typed) return;
+            
+            const balloon = bubbles.find(b => !b.popped);
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            if (balloon && typed === balloon.letter) {
+                balloon.popped = true;
+                gameScore += balloon.points;
+                document.getElementById('gameScore').textContent = gameScore;
+                explosions.push({ x: balloon.x, y: balloon.y, life: 15 });
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } else {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = 400;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.12, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            }
+        });
         
         function resizeCanvas() {
             const container = document.querySelector('.game-container');
@@ -2029,6 +2111,68 @@
             const x = (e.clientX - rect.left) * scaleX;
             const y = (e.clientY - rect.top) * scaleY;
             
+            // Balloon Pop is now typing-only - taps do nothing
+            if (currentGame === 'balloon') return;
+            
+            if (currentGame === 'battle') {
+                if (bossDefeated) return;
+                
+                pillowShots.push({
+                    x1: canvas.width / 2,
+                    y1: canvas.height,
+                    x2: x,
+                    y2: y,
+                    life: 12,
+                    maxLife: 12
+                });
+                
+                const targetX = bossX + 25;
+                const targetY = bossY + 20;
+                const distance = Math.sqrt((x - targetX) ** 2 + (y - targetY) ** 2);
+                const isHit = distance < bossHitRadius;
+                
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                if (isHit) {
+                    const damage = distance < bossHitRadius * 0.4 ? 20 : distance < bossHitRadius * 0.7 ? 12 : 6;
+                    gameScore += damage;
+                    document.getElementById('gameScore').textContent = gameScore;
+                    bossHealth = Math.max(0, bossHealth - damage);
+                    explosions.push({ x: x, y: y, life: 15 });
+                    
+                    if (bossHealth <= 0 && !bossDefeated) {
+                        bossDefeated = true;
+                        gameScore += 50;
+                        document.getElementById('gameScore').textContent = gameScore;
+                        setTimeout(() => endGame(), 600);
+                    }
+                    
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    oscillator.frequency.value = 150;
+                    oscillator.type = 'square';
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                } else {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    oscillator.frequency.value = 500;
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.12, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                }
+                
+                return;
+            }
+            
             if (currentGame === 'space') {
                 lasers.push({ x: x, y: y, life: 10 });
             }
@@ -2038,23 +2182,13 @@
                 const obj = bubbles[i];
                 const distance = Math.sqrt((x - obj.x) ** 2 + (y - obj.y) ** 2);
                 
-                if (distance < obj.radius) {
+                if (distance < (obj.hitRadius || obj.radius)) {
                     obj.popped = true;
                     gameScore += obj.points;
                     hit = true;
                     document.getElementById('gameScore').textContent = gameScore;
                     
                     explosions.push({ x: obj.x, y: obj.y, life: 15 });
-                    
-                    if (currentGame === 'battle' && !obj.isDecoy) {
-                        bossHealth = Math.max(0, bossHealth - obj.points);
-                        if (bossHealth <= 0 && !bossDefeated) {
-                            bossDefeated = true;
-                            gameScore += 50;
-                            document.getElementById('gameScore').textContent = gameScore;
-                            setTimeout(() => endGame(), 600);
-                        }
-                    }
                     
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     const oscillator = audioContext.createOscillator();
