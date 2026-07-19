@@ -966,7 +966,9 @@
             const container = document.getElementById('pottyButtonsContainer');
             container.innerHTML = '';
             
-            const visibleActions = starActions.filter(action => action.category === activeCategory);
+            const visibleActions = starActions
+                .filter(action => action.category === activeCategory)
+                .sort((a, b) => a.stars - b.stars);
             
             visibleActions.forEach(action => {
                 const btn = document.createElement('button');
