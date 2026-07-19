@@ -88,7 +88,7 @@
         }
 
         .potty-button {
-            padding: 25px 15px;
+            padding: 18px 10px;
             font-size: 1.2em;
             border: none;
             border-radius: 20px;
@@ -100,7 +100,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             gap: 5px;
+            min-height: 92px;
+        }
+
+        .task-label {
+            font-size: 0.72em;
+            line-height: 1.15;
+            text-align: center;
         }
 
         .potty-button:hover {
@@ -752,7 +760,7 @@
             { emoji: '🥡', label: 'Your Choice DoorDash', cost: 325 },
             { emoji: '📚', label: 'New Book', cost: 350 },
             { emoji: '🎬', label: 'Play Shows Night', cost: 400 },
-            { emoji: '🎮', label: 'Mom/Dad Play Video Games for 30 Min', cost: 450 },
+            { emoji: '🎮', label: 'Mom or Dad Play Video Games for 30 Min', cost: 450 },
             { emoji: '⚽', label: 'New Toy', cost: 500 },
             { emoji: '🎪', label: 'Activity with Mom & Dad', cost: 600 },
             { emoji: '🎳', label: 'Go Bowling', cost: 650 },
@@ -869,7 +877,7 @@
                 method: 'chore',
                 stars: 3,
                 emoji: '👨‍👩‍👧‍👦',
-                label: 'Fold/Put Away Family Laundry',
+                label: 'Fold or Put Away Family Laundry',
                 subLabel: 'Towels & More',
                 cssClass: 'cat-chores'
             },
@@ -889,7 +897,7 @@
                 method: 'chore',
                 stars: 1,
                 emoji: '🍎',
-                label: 'Get Own Snack/Drink',
+                label: 'Get Own Snack or Drink',
                 subLabel: 'I Did It Myself!',
                 cssClass: 'cat-chores'
             },
@@ -919,7 +927,7 @@
                 method: 'chore',
                 stars: 1,
                 emoji: '🎒',
-                label: 'Hang Up Backpack/Lunchbox',
+                label: 'Hang Up Backpack or Lunchbox',
                 subLabel: 'Nice and Tidy!',
                 cssClass: 'cat-chores'
             },
@@ -995,8 +1003,8 @@
                 
                 const starEmoji = '⭐'.repeat(action.stars);
                 btn.innerHTML = `
-                    <div style="font-size: 1.5em;">${action.emoji}${starEmoji}</div>
-                    <div>${action.label}</div>
+                    <div style="font-size: 1.4em;">${action.emoji}${starEmoji}</div>
+                    <div class="task-label">${action.label}</div>
                     <div class="button-label">${action.subLabel}</div>
                 `;
                 
@@ -1010,7 +1018,7 @@
             { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', cost: 5, instruction: 'Tap the balloons before they float away!' },
             { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', cost: 5, instruction: 'Tap the moles as they pop up from their holes!' },
             { id: 'battle', name: 'Sock Monster SHOWDOWN', emoji: '🥊', cost: 5, instruction: 'Aim and fire pillows at the Sock Monster! Land combos to charge your MEGA SMASH!', isBattle: true },
-            { id: 'duel', name: 'Pillow Duel', emoji: '⚡', cost: 10, instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true }
+            { id: 'duel', name: 'Pillow Duel', emoji: '⚡', cost: 10, instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true, fullWidth: true }
         ];
         // Polyfill for older browsers/WebViews without native roundRect support (used for pillow shapes)
         if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
@@ -1507,11 +1515,26 @@
                 btn.className = 'game-select-card' + (game.isBattle ? ' battle-card' : '') + (game.isDuel ? ' duel-card' : '');
                 btn.id = 'game-btn-' + game.id;
                 btn.onclick = () => startGame(game.id);
-                btn.innerHTML = `
-                    <div style="font-size: 2.2em;">${game.emoji}</div>
-                    <div>${game.name}</div>
-                    <div class="game-card-cost">${game.cost}⭐ per play</div>
-                `;
+                
+                if (game.fullWidth) {
+                    btn.style.gridColumn = '1 / -1';
+                    btn.style.flexDirection = 'row';
+                    btn.style.justifyContent = 'center';
+                    btn.innerHTML = `
+                        <div style="font-size: 2.2em;">${game.emoji}</div>
+                        <div style="text-align: left;">
+                            <div>${game.name}</div>
+                            <div class="game-card-cost">${game.cost}⭐ per play &middot; 2 players</div>
+                        </div>
+                    `;
+                } else {
+                    btn.innerHTML = `
+                        <div style="font-size: 2.2em;">${game.emoji}</div>
+                        <div>${game.name}</div>
+                        <div class="game-card-cost">${game.cost}⭐ per play</div>
+                    `;
+                }
+                
                 container.appendChild(btn);
             });
             
