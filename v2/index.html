@@ -1005,7 +1005,7 @@
             { id: 'space', name: 'Space Laser Battle', emoji: '🚀', cost: 5, instruction: 'Tap the asteroids to blast them with your laser!' },
             { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', cost: 5, instruction: 'Tap the balloons before they float away!' },
             { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', cost: 5, instruction: 'Tap the moles as they pop up from their holes!' },
-            { id: 'battle', name: 'Pillow Fort Battle', emoji: '🛡️', cost: 10, instruction: 'Toss pillows at the Sock Monster to defeat it before time runs out!', isBattle: true }
+            { id: 'battle', name: 'Sock Monster SHOWDOWN', emoji: '🥊', cost: 10, instruction: 'Aim and fire pillows at the Sock Monster! Land combos to charge your MEGA SMASH!', isBattle: true }
         ];
         // Polyfill for older browsers/WebViews without native roundRect support (used for pillow shapes)
         if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
@@ -1523,14 +1523,20 @@
         }
 
         let currentGameCost = 5;
-        let bossMaxHealth = 150;
-        let bossHealth = 150;
+        let bossMaxHealth = 180;
+        let bossHealth = 180;
         let bossDefeated = false;
         let bossX = 200;
         let bossY = 95;
-        let bossHitRadius = 72;
+        let bossBaseY = 95;
+        let bossHitRadius = 46;
         let battleFrame = 0;
         let pillowShots = [];
+        let comboCount = 0;
+        let powerMeter = 0;
+        let shakeFrames = 0;
+        let shakeMag = 0;
+        let comicPopups = [];
 
         function startGame(gameId) {
             const game = GAMES.find(g => g.id === gameId) || GAMES[0];
@@ -1565,12 +1571,18 @@
             
             // Set up the boss for Pillow Fort Battle
             if (currentGame === 'battle') {
-                bossMaxHealth = 150;
-                bossHealth = 150;
+                bossMaxHealth = 180;
+                bossHealth = 180;
                 bossDefeated = false;
                 bossX = 200;
+                bossY = 95;
                 battleFrame = 0;
                 pillowShots = [];
+                comboCount = 0;
+                powerMeter = 0;
+                shakeFrames = 0;
+                shakeMag = 0;
+                comicPopups = [];
             }
             
             canvas = document.getElementById('gameCanvas');
@@ -1696,6 +1708,16 @@
         function gameLoop() {
             if (!gameActive) return;
             
+            // Screen shake (used by Pillow Fort Battle hits)
+            let shakeX = 0, shakeY = 0;
+            if (shakeFrames > 0) {
+                shakeX = (Math.random() - 0.5) * shakeMag;
+                shakeY = (Math.random() - 0.5) * shakeMag;
+                shakeFrames--;
+            }
+            ctx.save();
+            ctx.translate(shakeX, shakeY);
+            
             // Background per game theme
             if (currentGame === 'balloon') {
                 ctx.fillStyle = '#87ceeb';
@@ -1721,15 +1743,23 @@
                 ctx.fillStyle = '#ddd6fe';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // Boss drifts side to side so aiming takes a bit of timing
+                // Boss gets faster and twitchier as its health drops - real challenge
+                const healthFrac = bossHealth / bossMaxHealth;
+                const enraged = healthFrac < 0.4;
+                const freqX = enraged ? 16 : 26;
+                const ampX = enraged ? 78 : 55;
+                const freqY = enraged ? 11 : 19;
+                const ampY = enraged ? 20 : 12;
+                
                 if (!bossDefeated) {
                     battleFrame++;
                 }
-                bossX = 200 + Math.sin(battleFrame / 45) * 50;
+                bossX = 200 + Math.sin(battleFrame / freqX) * ampX;
+                bossY = bossBaseY + Math.sin(battleFrame / freqY) * ampY;
                 
                 const cx = bossX;
                 const cy = bossY;
-                const sockColor = bossDefeated ? '#facc15' : '#f9a8d4';
+                const sockColor = bossDefeated ? '#facc15' : (enraged ? '#f87171' : '#f9a8d4');
                 
                 // Sock silhouette: leg + bent foot with heel and rounded toe
                 ctx.beginPath();
@@ -1746,6 +1776,17 @@
                 ctx.fill();
                 ctx.strokeStyle = '#be185d';
                 ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Boxer fists (little battle-ready arms)
+                ctx.fillStyle = sockColor;
+                ctx.beginPath();
+                ctx.arc(cx - 44, cy + 5, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(cx + 44, cy - 10, 12, 0, Math.PI * 2);
+                ctx.fill();
                 ctx.stroke();
                 
                 // Cuff stripes near the top opening
@@ -1765,28 +1806,81 @@
                 ctx.arc(cx + 13, cy - 2, 5, 0, Math.PI * 2);
                 ctx.fill();
                 
+                // Angry eyebrows once enraged, for extra drama
+                if (enraged && !bossDefeated) {
+                    ctx.strokeStyle = '#7f1d1d';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(cx - 22, cy - 16);
+                    ctx.lineTo(cx - 6, cy - 10);
+                    ctx.moveTo(cx + 22, cy - 16);
+                    ctx.lineTo(cx + 6, cy - 10);
+                    ctx.stroke();
+                }
+                
                 ctx.strokeStyle = '#1f2937';
                 ctx.lineWidth = 3;
                 ctx.beginPath();
                 if (bossDefeated) {
                     ctx.arc(cx, cy + 12, 14, 0, Math.PI, false);
+                } else if (enraged) {
+                    ctx.moveTo(cx - 12, cy + 20);
+                    ctx.lineTo(cx + 12, cy + 20);
                 } else {
                     ctx.arc(cx, cy + 16, 10, 0, Math.PI, false);
                 }
                 ctx.stroke();
                 
-                // Boss health bar (fixed position so it's always easy to read)
+                // Dizzy stars when almost defeated
+                if (bossHealth > 0 && bossHealth < bossMaxHealth * 0.15 && !bossDefeated) {
+                    const starAngle = battleFrame / 8;
+                    for (let s = 0; s < 3; s++) {
+                        const a = starAngle + (s * Math.PI * 2) / 3;
+                        const sx = cx + Math.cos(a) * 36;
+                        const sy = cy - 45 + Math.sin(a) * 10;
+                        ctx.fillStyle = '#fbbf24';
+                        ctx.font = 'bold 16px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('✦', sx, sy);
+                    }
+                }
+                
+                // Boss health bar
                 const barWidth = 260;
                 const barX = (canvas.width - barWidth) / 2;
-                const barY = 165;
+                const barY = 220;
                 ctx.fillStyle = 'rgba(0,0,0,0.2)';
                 ctx.fillRect(barX, barY, barWidth, 16);
-                const healthPct = Math.max(0, bossHealth / bossMaxHealth);
-                ctx.fillStyle = healthPct > 0.3 ? '#22c55e' : '#ef4444';
-                ctx.fillRect(barX, barY, barWidth * healthPct, 16);
+                ctx.fillStyle = healthFrac > 0.3 ? '#22c55e' : '#ef4444';
+                ctx.fillRect(barX, barY, barWidth * Math.max(0, healthFrac), 16);
                 ctx.strokeStyle = '#1f2937';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(barX, barY, barWidth, 16);
+                ctx.fillStyle = '#4c1d95';
+                ctx.font = 'bold 11px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('SOCK MONSTER', canvas.width / 2, barY - 6);
+                
+                // Power meter (fills as you land hits, unleashes a Mega Smash when full)
+                const pmY = barY + 26;
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.fillRect(barX, pmY, barWidth, 12);
+                ctx.fillStyle = powerMeter >= 100 ? '#fbbf24' : '#38bdf8';
+                ctx.fillRect(barX, pmY, barWidth * (powerMeter / 100), 12);
+                ctx.strokeStyle = '#1f2937';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(barX, pmY, barWidth, 12);
+                ctx.fillStyle = '#1f2937';
+                ctx.font = 'bold 10px Arial';
+                ctx.fillText(powerMeter >= 100 ? 'MEGA SMASH READY!' : 'POWER', canvas.width / 2, pmY + 10);
+                
+                // Combo counter
+                if (comboCount >= 2 && !bossDefeated) {
+                    ctx.fillStyle = '#ea580c';
+                    ctx.font = 'bold 22px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`COMBO x${comboCount}!`, canvas.width / 2, 40);
+                }
                 
                 // Pillow shots flying from the player toward the tapped spot
                 pillowShots = pillowShots.filter(shot => {
@@ -1806,6 +1900,29 @@
                     ctx.strokeStyle = 'rgba(0,0,0,0.2)';
                     ctx.lineWidth = 1;
                     ctx.stroke();
+                    ctx.restore();
+                    
+                    return true;
+                });
+                
+                // Comic-book style impact text ("POW!", "KAPOW!", etc.)
+                comicPopups = comicPopups.filter(popup => {
+                    popup.life--;
+                    if (popup.life <= 0) return false;
+                    
+                    const scale = popup.life > popup.maxLife - 4 ? 1 + (popup.maxLife - popup.life) * 0.08 : 1;
+                    const alpha = Math.min(1, popup.life / (popup.maxLife * 0.4));
+                    
+                    ctx.save();
+                    ctx.translate(popup.x, popup.y - (popup.maxLife - popup.life) * 1.5);
+                    ctx.scale(scale, scale);
+                    ctx.font = 'bold 26px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.lineWidth = 4;
+                    ctx.strokeStyle = `rgba(31,41,55,${alpha})`;
+                    ctx.strokeText(popup.text, 0, 0);
+                    ctx.fillStyle = `rgba(${popup.color},${alpha})`;
+                    ctx.fillText(popup.text, 0, 0);
                     ctx.restore();
                     
                     return true;
@@ -1985,6 +2102,8 @@
                 return true;
             });
             
+            ctx.restore();
+            
             requestAnimationFrame(gameLoop);
         }
 
@@ -2023,7 +2142,7 @@
             const gameOverTitle = document.querySelector('#gameOverScreen .game-over-title');
             if (gameOverTitle) {
                 gameOverTitle.textContent = (currentGame === 'battle' && bossDefeated)
-                    ? '🎉 SOCK MONSTER DEFEATED! 🎉'
+                    ? '🥊 K.O.! SOCK MONSTER DEFEATED! 🥊'
                     : '🎉 MISSION COMPLETE! 🎉';
             }
             
@@ -2134,30 +2253,60 @@
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 
                 if (isHit) {
-                    const damage = distance < bossHitRadius * 0.4 ? 20 : distance < bossHitRadius * 0.7 ? 12 : 6;
+                    const megaSmash = powerMeter >= 100;
+                    let damage = distance < bossHitRadius * 0.4 ? 20 : distance < bossHitRadius * 0.7 ? 12 : 6;
+                    let popupText = damage >= 20 ? 'KAPOW!' : damage >= 12 ? 'POW!' : 'TAP!';
+                    let popupColor = '234,88,12';
+                    
+                    if (megaSmash) {
+                        damage = 45;
+                        popupText = 'MEGA SMASH!!';
+                        popupColor = '217,119,6';
+                        powerMeter = 0;
+                        shakeFrames = 14;
+                        shakeMag = 18;
+                    } else {
+                        powerMeter = Math.min(100, powerMeter + 16);
+                        shakeFrames = 7;
+                        shakeMag = damage >= 20 ? 9 : 5;
+                    }
+                    
+                    comboCount++;
+                    if (comboCount > 0 && comboCount % 3 === 0) {
+                        damage += 8;
+                        comicPopups.push({ x: x, y: y - 30, text: `COMBO x${comboCount}!`, color: '234,179,8', life: 26, maxLife: 26 });
+                    }
+                    
                     gameScore += damage;
                     document.getElementById('gameScore').textContent = gameScore;
                     bossHealth = Math.max(0, bossHealth - damage);
                     explosions.push({ x: x, y: y, life: 15 });
+                    comicPopups.push({ x: x, y: y, text: popupText, color: popupColor, life: 22, maxLife: 22 });
                     
                     if (bossHealth <= 0 && !bossDefeated) {
                         bossDefeated = true;
                         gameScore += 50;
                         document.getElementById('gameScore').textContent = gameScore;
-                        setTimeout(() => endGame(), 600);
+                        shakeFrames = 20;
+                        shakeMag = 16;
+                        comicPopups.push({ x: bossX + 20, y: bossY, text: 'K.O.!!', color: '220,38,38', life: 40, maxLife: 40 });
+                        setTimeout(() => endGame(), 900);
                     }
                     
                     const oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
                     oscillator.connect(gainNode);
                     gainNode.connect(audioContext.destination);
-                    oscillator.frequency.value = 150;
+                    oscillator.frequency.value = megaSmash ? 100 : 150;
                     oscillator.type = 'square';
                     gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + (megaSmash ? 0.3 : 0.15));
                     oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.15);
+                    oscillator.stop(audioContext.currentTime + (megaSmash ? 0.3 : 0.15));
                 } else {
+                    comboCount = 0;
+                    comicPopups.push({ x: x, y: y, text: 'WHIFF!', color: '107,114,128', life: 18, maxLife: 18 });
+                    
                     const oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
                     oscillator.connect(gainNode);
