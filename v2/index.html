@@ -610,6 +610,10 @@
             background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
         }
 
+        .game-select-card.duel-card:not(:disabled) {
+            background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%);
+        }
+
         .game-card-cost {
             font-size: 0.75em;
             opacity: 0.9;
@@ -716,13 +720,13 @@
             <h2 class="game-title" id="gameModalTitle">🚀 Space Laser Battle! 🚀</h2>
             <div class="game-instruction" id="gameModalInstruction">Tap the asteroids to blast them with your laser!</div>
             <div class="game-timer">Time: <span id="gameTimer">30</span>s</div>
-            <div class="game-score">Score: <span id="gameScore">0</span></div>
+            <div class="game-score" id="gameScoreLine">Score: <span id="gameScore">0</span></div>
             <div style="position: relative;">
                 <canvas id="gameCanvas" class="game-canvas" width="400" height="500"></canvas>
                 <div class="game-over-screen" id="gameOverScreen">
                     <div class="game-over-title">🎉 MISSION COMPLETE! 🎉</div>
                     <div class="game-over-score">Final Score: <span id="finalScore">0</span></div>
-                    <div style="font-size: 1.2em; margin-bottom: 20px;">Great job!</div>
+                    <div id="gameOverSubtext" style="font-size: 1.2em; margin-bottom: 20px;">Great job!</div>
                 </div>
             </div>
             <div id="balloonLetterWrap" style="display: none; margin-top: 15px;">
@@ -1005,7 +1009,8 @@
             { id: 'space', name: 'Space Laser Battle', emoji: '🚀', cost: 5, instruction: 'Tap the asteroids to blast them with your laser!' },
             { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', cost: 5, instruction: 'Tap the balloons before they float away!' },
             { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', cost: 5, instruction: 'Tap the moles as they pop up from their holes!' },
-            { id: 'battle', name: 'Sock Monster SHOWDOWN', emoji: '🥊', cost: 10, instruction: 'Aim and fire pillows at the Sock Monster! Land combos to charge your MEGA SMASH!', isBattle: true }
+            { id: 'battle', name: 'Sock Monster SHOWDOWN', emoji: '🥊', cost: 5, instruction: 'Aim and fire pillows at the Sock Monster! Land combos to charge your MEGA SMASH!', isBattle: true },
+            { id: 'duel', name: 'Pillow Duel', emoji: '⚡', cost: 10, instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true }
         ];
         // Polyfill for older browsers/WebViews without native roundRect support (used for pillow shapes)
         if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
@@ -1499,7 +1504,7 @@
             
             GAMES.forEach(game => {
                 const btn = document.createElement('button');
-                btn.className = 'game-select-card' + (game.isBattle ? ' battle-card' : '');
+                btn.className = 'game-select-card' + (game.isBattle ? ' battle-card' : '') + (game.isDuel ? ' duel-card' : '');
                 btn.id = 'game-btn-' + game.id;
                 btn.onclick = () => startGame(game.id);
                 btn.innerHTML = `
@@ -1537,6 +1542,9 @@
         let shakeFrames = 0;
         let shakeMag = 0;
         let comicPopups = [];
+        let duelHoles = [];
+        let p1Score = 0;
+        let p2Score = 0;
 
         function startGame(gameId) {
             const game = GAMES.find(g => g.id === gameId) || GAMES[0];
@@ -1585,6 +1593,20 @@
                 comicPopups = [];
             }
             
+            // Set up Pillow Duel (two-player, split screen)
+            if (currentGame === 'duel') {
+                p1Score = 0;
+                p2Score = 0;
+                duelHoles = [
+                    { x: 70, y: 150, side: 'left', occupied: false },
+                    { x: 120, y: 280, side: 'left', occupied: false },
+                    { x: 70, y: 410, side: 'left', occupied: false },
+                    { x: 330, y: 150, side: 'right', occupied: false },
+                    { x: 280, y: 280, side: 'right', occupied: false },
+                    { x: 330, y: 410, side: 'right', occupied: false }
+                ];
+            }
+            
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
             
@@ -1600,6 +1622,8 @@
                 balloonWrap.style.display = 'none';
             }
             
+            document.getElementById('gameScoreLine').style.display = currentGame === 'duel' ? 'none' : 'block';
+            
             document.getElementById('gameScore').textContent = gameScore;
             document.getElementById('gameTimer').textContent = timeRemaining;
             document.getElementById('gameOverScreen').classList.remove('show');
@@ -1613,7 +1637,7 @@
                 }
             }, 1000);
             
-            const spawnRate = currentGame === 'mole' ? 800 : (currentGame === 'battle' ? 700 : 1000);
+            const spawnRate = currentGame === 'mole' ? 800 : (currentGame === 'battle' ? 700 : (currentGame === 'duel' ? 650 : 1000));
             gameInterval = setInterval(spawnBubble, spawnRate);
             
             setTimeout(() => {
@@ -1633,6 +1657,11 @@
             
             // Pillow Fort Battle is now aim-and-shoot (see click handler) - no falling spawns
             if (currentGame === 'battle') return;
+            
+            if (currentGame === 'duel') {
+                spawnDuelTargets();
+                return;
+            }
             
             if (currentGame === 'balloon') {
                 // Only one balloon floats at a time, slowly, with a letter to type
@@ -1705,6 +1734,32 @@
             });
         }
 
+        function spawnDuelTargets() {
+            ['left', 'right'].forEach(side => {
+                const freeHoles = duelHoles.filter(h => h.side === side && !h.occupied);
+                if (freeHoles.length === 0) return;
+                
+                const hole = freeHoles[Math.floor(Math.random() * freeHoles.length)];
+                hole.occupied = true;
+                
+                bubbles.push({
+                    x: hole.x,
+                    y: hole.y,
+                    radius: 36,
+                    hitRadius: 46,
+                    color: side === 'left' ? '#3b82f6' : '#ef4444',
+                    side: side,
+                    speed: 0,
+                    dy: 0,
+                    popped: false,
+                    points: 1,
+                    life: 55,
+                    isDuelTarget: true,
+                    holeRef: hole
+                });
+            });
+        }
+
         function gameLoop() {
             if (!gameActive) return;
             
@@ -1739,6 +1794,27 @@
                     ctx.fillStyle = '#3f2d1d';
                     ctx.fill();
                 });
+            } else if (currentGame === 'duel') {
+                // Split screen: blue half for Player 1, red half for Player 2
+                ctx.fillStyle = '#dbeafe';
+                ctx.fillRect(0, 0, canvas.width / 2, canvas.height);
+                ctx.fillStyle = '#fee2e2';
+                ctx.fillRect(canvas.width / 2, 0, canvas.width / 2, canvas.height);
+                
+                ctx.strokeStyle = '#1f2937';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 2, 0);
+                ctx.lineTo(canvas.width / 2, canvas.height);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#1e40af';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`P1: ${p1Score}`, canvas.width / 4, 40);
+                
+                ctx.fillStyle = '#b91c1c';
+                ctx.fillText(`P2: ${p2Score}`, (canvas.width / 4) * 3, 40);
             } else if (currentGame === 'battle') {
                 ctx.fillStyle = '#ddd6fe';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1984,7 +2060,7 @@
             
             bubbles = bubbles.filter(obj => {
                 if (obj.popped) {
-                    if (obj.isMole && obj.holeRef) obj.holeRef.occupied = false;
+                    if ((obj.isMole || obj.isDuelTarget) && obj.holeRef) obj.holeRef.occupied = false;
                     return false;
                 }
                 
@@ -2016,6 +2092,31 @@
                     ctx.beginPath();
                     ctx.arc(obj.x, obj.y + 5, 3, 0, Math.PI * 2);
                     ctx.fill();
+                    
+                    return true;
+                }
+                
+                // Pillow Duel: fixed position targets on each half, disappear after their lifespan
+                if (obj.isDuelTarget) {
+                    obj.life--;
+                    if (obj.life <= 0) {
+                        if (obj.holeRef) obj.holeRef.occupied = false;
+                        return false;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = obj.color;
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 22px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(obj.side === 'left' ? 'P1' : 'P2', obj.x, obj.y);
                     
                     return true;
                 }
@@ -2140,10 +2241,26 @@
             document.getElementById('gameOverScreen').classList.add('show');
             
             const gameOverTitle = document.querySelector('#gameOverScreen .game-over-title');
-            if (gameOverTitle) {
-                gameOverTitle.textContent = (currentGame === 'battle' && bossDefeated)
-                    ? '🥊 K.O.! SOCK MONSTER DEFEATED! 🥊'
-                    : '🎉 MISSION COMPLETE! 🎉';
+            const gameOverSubtext = document.getElementById('gameOverSubtext');
+            
+            if (currentGame === 'duel') {
+                if (gameOverTitle) gameOverTitle.textContent = '⚡ PILLOW DUEL COMPLETE! ⚡';
+                if (gameOverSubtext) {
+                    if (p1Score > p2Score) {
+                        gameOverSubtext.textContent = `🏆 Player 1 wins! ${p1Score} - ${p2Score}`;
+                    } else if (p2Score > p1Score) {
+                        gameOverSubtext.textContent = `🏆 Player 2 wins! ${p2Score} - ${p1Score}`;
+                    } else {
+                        gameOverSubtext.textContent = `🤝 It's a tie! ${p1Score} - ${p2Score}`;
+                    }
+                }
+            } else {
+                if (gameOverTitle) {
+                    gameOverTitle.textContent = (currentGame === 'battle' && bossDefeated)
+                        ? '🥊 K.O.! SOCK MONSTER DEFEATED! 🥊'
+                        : '🎉 MISSION COMPLETE! 🎉';
+                }
+                if (gameOverSubtext) gameOverSubtext.textContent = 'Great job!';
             }
             
             const celebration = document.getElementById('celebration');
@@ -2336,6 +2453,14 @@
                     gameScore += obj.points;
                     hit = true;
                     document.getElementById('gameScore').textContent = gameScore;
+                    
+                    if (obj.isDuelTarget) {
+                        if (obj.side === 'left') {
+                            p1Score++;
+                        } else {
+                            p2Score++;
+                        }
+                    }
                     
                     explosions.push({ x: obj.x, y: obj.y, life: 15 });
                     
