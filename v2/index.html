@@ -1545,6 +1545,8 @@
         let duelHoles = [];
         let p1Score = 0;
         let p2Score = 0;
+        let dividerX = 200;
+        let dividerTargetX = 200;
 
         function startGame(gameId) {
             const game = GAMES.find(g => g.id === gameId) || GAMES[0];
@@ -1597,13 +1599,15 @@
             if (currentGame === 'duel') {
                 p1Score = 0;
                 p2Score = 0;
+                dividerX = 200;
+                dividerTargetX = 200;
                 duelHoles = [
-                    { x: 70, y: 150, side: 'left', occupied: false },
-                    { x: 120, y: 280, side: 'left', occupied: false },
-                    { x: 70, y: 410, side: 'left', occupied: false },
-                    { x: 330, y: 150, side: 'right', occupied: false },
-                    { x: 280, y: 280, side: 'right', occupied: false },
-                    { x: 330, y: 410, side: 'right', occupied: false }
+                    { fracX: 0.4, y: 150, side: 'left', occupied: false },
+                    { fracX: 0.6, y: 280, side: 'left', occupied: false },
+                    { fracX: 0.4, y: 410, side: 'left', occupied: false },
+                    { fracX: 0.4, y: 150, side: 'right', occupied: false },
+                    { fracX: 0.6, y: 280, side: 'right', occupied: false },
+                    { fracX: 0.4, y: 410, side: 'right', occupied: false }
                 ];
             }
             
@@ -1742,11 +1746,15 @@
                 const hole = freeHoles[Math.floor(Math.random() * freeHoles.length)];
                 hole.occupied = true;
                 
+                const targetX = side === 'left'
+                    ? dividerX * hole.fracX
+                    : dividerX + (canvas.width - dividerX) * hole.fracX;
+                
                 bubbles.push({
-                    x: hole.x,
+                    x: targetX,
                     y: hole.y,
-                    radius: 36,
-                    hitRadius: 46,
+                    radius: 30,
+                    hitRadius: 40,
                     color: side === 'left' ? '#3b82f6' : '#ef4444',
                     side: side,
                     speed: 0,
@@ -1795,26 +1803,29 @@
                     ctx.fill();
                 });
             } else if (currentGame === 'duel') {
-                // Split screen: blue half for Player 1, red half for Player 2
+                // Divider slides toward whoever's ahead - tug of war style
+                dividerTargetX = Math.max(110, Math.min(290, 200 + (p1Score - p2Score) * 14));
+                dividerX += (dividerTargetX - dividerX) * 0.1;
+                
                 ctx.fillStyle = '#dbeafe';
-                ctx.fillRect(0, 0, canvas.width / 2, canvas.height);
+                ctx.fillRect(0, 0, dividerX, canvas.height);
                 ctx.fillStyle = '#fee2e2';
-                ctx.fillRect(canvas.width / 2, 0, canvas.width / 2, canvas.height);
+                ctx.fillRect(dividerX, 0, canvas.width - dividerX, canvas.height);
                 
                 ctx.strokeStyle = '#1f2937';
                 ctx.lineWidth = 4;
                 ctx.beginPath();
-                ctx.moveTo(canvas.width / 2, 0);
-                ctx.lineTo(canvas.width / 2, canvas.height);
+                ctx.moveTo(dividerX, 0);
+                ctx.lineTo(dividerX, canvas.height);
                 ctx.stroke();
                 
                 ctx.fillStyle = '#1e40af';
                 ctx.font = 'bold 24px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(`P1: ${p1Score}`, canvas.width / 4, 40);
+                ctx.fillText(`P1: ${p1Score}`, dividerX / 2, 40);
                 
                 ctx.fillStyle = '#b91c1c';
-                ctx.fillText(`P2: ${p2Score}`, (canvas.width / 4) * 3, 40);
+                ctx.fillText(`P2: ${p2Score}`, dividerX + (canvas.width - dividerX) / 2, 40);
             } else if (currentGame === 'battle') {
                 ctx.fillStyle = '#ddd6fe';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
