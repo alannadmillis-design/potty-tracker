@@ -224,17 +224,28 @@
             height: 30px;
             overflow: hidden;
             margin-bottom: 10px;
+            position: relative;
         }
 
         .progress-fill {
             background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
             height: 100%;
             transition: width 0.5s ease;
+        }
+
+        .progress-label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: #1e3a8a;
             font-weight: bold;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+            pointer-events: none;
         }
 
         .achievement-grid {
@@ -302,13 +313,61 @@
         }
 
         .history-item {
-            padding: 10px;
+            padding: 10px 14px;
             margin-bottom: 8px;
-            background: #f5f5f5;
-            border-radius: 10px;
+            background: #f9fafb;
+            border-radius: 14px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 12px;
+            border-left: 6px solid #9ca3af;
+        }
+
+        .history-item.cat-potty-border { border-left-color: #059669; }
+        .history-item.cat-hygiene-border { border-left-color: #2563eb; }
+        .history-item.cat-chores-border { border-left-color: #7c3aed; }
+        .history-item.cat-bonus-border { border-left-color: #db2777; }
+
+        .history-emoji-badge {
+            font-size: 1.8em;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .history-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .history-desc {
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .history-sublabel {
+            font-size: 0.8em;
+            color: #6b7280;
+        }
+
+        .history-meta {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .history-stars {
+            font-size: 0.95em;
+        }
+
+        .history-time {
+            font-size: 0.75em;
+            color: #9ca3af;
         }
 
         .celebration {
@@ -673,7 +732,8 @@
         <div class="rewards-section">
             <h3 style="color: #1e40af; margin-bottom: 10px; text-align: center;">Next Game Play Progress:</h3>
             <div class="progress-bar">
-                <div class="progress-fill" id="progressFill">0/5 ⭐</div>
+                <div class="progress-fill" id="progressFill"></div>
+                <div class="progress-label" id="progressLabel">0/5 ⭐</div>
             </div>
         </div>
 
@@ -701,7 +761,13 @@
             
             <h2 style="margin-top: 25px;">🎁 Redeem Rewards!</h2>
             <div class="achievement-grid" id="achievementGrid"></div>
+            
+            <h2 style="margin-top: 25px;">📦 Reward Tracker</h2>
+            <div style="text-align: center; color: #6b7280; font-size: 0.85em; margin-bottom: 10px;" id="rewardTrackerHint">Rewards waiting to be given show up here!</div>
+            <div id="rewardTrackerList"></div>
         </div>
+
+        <div id="todayDateBanner" style="text-align: center; background: rgba(255,255,255,0.85); border-radius: 16px; padding: 12px; margin-bottom: 15px; color: #1e3a8a; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></div>
 
         <div class="history">
             <h2>📅 Today's Adventures</h2>
@@ -774,6 +840,16 @@
             </div>
             <button class="play-game-button" style="margin-bottom: 15px;" onclick="addNewParentTask()">Add Task</button>
             
+            <details style="margin-bottom: 15px;">
+                <summary style="cursor: pointer; font-weight: bold; color: #1e40af; padding: 8px 0;">🎮 Edit Games (name, emoji, cost, color)</summary>
+                <div id="parentGamesList" style="margin-top: 10px;"></div>
+            </details>
+            
+            <details style="margin-bottom: 15px;">
+                <summary style="cursor: pointer; font-weight: bold; color: #1e40af; padding: 8px 0;">🎁 Edit Rewards (label, emoji, cost)</summary>
+                <div id="parentRewardsList" style="max-height: 320px; overflow-y: auto; margin-top: 10px;"></div>
+            </details>
+            
             <div style="display: flex; gap: 10px;">
                 <button class="play-game-button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="saveParentChanges()">💾 Save Changes</button>
                 <button class="close-game-button" onclick="closeParentArea()">Close</button>
@@ -817,28 +893,42 @@
 
     <script>
         // Reworked reward list - broad mix of treats, privileges, screen time, and bigger outings
-        const rewards = [
-            { emoji: '🍪', label: 'Chocolate Chip Cookie', cost: 100 },
-            { emoji: '📺', label: '1 YTKids Video', cost: 125 },
-            { emoji: '💥', label: 'Pillow Throw Time', cost: 150 },
-            { emoji: '🎮', label: 'Dad Plays Video Games for 10 Min', cost: 175 },
-            { emoji: '🥤', label: 'Coke from McDonalds', cost: 200 },
-            { emoji: '🍦', label: 'Ice Cream', cost: 225 },
-            { emoji: '🚗', label: 'New Hot Wheels Car', cost: 250 },
-            { emoji: '🎮', label: 'Mom Plays Video Games for 15 Min', cost: 300 },
-            { emoji: '🥡', label: 'Your Choice DoorDash', cost: 325 },
-            { emoji: '📚', label: 'New Book', cost: 350 },
-            { emoji: '🎬', label: 'Play Shows Night', cost: 400 },
-            { emoji: '🎮', label: 'Mom or Dad Play Video Games for 30 Min', cost: 450 },
-            { emoji: '⚽', label: 'New Toy', cost: 500 },
-            { emoji: '🎪', label: 'Activity with Mom & Dad', cost: 600 },
-            { emoji: '🎳', label: 'Go Bowling', cost: 650 },
-            { emoji: '⛳', label: 'Play Minigolf', cost: 700 },
-            { emoji: '🎮', label: 'New Video Game', cost: 750 },
-            { emoji: '🛏️', label: "Sleep in Mom & Dad's Bed", cost: 850 },
-            { emoji: '🕹️', label: 'Play a Mall Game', cost: 1000 },
-            { emoji: '🍗', label: 'Nuggie Party', cost: 1500 }
+        const baseRewards = [
+            { id: 'cookie', emoji: '🍪', label: 'Chocolate Chip Cookie', cost: 100 },
+            { id: 'ytkids', emoji: '📺', label: '1 YTKids Video', cost: 125 },
+            { id: 'pillowfight', emoji: '💥', label: 'Pillow Throw Time', cost: 150 },
+            { id: 'dadgame10', emoji: '🎮', label: 'Dad Plays Video Games for 10 Min', cost: 175 },
+            { id: 'coke', emoji: '🥤', label: 'Coke from McDonalds', cost: 200 },
+            { id: 'icecream', emoji: '🍦', label: 'Ice Cream', cost: 225 },
+            { id: 'hotwheels', emoji: '🚗', label: 'New Hot Wheels Car', cost: 250 },
+            { id: 'momgame15', emoji: '🎮', label: 'Mom Plays Video Games for 15 Min', cost: 300 },
+            { id: 'doordash', emoji: '🥡', label: 'Your Choice DoorDash', cost: 325 },
+            { id: 'book', emoji: '📚', label: 'New Book', cost: 350 },
+            { id: 'showsnight', emoji: '🎬', label: 'Play Shows Night', cost: 400 },
+            { id: 'parentsgame30', emoji: '🎮', label: 'Mom or Dad Play Video Games for 30 Min', cost: 450 },
+            { id: 'newtoy', emoji: '⚽', label: 'New Toy', cost: 500 },
+            { id: 'activity', emoji: '🎪', label: 'Activity with Mom & Dad', cost: 600 },
+            { id: 'bowling', emoji: '🎳', label: 'Go Bowling', cost: 650 },
+            { id: 'minigolf', emoji: '⛳', label: 'Play Minigolf', cost: 700 },
+            { id: 'newvideogame', emoji: '🎮', label: 'New Video Game', cost: 750 },
+            { id: 'sleepparents', emoji: '🛏️', label: "Sleep in Mom & Dad's Bed", cost: 850 },
+            { id: 'mallgame', emoji: '🕹️', label: 'Play a Mall Game', cost: 1000 },
+            { id: 'nuggie', emoji: '🍗', label: 'Nuggie Party', cost: 1500 }
         ];
+
+        let rewardOverrides = {};
+        let rewards = [];
+
+        function rebuildRewards() {
+            rewards = baseRewards
+                .map(r => {
+                    const o = rewardOverrides[r.id];
+                    return o ? { ...r, ...o } : r;
+                })
+                .sort((a, b) => a.cost - b.cost);
+        }
+
+        rebuildRewards();
 
         // Tabs shown above the star-earning buttons
         const categories = [
@@ -1058,6 +1148,7 @@
         // taskOverrides: { taskId: { emoji, label, subLabel, stars, category, hidden } }
         // customTasks: brand-new tasks the parent added from scratch
         let taskOverrides = {};
+        let redemptionLog = [];
         let customTasks = [];
         let starActions = [];
 
@@ -1148,13 +1239,33 @@
         }
         // Available mini-games. To add another later, add an entry here plus
         // a rendering branch in gameLoop()/spawnBubble() for its visuals.
-        const GAMES = [
-            { id: 'space', name: 'Space Laser Battle', emoji: '🚀', cost: 5, instruction: 'Tap the asteroids to blast them with your laser!' },
-            { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', cost: 5, instruction: 'Tap the balloons before they float away!' },
-            { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', cost: 5, instruction: 'Tap the moles as they pop up from their holes!' },
-            { id: 'battle', name: 'Sock Monster SHOWDOWN', emoji: '🥊', cost: 5, instruction: 'Aim and fire pillows at the Sock Monster! Land combos to charge your MEGA SMASH!', isBattle: true },
-            { id: 'duel', name: 'Duel', emoji: '⚡', cost: 10, instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true, fullWidth: true }
+        const baseGames = [
+            { id: 'space', name: 'Space Laser Battle', emoji: '🚀', cost: 5, color: '#3b82f6', instruction: 'Tap the asteroids to blast them with your laser!' },
+            { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', cost: 5, color: '#3b82f6', instruction: 'Tap the balloons before they float away!' },
+            { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', cost: 5, color: '#3b82f6', instruction: 'Tap the moles as they pop up from their holes!' },
+            { id: 'battle', name: 'Sock Monster SHOWDOWN', emoji: '🥊', cost: 5, color: '#ea580c', instruction: 'Aim and fire pillows at the Sock Monster! Land combos to charge your MEGA SMASH!', isBattle: true },
+            { id: 'duel', name: 'Duel', emoji: '⚡', cost: 10, color: '#6d28d9', instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true, fullWidth: true }
         ];
+
+        let gameOverrides = {};
+        let GAMES = [];
+
+        function darkenColor(hex, amount) {
+            const num = parseInt(hex.replace('#', ''), 16);
+            const r = Math.max(0, (num >> 16) - amount);
+            const g = Math.max(0, ((num >> 8) & 0x00FF) - amount);
+            const b = Math.max(0, (num & 0x0000FF) - amount);
+            return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+        }
+
+        function rebuildGames() {
+            GAMES = baseGames.map(g => {
+                const o = gameOverrides[g.id];
+                return o ? { ...g, ...o } : g;
+            });
+        }
+
+        rebuildGames();
         // Polyfill for older browsers/WebViews without native roundRect support (used for pillow shapes)
         if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
             CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
@@ -1242,6 +1353,8 @@
                     data.totalGamePoints = result.data.totalGamePoints || 0;
                     data.events = result.data.events || [];
                     
+                    checkForNewDay();
+                    
                     // Also save to localStorage
                     localStorage.setItem('pottyTrackerData', JSON.stringify(data));
                     
@@ -1322,12 +1435,92 @@
                         redemption: {
                             label: redemption.label,
                             cost: redemption.cost,
-                            emoji: redemption.emoji
+                            emoji: redemption.emoji,
+                            id: redemption.id
                         }
                     })
                 });
             } catch (error) {
                 console.error('Error adding redemption:', error);
+            }
+        }
+
+        async function loadRedemptionLog() {
+            if (!sheetUrl) {
+                renderRewardTracker();
+                return;
+            }
+            
+            try {
+                const response = await fetch(sheetUrl + '?action=getRedemptions');
+                const result = await response.json();
+                if (result.success) {
+                    redemptionLog = (result.redemptions || []).filter(r => r.id);
+                }
+            } catch (error) {
+                console.error('Error loading redemption log:', error);
+            }
+            
+            renderRewardTracker();
+        }
+
+        function renderRewardTracker() {
+            const container = document.getElementById('rewardTrackerList');
+            const hint = document.getElementById('rewardTrackerHint');
+            if (!container) return;
+            
+            const pending = redemptionLog.filter(r => !r.fulfilled);
+            const fulfilled = redemptionLog.filter(r => r.fulfilled).slice(0, 5);
+            const sorted = [...pending, ...fulfilled];
+            
+            if (sorted.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:10px;">No rewards redeemed yet!</div>';
+                if (hint) hint.style.display = 'block';
+                return;
+            }
+            
+            if (hint) hint.style.display = pending.length > 0 ? 'block' : 'none';
+            
+            container.innerHTML = sorted.map(r => {
+                const dateStr = r.timestamp ? new Date(r.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+                return `
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px;margin-bottom:8px;border-radius:12px;background:${r.fulfilled ? '#f3f4f6' : '#fef3c7'};border-left:5px solid ${r.fulfilled ? '#9ca3af' : '#f59e0b'};">
+                        <button onclick="toggleRedemptionFulfilled('${r.id}', ${!r.fulfilled})" style="width:32px;height:32px;flex-shrink:0;border-radius:50%;border:2px solid ${r.fulfilled ? '#10b981' : '#d1d5db'};background:${r.fulfilled ? '#10b981' : 'white'};color:white;font-weight:bold;cursor:pointer;font-size:1em;">${r.fulfilled ? '✓' : ''}</button>
+                        <div style="font-size:1.4em;">${r.emoji}</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:bold;color:#1f2937;text-decoration:${r.fulfilled ? 'line-through' : 'none'};opacity:${r.fulfilled ? '0.6' : '1'};">${r.label}</div>
+                            <div style="font-size:0.75em;color:#9ca3af;">${dateStr} &middot; ${r.cost} pts ${r.fulfilled ? '&middot; Given!' : '&middot; Waiting...'}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleRedemptionFulfilled(id, fulfilled) {
+            if (kidModeEnabled) {
+                openParentGate('fulfill', null, { id, fulfilled });
+                return;
+            }
+            
+            applyRedemptionFulfilled(id, fulfilled);
+        }
+
+        function applyRedemptionFulfilled(id, fulfilled) {
+            const entry = redemptionLog.find(r => r.id === id);
+            if (entry) entry.fulfilled = fulfilled;
+            renderRewardTracker();
+            
+            if (sheetUrl) {
+                try {
+                    fetch(sheetUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'setRedemptionFulfilled', id, fulfilled })
+                    });
+                } catch (error) {
+                    console.error('Error updating redemption status:', error);
+                }
             }
         }
 
@@ -1354,6 +1547,40 @@
             }
         }
 
+        function ordinalSuffix(day) {
+            if (day % 10 === 1 && day !== 11) return 'st';
+            if (day % 10 === 2 && day !== 12) return 'nd';
+            if (day % 10 === 3 && day !== 13) return 'rd';
+            return 'th';
+        }
+
+        function renderTodayDate() {
+            const el = document.getElementById('todayDateBanner');
+            if (!el) return;
+            const today = new Date();
+            const weekday = today.toLocaleDateString('en-US', { weekday: 'long' });
+            const month = today.toLocaleDateString('en-US', { month: 'long' });
+            const day = today.getDate();
+            el.textContent = `🌞 Today is ${weekday}, ${month} ${day}${ordinalSuffix(day)}!`;
+        }
+
+        function checkForNewDay() {
+            if (!data.events || data.events.length === 0) return;
+            
+            const todayStr = new Date().toDateString();
+            const lastEvent = data.events[data.events.length - 1];
+            const lastEventDate = lastEvent.timestamp ? new Date(lastEvent.timestamp).toDateString() : null;
+            
+            if (lastEventDate && lastEventDate !== todayStr) {
+                // A new day has started since these events were logged - start fresh automatically
+                data.events = [];
+                localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+                if (sheetUrl) {
+                    saveDataToSheets();
+                }
+            }
+        }
+
         function loadData() {
             if (sheetUrl) {
                 loadDataFromSheets();
@@ -1366,6 +1593,7 @@
                         data.totalGamePoints = 0;
                     }
                 }
+                checkForNewDay();
                 updateUI();
             }
         }
@@ -1390,6 +1618,8 @@
                         customTasks = result.config.customTasks || [];
                         parentWord = result.config.parentWord || 'edward';
                         kidModeCooldownMinutes = result.config.kidModeCooldownMinutes || 3;
+                        gameOverrides = result.config.gameOverrides || {};
+                        rewardOverrides = result.config.rewardOverrides || {};
                     }
                 } catch (error) {
                     console.error('Error loading task config from sheets:', error);
@@ -1400,8 +1630,11 @@
             }
             
             rebuildStarActions();
+            rebuildGames();
+            rebuildRewards();
             renderCategoryTabs();
             renderPottyButtons();
+            renderGameButtons();
         }
 
         function loadTaskConfigLocal() {
@@ -1413,6 +1646,8 @@
                     customTasks = cfg.customTasks || [];
                     parentWord = cfg.parentWord || 'edward';
                     kidModeCooldownMinutes = cfg.kidModeCooldownMinutes || 3;
+                    gameOverrides = cfg.gameOverrides || {};
+                    rewardOverrides = cfg.rewardOverrides || {};
                 } catch (error) {
                     console.error('Error parsing local task config:', error);
                 }
@@ -1420,7 +1655,7 @@
         }
 
         function saveTaskConfig() {
-            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes };
+            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes, gameOverrides, rewardOverrides };
             localStorage.setItem('pottyTrackerTaskConfig', JSON.stringify(payload));
             
             if (sheetUrl) {
@@ -1462,10 +1697,13 @@
             if (badge) badge.style.display = kidModeEnabled ? 'inline-block' : 'none';
         }
 
-        function openParentGate(purpose, redemptionReward) {
+        let pendingFulfillment = null;
+
+        function openParentGate(purpose, redemptionReward, fulfillmentPayload) {
             gateSuccessAction = purpose || 'settings';
             pendingRedemption = redemptionReward || null;
-            document.getElementById('parentGateQuestion').textContent = gateSuccessAction === 'redeem'
+            pendingFulfillment = fulfillmentPayload || null;
+            document.getElementById('parentGateQuestion').textContent = gateSuccessAction === 'redeem' || gateSuccessAction === 'fulfill'
                 ? 'Ask a parent to enter the secret word'
                 : 'Enter the secret word';
             document.getElementById('parentGateAnswer').value = '';
@@ -1476,6 +1714,7 @@
         function closeParentGate() {
             document.getElementById('parentGateModal').classList.remove('active');
             pendingRedemption = null;
+            pendingFulfillment = null;
         }
 
         function checkParentGate() {
@@ -1483,9 +1722,12 @@
             if (val === parentWord.toLowerCase()) {
                 const action = gateSuccessAction;
                 const reward = pendingRedemption;
+                const fulfillment = pendingFulfillment;
                 closeParentGate();
                 if (action === 'redeem') {
                     completeRedemption(reward);
+                } else if (action === 'fulfill') {
+                    if (fulfillment) applyRedemptionFulfilled(fulfillment.id, fulfillment.fulfilled);
                 } else {
                     openParentArea();
                 }
@@ -1500,6 +1742,8 @@
             document.getElementById('kidModeCooldownInput').value = kidModeCooldownMinutes;
             renderKidModeStatus();
             renderParentTaskList();
+            renderParentGamesList();
+            renderParentRewardsList();
             document.getElementById('parentAreaModal').classList.add('active');
         }
 
@@ -1578,6 +1822,37 @@
                         <button onclick="restoreParentTask('${t.id}')" style="background:#10b981;color:white;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;">Restore</button>
                     </div>
                 `).join('');
+        }
+
+        function renderParentGamesList() {
+            const container = document.getElementById('parentGamesList');
+            container.innerHTML = GAMES.map(game => `
+                <div class="parent-game-row" data-game-id="${game.id}" style="border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-bottom:8px;">
+                    <div style="display:flex;gap:6px;margin-bottom:6px;">
+                        <input type="text" class="pg-emoji" value="${game.emoji}" style="width:50px;padding:6px;text-align:center;border-radius:8px;border:2px solid #ccc;font-size:1.1em;">
+                        <input type="text" class="pg-name" value="${game.name.replace(/"/g, '&quot;')}" style="flex:1;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                    </div>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <label style="font-size:0.8em;color:#6b7280;">Cost</label>
+                        <input type="number" class="pg-cost" value="${game.cost}" min="1" max="50" style="width:55px;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                        <label style="font-size:0.8em;color:#6b7280;">Color</label>
+                        <input type="color" class="pg-color" value="${game.color || '#3b82f6'}" style="width:44px;height:34px;padding:2px;border-radius:8px;border:2px solid #ccc;cursor:pointer;">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderParentRewardsList() {
+            const container = document.getElementById('parentRewardsList');
+            container.innerHTML = rewards.map(reward => `
+                <div class="parent-reward-row" data-reward-id="${reward.id}" style="border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-bottom:8px;">
+                    <div style="display:flex;gap:6px;">
+                        <input type="text" class="pr-emoji" value="${reward.emoji}" style="width:50px;padding:6px;text-align:center;border-radius:8px;border:2px solid #ccc;font-size:1.1em;">
+                        <input type="text" class="pr-label" value="${reward.label.replace(/"/g, '&quot;')}" style="flex:1;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                        <input type="number" class="pr-cost" value="${reward.cost}" min="1" max="10000" style="width:70px;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                    </div>
+                </div>
+            `).join('');
         }
 
         function removeParentTaskRow(taskId, isCustom) {
@@ -1668,10 +1943,36 @@
                 }
             });
             
+            document.querySelectorAll('#parentGamesList .parent-game-row').forEach(row => {
+                const gameId = row.dataset.gameId;
+                const emoji = row.querySelector('.pg-emoji').value.trim() || '🎮';
+                const name = row.querySelector('.pg-name').value.trim();
+                const cost = Math.max(1, Math.min(50, parseInt(row.querySelector('.pg-cost').value, 10) || 5));
+                const color = row.querySelector('.pg-color').value;
+                
+                if (!name) return;
+                
+                gameOverrides[gameId] = { emoji, name, cost, color };
+            });
+            
+            document.querySelectorAll('#parentRewardsList .parent-reward-row').forEach(row => {
+                const rewardId = row.dataset.rewardId;
+                const emoji = row.querySelector('.pr-emoji').value.trim() || '🎁';
+                const label = row.querySelector('.pr-label').value.trim();
+                const cost = Math.max(1, Math.min(10000, parseInt(row.querySelector('.pr-cost').value, 10) || 100));
+                
+                if (!label) return;
+                
+                rewardOverrides[rewardId] = { emoji, label, cost };
+            });
+            
             saveTaskConfig();
             rebuildStarActions();
+            rebuildGames();
+            rebuildRewards();
             renderCategoryTabs();
             renderPottyButtons();
+            renderGameButtons();
             closeParentArea(false);
             
             const celebration = document.getElementById('celebration');
@@ -1865,7 +2166,7 @@
             const starsToNextGame = data.totalStars % 5;
             const progress = (starsToNextGame / 5) * 100;
             document.getElementById('progressFill').style.width = progress + '%';
-            document.getElementById('progressFill').textContent = `${starsToNextGame}/5 ⭐`;
+            document.getElementById('progressLabel').textContent = `${starsToNextGame}/5 ⭐`;
 
             const grid = document.getElementById('achievementGrid');
             grid.innerHTML = '';
@@ -1890,34 +2191,48 @@
             historyList.innerHTML = '';
             
             if (data.events.length === 0) {
-                historyList.innerHTML = '<div class="history-item">No potty visits yet today! 🌟</div>';
+                historyList.innerHTML = '<div class="history-item">No adventures logged yet today! 🌟</div>';
             } else {
                 [...data.events].reverse().forEach(event => {
                     const div = document.createElement('div');
-                    div.className = 'history-item';
                     
-                    let emoji, description, subLabel;
+                    let emoji, description, subLabel, category;
                     
                     if (event.label) {
-                        // New-format event (has label/emoji/subLabel from pottyActions config)
+                        // New-format event (has label/emoji/subLabel from starActions config)
                         emoji = event.emoji || '⭐';
                         description = event.label;
                         subLabel = event.subLabel || '';
+                        category = event.category || 'potty';
                     } else if (event.method === 'school') {
                         // Old-format fallback
                         emoji = '🏫';
                         description = 'School Potty';
                         subLabel = 'Super Achievement!';
+                        category = 'bonus';
                     } else {
                         // Old-format fallback
                         emoji = event.type === 'pee' ? '💧' : '💩';
                         description = event.type === 'pee' ? 'Pee' : 'Poop';
                         subLabel = event.method === 'own' ? 'On My Own!' : 'With Reminder';
+                        category = 'potty';
                     }
+                    
+                    div.className = 'history-item cat-' + category + '-border';
                     
                     const stars = event.stars || 1;
                     const starEmoji = '⭐'.repeat(stars);
-                    div.innerHTML = `<span>${emoji} ${description} - ${subLabel}</span><span>${starEmoji} ${event.time}</span>`;
+                    div.innerHTML = `
+                        <div class="history-emoji-badge">${emoji}</div>
+                        <div class="history-text">
+                            <div class="history-desc">${description}</div>
+                            <div class="history-sublabel">${subLabel}</div>
+                        </div>
+                        <div class="history-meta">
+                            <div class="history-stars">${starEmoji}</div>
+                            <div class="history-time">${event.time}</div>
+                        </div>
+                    `;
                     historyList.appendChild(div);
                 });
             }
@@ -1968,9 +2283,23 @@
             // Update UI
             updateUI();
             
+            const redemptionId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+            const trackedReward = { ...reward, id: redemptionId };
+            
+            // Optimistically show it in the Reward Tracker right away
+            redemptionLog.unshift({
+                id: redemptionId,
+                label: reward.label,
+                cost: reward.cost,
+                emoji: reward.emoji,
+                timestamp: new Date().toISOString(),
+                fulfilled: false
+            });
+            renderRewardTracker();
+            
             // Log redemption to Google Sheets (permanent record)
             if (sheetUrl) {
-                addRedemptionToSheets(reward);
+                addRedemptionToSheets(trackedReward);
                 // Also update the points total
                 updateGameStatsToSheets();
             }
@@ -2007,9 +2336,12 @@
             
             GAMES.forEach(game => {
                 const btn = document.createElement('button');
-                btn.className = 'game-select-card' + (game.isBattle ? ' battle-card' : '') + (game.isDuel ? ' duel-card' : '');
+                btn.className = 'game-select-card';
                 btn.id = 'game-btn-' + game.id;
                 btn.onclick = () => startGame(game.id);
+                
+                const color = game.color || '#3b82f6';
+                btn.style.background = `linear-gradient(135deg, ${color} 0%, ${darkenColor(color, 40)} 100%)`;
                 
                 if (game.fullWidth) {
                     btn.style.gridColumn = '1 / -1';
@@ -2039,9 +2371,15 @@
         function updateGameButtonStates() {
             GAMES.forEach(game => {
                 const btn = document.getElementById('game-btn-' + game.id);
-                if (btn) {
-                    btn.disabled = data.totalStars < game.cost;
-                }
+                if (!btn) return;
+                
+                const affordable = data.totalStars >= game.cost;
+                btn.disabled = !affordable;
+                
+                const color = game.color || '#3b82f6';
+                btn.style.background = affordable
+                    ? `linear-gradient(135deg, ${color} 0%, ${darkenColor(color, 40)} 100%)`
+                    : '#9ca3af';
             });
         }
 
@@ -2159,7 +2497,7 @@
                 }
             }, 1000);
             
-            const spawnRate = currentGame === 'mole' ? 800 : (currentGame === 'battle' ? 700 : (currentGame === 'duel' ? 650 : 1000));
+            const spawnRate = currentGame === 'mole' ? 550 : (currentGame === 'battle' ? 700 : (currentGame === 'duel' ? 450 : 1000));
             gameInterval = setInterval(spawnBubble, spawnRate);
             
             setTimeout(() => {
@@ -2215,13 +2553,12 @@
             const baseRadius = type.size === 'large' ? 35 : type.size === 'medium' ? 25 : 18;
             const radius = baseRadius + Math.random() * 8;
             
-            // Space asteroid (default)
-            const asteroidColors = ['#808080', '#a0a0a0', '#606060'];
+            // Space asteroid (default) - flat single-color icon style
             bubbles.push({
                 x: Math.random() * (canvas.width - 60) + 30,
                 y: -40,
                 radius: radius,
-                color: asteroidColors[Math.floor(Math.random() * asteroidColors.length)],
+                color: '#64748b',
                 speed: 2 + Math.random() * 3,
                 dy: 1,
                 popped: false,
@@ -2250,7 +2587,7 @@
                 dy: 0,
                 popped: false,
                 points: pointOptions[Math.floor(Math.random() * pointOptions.length)],
-                life: 70,
+                life: 48,
                 isMole: true,
                 holeRef: hole
             });
@@ -2281,7 +2618,7 @@
                     dy: 0,
                     popped: false,
                     points: pointTiers[Math.floor(Math.random() * pointTiers.length)],
-                    life: 55,
+                    life: 38,
                     isDuelTarget: true,
                     holeRef: hole
                 });
@@ -2607,9 +2944,6 @@
                     ctx.ellipse(obj.x, obj.y, obj.radius, obj.radius * 0.9, 0, 0, Math.PI * 2);
                     ctx.fillStyle = obj.color;
                     ctx.fill();
-                    ctx.strokeStyle = '#5c3d24';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
                     
                     ctx.fillStyle = '#000000';
                     ctx.beginPath();
@@ -2635,16 +2969,24 @@
                         return false;
                     }
                     
+                    // Flat bullseye/target icon
                     ctx.beginPath();
                     ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
                     ctx.fillStyle = obj.color;
                     ctx.fill();
-                    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, obj.radius * 0.66, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, obj.radius * 0.33, 0, Math.PI * 2);
+                    ctx.fillStyle = obj.color;
+                    ctx.fill();
                     
                     ctx.fillStyle = '#ffffff';
-                    ctx.font = 'bold 22px Arial';
+                    ctx.font = 'bold 13px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(obj.side === 'left' ? 'P1' : 'P2', obj.x, obj.y);
@@ -2666,9 +3008,6 @@
                     ctx.ellipse(obj.x, obj.y, obj.radius * 0.85, obj.radius, 0, 0, Math.PI * 2);
                     ctx.fillStyle = obj.color;
                     ctx.fill();
-                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
                     
                     ctx.beginPath();
                     ctx.moveTo(obj.x - 4, obj.y + obj.radius);
@@ -2685,11 +3024,6 @@
                     ctx.lineWidth = 1;
                     ctx.stroke();
                     
-                    ctx.beginPath();
-                    ctx.ellipse(obj.x - obj.radius * 0.3, obj.y - obj.radius * 0.4, obj.radius * 0.2, obj.radius * 0.3, 0, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                    ctx.fill();
-                    
                     // Big letter to type, with dark outline for legibility over any balloon color
                     ctx.font = 'bold 40px Arial';
                     ctx.textAlign = 'center';
@@ -2703,19 +3037,17 @@
                     return true;
                 }
                 
-                // Space asteroid (default)
+                // Space asteroid (default) - flat single-color hexagon icon
                 ctx.save();
                 ctx.translate(obj.x, obj.y);
                 ctx.rotate(obj.rotation);
                 
                 ctx.beginPath();
-                const points = 8;
-                for (let i = 0; i < points; i++) {
-                    const angle = (i / points) * Math.PI * 2;
-                    const variance = 0.7 + Math.random() * 0.3;
-                    const r = obj.radius * variance;
-                    const x = Math.cos(angle) * r;
-                    const y = Math.sin(angle) * r;
+                const sides = 6;
+                for (let i = 0; i < sides; i++) {
+                    const angle = (i / sides) * Math.PI * 2;
+                    const x = Math.cos(angle) * obj.radius;
+                    const y = Math.sin(angle) * obj.radius;
                     if (i === 0) {
                         ctx.moveTo(x, y);
                     } else {
@@ -2725,9 +3057,6 @@
                 ctx.closePath();
                 ctx.fillStyle = obj.color;
                 ctx.fill();
-                ctx.strokeStyle = '#404040';
-                ctx.lineWidth = 2;
-                ctx.stroke();
                 
                 ctx.restore();
                 
@@ -2775,7 +3104,7 @@
             const gameOverSubtext = document.getElementById('gameOverSubtext');
             
             if (currentGame === 'duel') {
-                if (gameOverTitle) gameOverTitle.textContent = '⚡ PILLOW DUEL COMPLETE! ⚡';
+                if (gameOverTitle) gameOverTitle.textContent = '⚡ DUEL COMPLETE! ⚡';
                 if (gameOverSubtext) {
                     if (p1Score > p2Score) {
                         gameOverSubtext.textContent = `🏆 Player 1 wins! ${p1Score} - ${p2Score}`;
@@ -2785,12 +3114,28 @@
                         gameOverSubtext.textContent = `🤝 It's a tie! ${p1Score} - ${p2Score}`;
                     }
                 }
-            } else {
+            } else if (currentGame === 'battle') {
                 if (gameOverTitle) {
-                    gameOverTitle.textContent = (currentGame === 'battle' && bossDefeated)
+                    gameOverTitle.textContent = bossDefeated
                         ? '🥊 K.O.! SOCK MONSTER DEFEATED! 🥊'
-                        : '🎉 MISSION COMPLETE! 🎉';
+                        : "⏰ TIME'S UP! 🧦";
                 }
+                if (gameOverSubtext) {
+                    gameOverSubtext.textContent = bossDefeated
+                        ? 'Champion!'
+                        : 'The Sock Monster survives... barely!';
+                }
+            } else if (currentGame === 'space') {
+                if (gameOverTitle) gameOverTitle.textContent = '🚀 ASTEROIDS CLEARED! 🚀';
+                if (gameOverSubtext) gameOverSubtext.textContent = 'Great flying!';
+            } else if (currentGame === 'balloon') {
+                if (gameOverTitle) gameOverTitle.textContent = '🎈 GREAT POPPING! 🎈';
+                if (gameOverSubtext) gameOverSubtext.textContent = 'Nice letter skills!';
+            } else if (currentGame === 'mole') {
+                if (gameOverTitle) gameOverTitle.textContent = '🔨 MOLES WHACKED! 🔨';
+                if (gameOverSubtext) gameOverSubtext.textContent = 'Speedy hands!';
+            } else {
+                if (gameOverTitle) gameOverTitle.textContent = '🎉 MISSION COMPLETE! 🎉';
                 if (gameOverSubtext) gameOverSubtext.textContent = 'Great job!';
             }
             
@@ -3033,6 +3378,7 @@
         });
 
         // Initialize
+        renderTodayDate();
         loadKidMode();
         renderCategoryTabs();
         renderPottyButtons();
@@ -3040,6 +3386,7 @@
         checkSheetUrl();
         loadData();
         loadTaskConfig();
+        loadRedemptionLog();
         
         // Auto-refresh data every 1 hour
         setInterval(() => {
@@ -3047,6 +3394,13 @@
                 loadDataFromSheets();
             }
         }, 3600000); // 1 hour = 3600000 milliseconds
+        
+        // Refresh the Reward Tracker every 5 minutes so fulfilled status shows up promptly
+        setInterval(() => {
+            if (sheetUrl && !gameActive) {
+                loadRedemptionLog();
+            }
+        }, 300000);
         
         // Keep task button cooldown dimming up to date
         setInterval(() => {
