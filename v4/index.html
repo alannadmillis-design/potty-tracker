@@ -835,6 +835,16 @@
             </div>
             <button class="play-game-button" style="margin-bottom: 15px;" onclick="addNewParentTask()">Add Task</button>
             
+            <details style="margin-bottom: 15px;">
+                <summary style="cursor: pointer; font-weight: bold; color: #1e40af; padding: 8px 0;">🎮 Edit Games (name, emoji, cost, color)</summary>
+                <div id="parentGamesList" style="margin-top: 10px;"></div>
+            </details>
+            
+            <details style="margin-bottom: 15px;">
+                <summary style="cursor: pointer; font-weight: bold; color: #1e40af; padding: 8px 0;">🎁 Edit Rewards (label, emoji, cost)</summary>
+                <div id="parentRewardsList" style="max-height: 320px; overflow-y: auto; margin-top: 10px;"></div>
+            </details>
+            
             <div style="display: flex; gap: 10px;">
                 <button class="play-game-button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="saveParentChanges()">💾 Save Changes</button>
                 <button class="close-game-button" onclick="closeParentArea()">Close</button>
@@ -878,28 +888,42 @@
 
     <script>
         // Reworked reward list - broad mix of treats, privileges, screen time, and bigger outings
-        const rewards = [
-            { emoji: '🍪', label: 'Chocolate Chip Cookie', cost: 100 },
-            { emoji: '📺', label: '1 YTKids Video', cost: 125 },
-            { emoji: '💥', label: 'Pillow Throw Time', cost: 150 },
-            { emoji: '🎮', label: 'Dad Plays Video Games for 10 Min', cost: 175 },
-            { emoji: '🥤', label: 'Coke from McDonalds', cost: 200 },
-            { emoji: '🍦', label: 'Ice Cream', cost: 225 },
-            { emoji: '🚗', label: 'New Hot Wheels Car', cost: 250 },
-            { emoji: '🎮', label: 'Mom Plays Video Games for 15 Min', cost: 300 },
-            { emoji: '🥡', label: 'Your Choice DoorDash', cost: 325 },
-            { emoji: '📚', label: 'New Book', cost: 350 },
-            { emoji: '🎬', label: 'Play Shows Night', cost: 400 },
-            { emoji: '🎮', label: 'Mom or Dad Play Video Games for 30 Min', cost: 450 },
-            { emoji: '⚽', label: 'New Toy', cost: 500 },
-            { emoji: '🎪', label: 'Activity with Mom & Dad', cost: 600 },
-            { emoji: '🎳', label: 'Go Bowling', cost: 650 },
-            { emoji: '⛳', label: 'Play Minigolf', cost: 700 },
-            { emoji: '🎮', label: 'New Video Game', cost: 750 },
-            { emoji: '🛏️', label: "Sleep in Mom & Dad's Bed", cost: 850 },
-            { emoji: '🕹️', label: 'Play a Mall Game', cost: 1000 },
-            { emoji: '🍗', label: 'Nuggie Party', cost: 1500 }
+        const baseRewards = [
+            { id: 'cookie', emoji: '🍪', label: 'Chocolate Chip Cookie', cost: 100 },
+            { id: 'ytkids', emoji: '📺', label: '1 YTKids Video', cost: 125 },
+            { id: 'pillowfight', emoji: '💥', label: 'Pillow Throw Time', cost: 150 },
+            { id: 'dadgame10', emoji: '🎮', label: 'Dad Plays Video Games for 10 Min', cost: 175 },
+            { id: 'coke', emoji: '🥤', label: 'Coke from McDonalds', cost: 200 },
+            { id: 'icecream', emoji: '🍦', label: 'Ice Cream', cost: 225 },
+            { id: 'hotwheels', emoji: '🚗', label: 'New Hot Wheels Car', cost: 250 },
+            { id: 'momgame15', emoji: '🎮', label: 'Mom Plays Video Games for 15 Min', cost: 300 },
+            { id: 'doordash', emoji: '🥡', label: 'Your Choice DoorDash', cost: 325 },
+            { id: 'book', emoji: '📚', label: 'New Book', cost: 350 },
+            { id: 'showsnight', emoji: '🎬', label: 'Play Shows Night', cost: 400 },
+            { id: 'parentsgame30', emoji: '🎮', label: 'Mom or Dad Play Video Games for 30 Min', cost: 450 },
+            { id: 'newtoy', emoji: '⚽', label: 'New Toy', cost: 500 },
+            { id: 'activity', emoji: '🎪', label: 'Activity with Mom & Dad', cost: 600 },
+            { id: 'bowling', emoji: '🎳', label: 'Go Bowling', cost: 650 },
+            { id: 'minigolf', emoji: '⛳', label: 'Play Minigolf', cost: 700 },
+            { id: 'newvideogame', emoji: '🎮', label: 'New Video Game', cost: 750 },
+            { id: 'sleepparents', emoji: '🛏️', label: "Sleep in Mom & Dad's Bed", cost: 850 },
+            { id: 'mallgame', emoji: '🕹️', label: 'Play a Mall Game', cost: 1000 },
+            { id: 'nuggie', emoji: '🍗', label: 'Nuggie Party', cost: 1500 }
         ];
+
+        let rewardOverrides = {};
+        let rewards = [];
+
+        function rebuildRewards() {
+            rewards = baseRewards
+                .map(r => {
+                    const o = rewardOverrides[r.id];
+                    return o ? { ...r, ...o } : r;
+                })
+                .sort((a, b) => a.cost - b.cost);
+        }
+
+        rebuildRewards();
 
         // Tabs shown above the star-earning buttons
         const categories = [
@@ -1209,13 +1233,33 @@
         }
         // Available mini-games. To add another later, add an entry here plus
         // a rendering branch in gameLoop()/spawnBubble() for its visuals.
-        const GAMES = [
-            { id: 'space', name: 'Space Laser Battle', emoji: '🚀', cost: 5, instruction: 'Tap the asteroids to blast them with your laser!' },
-            { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', cost: 5, instruction: 'Tap the balloons before they float away!' },
-            { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', cost: 5, instruction: 'Tap the moles as they pop up from their holes!' },
-            { id: 'battle', name: 'Sock Monster SHOWDOWN', emoji: '🥊', cost: 5, instruction: 'Aim and fire pillows at the Sock Monster! Land combos to charge your MEGA SMASH!', isBattle: true },
-            { id: 'duel', name: 'Duel', emoji: '⚡', cost: 10, instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true, fullWidth: true }
+        const baseGames = [
+            { id: 'space', name: 'Space Laser Battle', emoji: '🚀', cost: 5, color: '#3b82f6', instruction: 'Tap the asteroids to blast them with your laser!' },
+            { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', cost: 5, color: '#3b82f6', instruction: 'Tap the balloons before they float away!' },
+            { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', cost: 5, color: '#3b82f6', instruction: 'Tap the moles as they pop up from their holes!' },
+            { id: 'battle', name: 'Sock Monster SHOWDOWN', emoji: '🥊', cost: 5, color: '#ea580c', instruction: 'Aim and fire pillows at the Sock Monster! Land combos to charge your MEGA SMASH!', isBattle: true },
+            { id: 'duel', name: 'Duel', emoji: '⚡', cost: 10, color: '#6d28d9', instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true, fullWidth: true }
         ];
+
+        let gameOverrides = {};
+        let GAMES = [];
+
+        function darkenColor(hex, amount) {
+            const num = parseInt(hex.replace('#', ''), 16);
+            const r = Math.max(0, (num >> 16) - amount);
+            const g = Math.max(0, ((num >> 8) & 0x00FF) - amount);
+            const b = Math.max(0, (num & 0x0000FF) - amount);
+            return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+        }
+
+        function rebuildGames() {
+            GAMES = baseGames.map(g => {
+                const o = gameOverrides[g.id];
+                return o ? { ...g, ...o } : g;
+            });
+        }
+
+        rebuildGames();
         // Polyfill for older browsers/WebViews without native roundRect support (used for pillow shapes)
         if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
             CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
@@ -1478,6 +1522,8 @@
                         customTasks = result.config.customTasks || [];
                         parentWord = result.config.parentWord || 'edward';
                         kidModeCooldownMinutes = result.config.kidModeCooldownMinutes || 3;
+                        gameOverrides = result.config.gameOverrides || {};
+                        rewardOverrides = result.config.rewardOverrides || {};
                     }
                 } catch (error) {
                     console.error('Error loading task config from sheets:', error);
@@ -1488,8 +1534,11 @@
             }
             
             rebuildStarActions();
+            rebuildGames();
+            rebuildRewards();
             renderCategoryTabs();
             renderPottyButtons();
+            renderGameButtons();
         }
 
         function loadTaskConfigLocal() {
@@ -1501,6 +1550,8 @@
                     customTasks = cfg.customTasks || [];
                     parentWord = cfg.parentWord || 'edward';
                     kidModeCooldownMinutes = cfg.kidModeCooldownMinutes || 3;
+                    gameOverrides = cfg.gameOverrides || {};
+                    rewardOverrides = cfg.rewardOverrides || {};
                 } catch (error) {
                     console.error('Error parsing local task config:', error);
                 }
@@ -1508,7 +1559,7 @@
         }
 
         function saveTaskConfig() {
-            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes };
+            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes, gameOverrides, rewardOverrides };
             localStorage.setItem('pottyTrackerTaskConfig', JSON.stringify(payload));
             
             if (sheetUrl) {
@@ -1588,6 +1639,8 @@
             document.getElementById('kidModeCooldownInput').value = kidModeCooldownMinutes;
             renderKidModeStatus();
             renderParentTaskList();
+            renderParentGamesList();
+            renderParentRewardsList();
             document.getElementById('parentAreaModal').classList.add('active');
         }
 
@@ -1666,6 +1719,37 @@
                         <button onclick="restoreParentTask('${t.id}')" style="background:#10b981;color:white;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;">Restore</button>
                     </div>
                 `).join('');
+        }
+
+        function renderParentGamesList() {
+            const container = document.getElementById('parentGamesList');
+            container.innerHTML = GAMES.map(game => `
+                <div class="parent-game-row" data-game-id="${game.id}" style="border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-bottom:8px;">
+                    <div style="display:flex;gap:6px;margin-bottom:6px;">
+                        <input type="text" class="pg-emoji" value="${game.emoji}" style="width:50px;padding:6px;text-align:center;border-radius:8px;border:2px solid #ccc;font-size:1.1em;">
+                        <input type="text" class="pg-name" value="${game.name.replace(/"/g, '&quot;')}" style="flex:1;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                    </div>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <label style="font-size:0.8em;color:#6b7280;">Cost</label>
+                        <input type="number" class="pg-cost" value="${game.cost}" min="1" max="50" style="width:55px;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                        <label style="font-size:0.8em;color:#6b7280;">Color</label>
+                        <input type="color" class="pg-color" value="${game.color || '#3b82f6'}" style="width:44px;height:34px;padding:2px;border-radius:8px;border:2px solid #ccc;cursor:pointer;">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderParentRewardsList() {
+            const container = document.getElementById('parentRewardsList');
+            container.innerHTML = rewards.map(reward => `
+                <div class="parent-reward-row" data-reward-id="${reward.id}" style="border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-bottom:8px;">
+                    <div style="display:flex;gap:6px;">
+                        <input type="text" class="pr-emoji" value="${reward.emoji}" style="width:50px;padding:6px;text-align:center;border-radius:8px;border:2px solid #ccc;font-size:1.1em;">
+                        <input type="text" class="pr-label" value="${reward.label.replace(/"/g, '&quot;')}" style="flex:1;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                        <input type="number" class="pr-cost" value="${reward.cost}" min="1" max="10000" style="width:70px;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                    </div>
+                </div>
+            `).join('');
         }
 
         function removeParentTaskRow(taskId, isCustom) {
@@ -1756,10 +1840,36 @@
                 }
             });
             
+            document.querySelectorAll('#parentGamesList .parent-game-row').forEach(row => {
+                const gameId = row.dataset.gameId;
+                const emoji = row.querySelector('.pg-emoji').value.trim() || '🎮';
+                const name = row.querySelector('.pg-name').value.trim();
+                const cost = Math.max(1, Math.min(50, parseInt(row.querySelector('.pg-cost').value, 10) || 5));
+                const color = row.querySelector('.pg-color').value;
+                
+                if (!name) return;
+                
+                gameOverrides[gameId] = { emoji, name, cost, color };
+            });
+            
+            document.querySelectorAll('#parentRewardsList .parent-reward-row').forEach(row => {
+                const rewardId = row.dataset.rewardId;
+                const emoji = row.querySelector('.pr-emoji').value.trim() || '🎁';
+                const label = row.querySelector('.pr-label').value.trim();
+                const cost = Math.max(1, Math.min(10000, parseInt(row.querySelector('.pr-cost').value, 10) || 100));
+                
+                if (!label) return;
+                
+                rewardOverrides[rewardId] = { emoji, label, cost };
+            });
+            
             saveTaskConfig();
             rebuildStarActions();
+            rebuildGames();
+            rebuildRewards();
             renderCategoryTabs();
             renderPottyButtons();
+            renderGameButtons();
             closeParentArea(false);
             
             const celebration = document.getElementById('celebration');
@@ -2109,9 +2219,12 @@
             
             GAMES.forEach(game => {
                 const btn = document.createElement('button');
-                btn.className = 'game-select-card' + (game.isBattle ? ' battle-card' : '') + (game.isDuel ? ' duel-card' : '');
+                btn.className = 'game-select-card';
                 btn.id = 'game-btn-' + game.id;
                 btn.onclick = () => startGame(game.id);
+                
+                const color = game.color || '#3b82f6';
+                btn.style.background = `linear-gradient(135deg, ${color} 0%, ${darkenColor(color, 40)} 100%)`;
                 
                 if (game.fullWidth) {
                     btn.style.gridColumn = '1 / -1';
@@ -2141,9 +2254,15 @@
         function updateGameButtonStates() {
             GAMES.forEach(game => {
                 const btn = document.getElementById('game-btn-' + game.id);
-                if (btn) {
-                    btn.disabled = data.totalStars < game.cost;
-                }
+                if (!btn) return;
+                
+                const affordable = data.totalStars >= game.cost;
+                btn.disabled = !affordable;
+                
+                const color = game.color || '#3b82f6';
+                btn.style.background = affordable
+                    ? `linear-gradient(135deg, ${color} 0%, ${darkenColor(color, 40)} 100%)`
+                    : '#9ca3af';
             });
         }
 
