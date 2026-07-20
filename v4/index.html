@@ -723,7 +723,6 @@
 
         <div class="header">
             <h1>🚀 Potty Star Adventure! 🌟</h1>
-            <div id="todayDateDisplay" style="color: rgba(255,255,255,0.85); font-weight: bold; margin-bottom: 8px;"></div>
             <div class="stars-collected">
                 ⭐ <span id="totalStars">0</span> Stars Collected!
             </div>
@@ -762,7 +761,13 @@
             
             <h2 style="margin-top: 25px;">🎁 Redeem Rewards!</h2>
             <div class="achievement-grid" id="achievementGrid"></div>
+            
+            <h2 style="margin-top: 25px;">📦 Reward Tracker</h2>
+            <div style="text-align: center; color: #6b7280; font-size: 0.85em; margin-bottom: 10px;" id="rewardTrackerHint">Rewards waiting to be given show up here!</div>
+            <div id="rewardTrackerList"></div>
         </div>
+
+        <div id="todayDateBanner" style="text-align: center; background: rgba(255,255,255,0.85); border-radius: 16px; padding: 12px; margin-bottom: 15px; color: #1e3a8a; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></div>
 
         <div class="history">
             <h2>📅 Today's Adventures</h2>
@@ -1143,6 +1148,7 @@
         // taskOverrides: { taskId: { emoji, label, subLabel, stars, category, hidden } }
         // customTasks: brand-new tasks the parent added from scratch
         let taskOverrides = {};
+        let redemptionLog = [];
         let customTasks = [];
         let starActions = [];
 
@@ -1429,12 +1435,92 @@
                         redemption: {
                             label: redemption.label,
                             cost: redemption.cost,
-                            emoji: redemption.emoji
+                            emoji: redemption.emoji,
+                            id: redemption.id
                         }
                     })
                 });
             } catch (error) {
                 console.error('Error adding redemption:', error);
+            }
+        }
+
+        async function loadRedemptionLog() {
+            if (!sheetUrl) {
+                renderRewardTracker();
+                return;
+            }
+            
+            try {
+                const response = await fetch(sheetUrl + '?action=getRedemptions');
+                const result = await response.json();
+                if (result.success) {
+                    redemptionLog = (result.redemptions || []).filter(r => r.id);
+                }
+            } catch (error) {
+                console.error('Error loading redemption log:', error);
+            }
+            
+            renderRewardTracker();
+        }
+
+        function renderRewardTracker() {
+            const container = document.getElementById('rewardTrackerList');
+            const hint = document.getElementById('rewardTrackerHint');
+            if (!container) return;
+            
+            const pending = redemptionLog.filter(r => !r.fulfilled);
+            const fulfilled = redemptionLog.filter(r => r.fulfilled).slice(0, 5);
+            const sorted = [...pending, ...fulfilled];
+            
+            if (sorted.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:10px;">No rewards redeemed yet!</div>';
+                if (hint) hint.style.display = 'block';
+                return;
+            }
+            
+            if (hint) hint.style.display = pending.length > 0 ? 'block' : 'none';
+            
+            container.innerHTML = sorted.map(r => {
+                const dateStr = r.timestamp ? new Date(r.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+                return `
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px;margin-bottom:8px;border-radius:12px;background:${r.fulfilled ? '#f3f4f6' : '#fef3c7'};border-left:5px solid ${r.fulfilled ? '#9ca3af' : '#f59e0b'};">
+                        <button onclick="toggleRedemptionFulfilled('${r.id}', ${!r.fulfilled})" style="width:32px;height:32px;flex-shrink:0;border-radius:50%;border:2px solid ${r.fulfilled ? '#10b981' : '#d1d5db'};background:${r.fulfilled ? '#10b981' : 'white'};color:white;font-weight:bold;cursor:pointer;font-size:1em;">${r.fulfilled ? '✓' : ''}</button>
+                        <div style="font-size:1.4em;">${r.emoji}</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:bold;color:#1f2937;text-decoration:${r.fulfilled ? 'line-through' : 'none'};opacity:${r.fulfilled ? '0.6' : '1'};">${r.label}</div>
+                            <div style="font-size:0.75em;color:#9ca3af;">${dateStr} &middot; ${r.cost} pts ${r.fulfilled ? '&middot; Given!' : '&middot; Waiting...'}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleRedemptionFulfilled(id, fulfilled) {
+            if (kidModeEnabled) {
+                openParentGate('fulfill', null, { id, fulfilled });
+                return;
+            }
+            
+            applyRedemptionFulfilled(id, fulfilled);
+        }
+
+        function applyRedemptionFulfilled(id, fulfilled) {
+            const entry = redemptionLog.find(r => r.id === id);
+            if (entry) entry.fulfilled = fulfilled;
+            renderRewardTracker();
+            
+            if (sheetUrl) {
+                try {
+                    fetch(sheetUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'setRedemptionFulfilled', id, fulfilled })
+                    });
+                } catch (error) {
+                    console.error('Error updating redemption status:', error);
+                }
             }
         }
 
@@ -1461,11 +1547,21 @@
             }
         }
 
+        function ordinalSuffix(day) {
+            if (day % 10 === 1 && day !== 11) return 'st';
+            if (day % 10 === 2 && day !== 12) return 'nd';
+            if (day % 10 === 3 && day !== 13) return 'rd';
+            return 'th';
+        }
+
         function renderTodayDate() {
-            const el = document.getElementById('todayDateDisplay');
+            const el = document.getElementById('todayDateBanner');
             if (!el) return;
             const today = new Date();
-            el.textContent = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            const weekday = today.toLocaleDateString('en-US', { weekday: 'long' });
+            const month = today.toLocaleDateString('en-US', { month: 'long' });
+            const day = today.getDate();
+            el.textContent = `🌞 Today is ${weekday}, ${month} ${day}${ordinalSuffix(day)}!`;
         }
 
         function checkForNewDay() {
@@ -1601,10 +1697,13 @@
             if (badge) badge.style.display = kidModeEnabled ? 'inline-block' : 'none';
         }
 
-        function openParentGate(purpose, redemptionReward) {
+        let pendingFulfillment = null;
+
+        function openParentGate(purpose, redemptionReward, fulfillmentPayload) {
             gateSuccessAction = purpose || 'settings';
             pendingRedemption = redemptionReward || null;
-            document.getElementById('parentGateQuestion').textContent = gateSuccessAction === 'redeem'
+            pendingFulfillment = fulfillmentPayload || null;
+            document.getElementById('parentGateQuestion').textContent = gateSuccessAction === 'redeem' || gateSuccessAction === 'fulfill'
                 ? 'Ask a parent to enter the secret word'
                 : 'Enter the secret word';
             document.getElementById('parentGateAnswer').value = '';
@@ -1615,6 +1714,7 @@
         function closeParentGate() {
             document.getElementById('parentGateModal').classList.remove('active');
             pendingRedemption = null;
+            pendingFulfillment = null;
         }
 
         function checkParentGate() {
@@ -1622,9 +1722,12 @@
             if (val === parentWord.toLowerCase()) {
                 const action = gateSuccessAction;
                 const reward = pendingRedemption;
+                const fulfillment = pendingFulfillment;
                 closeParentGate();
                 if (action === 'redeem') {
                     completeRedemption(reward);
+                } else if (action === 'fulfill') {
+                    if (fulfillment) applyRedemptionFulfilled(fulfillment.id, fulfillment.fulfilled);
                 } else {
                     openParentArea();
                 }
@@ -2180,9 +2283,23 @@
             // Update UI
             updateUI();
             
+            const redemptionId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+            const trackedReward = { ...reward, id: redemptionId };
+            
+            // Optimistically show it in the Reward Tracker right away
+            redemptionLog.unshift({
+                id: redemptionId,
+                label: reward.label,
+                cost: reward.cost,
+                emoji: reward.emoji,
+                timestamp: new Date().toISOString(),
+                fulfilled: false
+            });
+            renderRewardTracker();
+            
             // Log redemption to Google Sheets (permanent record)
             if (sheetUrl) {
-                addRedemptionToSheets(reward);
+                addRedemptionToSheets(trackedReward);
                 // Also update the points total
                 updateGameStatsToSheets();
             }
@@ -3269,6 +3386,7 @@
         checkSheetUrl();
         loadData();
         loadTaskConfig();
+        loadRedemptionLog();
         
         // Auto-refresh data every 1 hour
         setInterval(() => {
@@ -3276,6 +3394,13 @@
                 loadDataFromSheets();
             }
         }, 3600000); // 1 hour = 3600000 milliseconds
+        
+        // Refresh the Reward Tracker every 5 minutes so fulfilled status shows up promptly
+        setInterval(() => {
+            if (sheetUrl && !gameActive) {
+                loadRedemptionLog();
+            }
+        }, 300000);
         
         // Keep task button cooldown dimming up to date
         setInterval(() => {
