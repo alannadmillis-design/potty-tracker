@@ -313,13 +313,61 @@
         }
 
         .history-item {
-            padding: 10px;
+            padding: 10px 14px;
             margin-bottom: 8px;
-            background: #f5f5f5;
-            border-radius: 10px;
+            background: #f9fafb;
+            border-radius: 14px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 12px;
+            border-left: 6px solid #9ca3af;
+        }
+
+        .history-item.cat-potty-border { border-left-color: #059669; }
+        .history-item.cat-hygiene-border { border-left-color: #2563eb; }
+        .history-item.cat-chores-border { border-left-color: #7c3aed; }
+        .history-item.cat-bonus-border { border-left-color: #db2777; }
+
+        .history-emoji-badge {
+            font-size: 1.8em;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .history-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .history-desc {
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .history-sublabel {
+            font-size: 0.8em;
+            color: #6b7280;
+        }
+
+        .history-meta {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .history-stars {
+            font-size: 0.95em;
+        }
+
+        .history-time {
+            font-size: 0.75em;
+            color: #9ca3af;
         }
 
         .celebration {
@@ -675,6 +723,7 @@
 
         <div class="header">
             <h1>🚀 Potty Star Adventure! 🌟</h1>
+            <div id="todayDateDisplay" style="color: rgba(255,255,255,0.85); font-weight: bold; margin-bottom: 8px;"></div>
             <div class="stars-collected">
                 ⭐ <span id="totalStars">0</span> Stars Collected!
             </div>
@@ -1254,6 +1303,8 @@
                     data.totalGamePoints = result.data.totalGamePoints || 0;
                     data.events = result.data.events || [];
                     
+                    checkForNewDay();
+                    
                     // Also save to localStorage
                     localStorage.setItem('pottyTrackerData', JSON.stringify(data));
                     
@@ -1366,6 +1417,30 @@
             }
         }
 
+        function renderTodayDate() {
+            const el = document.getElementById('todayDateDisplay');
+            if (!el) return;
+            const today = new Date();
+            el.textContent = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        function checkForNewDay() {
+            if (!data.events || data.events.length === 0) return;
+            
+            const todayStr = new Date().toDateString();
+            const lastEvent = data.events[data.events.length - 1];
+            const lastEventDate = lastEvent.timestamp ? new Date(lastEvent.timestamp).toDateString() : null;
+            
+            if (lastEventDate && lastEventDate !== todayStr) {
+                // A new day has started since these events were logged - start fresh automatically
+                data.events = [];
+                localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+                if (sheetUrl) {
+                    saveDataToSheets();
+                }
+            }
+        }
+
         function loadData() {
             if (sheetUrl) {
                 loadDataFromSheets();
@@ -1378,6 +1453,7 @@
                         data.totalGamePoints = 0;
                     }
                 }
+                checkForNewDay();
                 updateUI();
             }
         }
@@ -1902,34 +1978,48 @@
             historyList.innerHTML = '';
             
             if (data.events.length === 0) {
-                historyList.innerHTML = '<div class="history-item">No potty visits yet today! 🌟</div>';
+                historyList.innerHTML = '<div class="history-item">No adventures logged yet today! 🌟</div>';
             } else {
                 [...data.events].reverse().forEach(event => {
                     const div = document.createElement('div');
-                    div.className = 'history-item';
                     
-                    let emoji, description, subLabel;
+                    let emoji, description, subLabel, category;
                     
                     if (event.label) {
-                        // New-format event (has label/emoji/subLabel from pottyActions config)
+                        // New-format event (has label/emoji/subLabel from starActions config)
                         emoji = event.emoji || '⭐';
                         description = event.label;
                         subLabel = event.subLabel || '';
+                        category = event.category || 'potty';
                     } else if (event.method === 'school') {
                         // Old-format fallback
                         emoji = '🏫';
                         description = 'School Potty';
                         subLabel = 'Super Achievement!';
+                        category = 'bonus';
                     } else {
                         // Old-format fallback
                         emoji = event.type === 'pee' ? '💧' : '💩';
                         description = event.type === 'pee' ? 'Pee' : 'Poop';
                         subLabel = event.method === 'own' ? 'On My Own!' : 'With Reminder';
+                        category = 'potty';
                     }
+                    
+                    div.className = 'history-item cat-' + category + '-border';
                     
                     const stars = event.stars || 1;
                     const starEmoji = '⭐'.repeat(stars);
-                    div.innerHTML = `<span>${emoji} ${description} - ${subLabel}</span><span>${starEmoji} ${event.time}</span>`;
+                    div.innerHTML = `
+                        <div class="history-emoji-badge">${emoji}</div>
+                        <div class="history-text">
+                            <div class="history-desc">${description}</div>
+                            <div class="history-sublabel">${subLabel}</div>
+                        </div>
+                        <div class="history-meta">
+                            <div class="history-stars">${starEmoji}</div>
+                            <div class="history-time">${event.time}</div>
+                        </div>
+                    `;
                     historyList.appendChild(div);
                 });
             }
@@ -3061,6 +3151,7 @@
         });
 
         // Initialize
+        renderTodayDate();
         loadKidMode();
         renderCategoryTabs();
         renderPottyButtons();
