@@ -667,6 +667,7 @@
             <div class="stars-collected">
                 ⭐ <span id="totalStars">0</span> Stars Collected!
             </div>
+            <div id="kidModeBadge" style="display: none; margin-top: 8px; background: rgba(220,38,38,0.85); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">🔒 Kid Mode</div>
         </div>
 
         <div class="rewards-section">
@@ -708,9 +709,77 @@
             <button class="reset-button" onclick="resetData()">Start New Day</button>
             <button class="reset-stars-button" onclick="resetStars()">⭐ Reset All Stars</button>
         </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="openParentGate()" style="background: rgba(255,255,255,0.9); color: #1e3a8a; border: none; padding: 12px 24px; border-radius: 12px; font-family: inherit; font-weight: bold; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">⚙️ Parent Settings</button>
+        </div>
     </div>
 
     <div class="celebration" id="celebration"></div>
+
+    <!-- Parent Gate Modal (secret word to keep little hands out) -->
+    <div class="game-modal" id="parentGateModal">
+        <div class="game-container" style="max-width: 340px;">
+            <h2 class="game-title" style="font-size: 1.5em;">🔒 Parent Check</h2>
+            <div class="game-instruction" id="parentGateQuestion">Enter the secret word</div>
+            <input type="password" id="parentGateAnswer" autocomplete="off" autocapitalize="off" style="width: 100%; padding: 14px; font-size: 1.3em; text-align: center; border: 3px solid #3b82f6; border-radius: 12px; font-family: inherit; margin-bottom: 15px;">
+            <button class="play-game-button" style="margin-bottom: 10px;" onclick="checkParentGate()">Enter</button>
+            <button class="close-game-button" onclick="closeParentGate()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Parent Area Modal -->
+    <div class="game-modal" id="parentAreaModal">
+        <div class="game-container" style="max-width: 550px; text-align: left;">
+            <h2 class="game-title" style="text-align: center;">⚙️ Parent Settings</h2>
+            <div class="game-instruction" style="text-align: center;">Edit tasks, star values, and emoji. Changes sync to every device.</div>
+            
+            <div style="background: #fef3c7; border-radius: 12px; padding: 12px; margin-bottom: 15px;">
+                <h3 style="color: #92400e; margin-bottom: 8px;">🧒 Kid Mode (this device only)</h3>
+                <div style="font-size: 0.85em; color: #92400e; margin-bottom: 10px;">When ON: redeeming a reward needs the secret word, and task buttons have a short cooldown so they can't be spammed or accidentally double-tapped. Games are unaffected - they're already limited by star cost. Turn it OFF on your own phone so you can move freely.</div>
+                <div id="kidModeStatus" style="font-weight: bold; margin-bottom: 8px;"></div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="setKidMode(true)" style="flex: 1; background: #dc2626; color: white; border: none; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: bold; cursor: pointer;">Turn ON</button>
+                    <button onclick="setKidMode(false)" style="flex: 1; background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: bold; cursor: pointer;">Turn OFF</button>
+                </div>
+            </div>
+            
+            <div style="background: #dbeafe; border-radius: 12px; padding: 12px; margin-bottom: 15px;">
+                <h3 style="color: #1e40af; margin-bottom: 8px;">🔒 Security</h3>
+                <label style="font-size: 0.85em; color: #1e40af;">Secret word (for Parent Settings + reward approval)</label>
+                <input type="text" id="parentWordInput" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid #93c5fd; margin: 4px 0 10px; font-family: inherit;">
+                <label style="font-size: 0.85em; color: #1e40af;">Task cooldown in Kid Mode (minutes between repeat taps of the same task)</label>
+                <input type="number" id="kidModeCooldownInput" min="0" max="60" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid #93c5fd; margin: 4px 0; font-family: inherit;">
+                <div style="font-size: 0.75em; color: #1e40af; opacity: 0.8;">Set to 0 for no cooldown. Games are never throttled - they're already gated by star cost.</div>
+            </div>
+            
+            <div id="parentTaskList" style="max-height: 320px; overflow-y: auto; margin-bottom: 15px;"></div>
+            
+            <div id="parentHiddenSection" style="margin-bottom: 15px;"></div>
+            
+            <h3 style="color: #1e40af; margin-bottom: 10px;">➕ Add New Task</h3>
+            <div style="display: grid; grid-template-columns: 60px 1fr; gap: 8px; margin-bottom: 8px;">
+                <input type="text" id="newTaskEmoji" placeholder="🌟" style="padding: 8px; text-align: center; border-radius: 8px; border: 2px solid #ccc; font-size: 1.2em;">
+                <input type="text" id="newTaskLabel" placeholder="Task name" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 70px 110px; gap: 8px; margin-bottom: 12px;">
+                <input type="text" id="newTaskSubLabel" placeholder="Sub-label (e.g. Great Job!)" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc;">
+                <input type="number" id="newTaskStars" placeholder="Stars" min="1" max="10" value="1" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc;">
+                <select id="newTaskCategory" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc;">
+                    <option value="potty">🚽 Potty</option>
+                    <option value="hygiene">🧼 Hygiene</option>
+                    <option value="chores">🧺 Chores</option>
+                    <option value="bonus" selected>🌟 Bonus</option>
+                </select>
+            </div>
+            <button class="play-game-button" style="margin-bottom: 15px;" onclick="addNewParentTask()">Add Task</button>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="play-game-button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="saveParentChanges()">💾 Save Changes</button>
+                <button class="close-game-button" onclick="closeParentArea()">Close</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Game Earned Modal -->
     <div class="game-earned-modal" id="gameEarnedModal">
@@ -787,7 +856,7 @@
         // cat-potty = green, cat-hygiene = blue, cat-chores = purple, cat-bonus = pink
         // cssClass controls color by category: cat-potty = green, cat-hygiene = blue,
         // cat-chores = purple, cat-bonus = pink
-        const starActions = [
+        const baseStarActions = [
             // ---- Potty ----
             {
                 id: 'pee',
@@ -828,6 +897,16 @@
                 emoji: '🦷',
                 label: 'Brush Teeth',
                 subLabel: 'Squeaky Clean!',
+                cssClass: 'cat-hygiene'
+            },
+            {
+                id: 'washHands',
+                category: 'hygiene',
+                method: 'hygiene',
+                stars: 1,
+                emoji: '🧼',
+                label: 'Wash Hands',
+                subLabel: 'All Clean!',
                 cssClass: 'cat-hygiene'
             },
             {
@@ -896,7 +975,7 @@
                 category: 'chores',
                 method: 'chore',
                 stars: 1,
-                emoji: '🍎',
+                emoji: '🍎🥤',
                 label: 'Get Own Snack or Drink',
                 subLabel: 'I Did It Myself!',
                 cssClass: 'cat-chores'
@@ -962,8 +1041,47 @@
                 label: 'Pack Your Backpack',
                 subLabel: 'Ready to Go!',
                 cssClass: 'cat-bonus'
+            },
+            {
+                id: 'parentChoice',
+                category: 'bonus',
+                method: 'bonus',
+                stars: 1,
+                emoji: '🎯',
+                label: "Parent's Choice",
+                subLabel: 'Great Job!',
+                cssClass: 'cat-bonus'
             }
         ];
+
+        // Parent-editable layer on top of the built-in defaults above.
+        // taskOverrides: { taskId: { emoji, label, subLabel, stars, category, hidden } }
+        // customTasks: brand-new tasks the parent added from scratch
+        let taskOverrides = {};
+        let customTasks = [];
+        let starActions = [];
+
+        function cssClassForCategory(category) {
+            return 'cat-' + category;
+        }
+
+        function rebuildStarActions() {
+            const merged = baseStarActions
+                .map(task => {
+                    const override = taskOverrides[task.id];
+                    if (!override) return task;
+                    if (override.hidden) return null;
+                    const category = override.category || task.category;
+                    return { ...task, ...override, category, cssClass: cssClassForCategory(category) };
+                })
+                .filter(Boolean);
+            
+            const customs = customTasks.map(t => ({ ...t, cssClass: cssClassForCategory(t.category) }));
+            
+            starActions = merged.concat(customs);
+        }
+
+        rebuildStarActions();
 
         function renderCategoryTabs() {
             const tabsContainer = document.getElementById('categoryTabs');
@@ -1010,6 +1128,23 @@
                 
                 container.appendChild(btn);
             });
+            
+            updateTaskCooldownStates();
+        }
+
+        function updateTaskCooldownStates() {
+            starActions.forEach(action => {
+                const btn = document.getElementById('btn-' + action.id);
+                if (!btn) return;
+                
+                if (kidModeEnabled && isTaskOnCooldown(action.id)) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.4';
+                } else {
+                    btn.disabled = false;
+                    btn.style.opacity = '';
+                }
+            });
         }
         // Available mini-games. To add another later, add an entry here plus
         // a rendering branch in gameLoop()/spawnBubble() for its visuals.
@@ -1018,7 +1153,7 @@
             { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', cost: 5, instruction: 'Tap the balloons before they float away!' },
             { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', cost: 5, instruction: 'Tap the moles as they pop up from their holes!' },
             { id: 'battle', name: 'Sock Monster SHOWDOWN', emoji: '🥊', cost: 5, instruction: 'Aim and fire pillows at the Sock Monster! Land combos to charge your MEGA SMASH!', isBattle: true },
-            { id: 'duel', name: 'Pillow Duel', emoji: '⚡', cost: 10, instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true, fullWidth: true }
+            { id: 'duel', name: 'Duel', emoji: '⚡', cost: 10, instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true, fullWidth: true }
         ];
         // Polyfill for older browsers/WebViews without native roundRect support (used for pillow shapes)
         if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
@@ -1245,9 +1380,314 @@
             }
         }
 
+        async function loadTaskConfig() {
+            if (sheetUrl) {
+                try {
+                    const response = await fetch(sheetUrl + '?action=getTaskConfig');
+                    const result = await response.json();
+                    if (result.success && result.config) {
+                        taskOverrides = result.config.taskOverrides || {};
+                        customTasks = result.config.customTasks || [];
+                        parentWord = result.config.parentWord || 'edward';
+                        kidModeCooldownMinutes = result.config.kidModeCooldownMinutes || 3;
+                    }
+                } catch (error) {
+                    console.error('Error loading task config from sheets:', error);
+                    loadTaskConfigLocal();
+                }
+            } else {
+                loadTaskConfigLocal();
+            }
+            
+            rebuildStarActions();
+            renderCategoryTabs();
+            renderPottyButtons();
+        }
+
+        function loadTaskConfigLocal() {
+            const saved = localStorage.getItem('pottyTrackerTaskConfig');
+            if (saved) {
+                try {
+                    const cfg = JSON.parse(saved);
+                    taskOverrides = cfg.taskOverrides || {};
+                    customTasks = cfg.customTasks || [];
+                    parentWord = cfg.parentWord || 'edward';
+                    kidModeCooldownMinutes = cfg.kidModeCooldownMinutes || 3;
+                } catch (error) {
+                    console.error('Error parsing local task config:', error);
+                }
+            }
+        }
+
+        function saveTaskConfig() {
+            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes };
+            localStorage.setItem('pottyTrackerTaskConfig', JSON.stringify(payload));
+            
+            if (sheetUrl) {
+                try {
+                    fetch(sheetUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'saveTaskConfig', config: payload })
+                    });
+                } catch (error) {
+                    console.error('Error saving task config to sheets:', error);
+                }
+            }
+        }
+
+        // ===== Parent Area =====
+        let parentWord = 'edward';
+        let kidModeCooldownMinutes = 3;
+        let kidModeEnabled = false; // per-device setting, not synced across devices
+        let gateSuccessAction = null; // what to do after a correct word: 'settings' or 'redeem'
+        let pendingRedemption = null;
+
+        function loadKidMode() {
+            kidModeEnabled = localStorage.getItem('pottyTrackerKidMode') === 'true';
+            updateKidModeBadge();
+        }
+
+        function setKidMode(enabled) {
+            kidModeEnabled = enabled;
+            localStorage.setItem('pottyTrackerKidMode', enabled ? 'true' : 'false');
+            renderKidModeStatus();
+            updateKidModeBadge();
+            updateTaskCooldownStates();
+        }
+
+        function updateKidModeBadge() {
+            const badge = document.getElementById('kidModeBadge');
+            if (badge) badge.style.display = kidModeEnabled ? 'inline-block' : 'none';
+        }
+
+        function openParentGate(purpose, redemptionReward) {
+            gateSuccessAction = purpose || 'settings';
+            pendingRedemption = redemptionReward || null;
+            document.getElementById('parentGateQuestion').textContent = gateSuccessAction === 'redeem'
+                ? 'Ask a parent to enter the secret word'
+                : 'Enter the secret word';
+            document.getElementById('parentGateAnswer').value = '';
+            document.getElementById('parentGateModal').classList.add('active');
+            setTimeout(() => document.getElementById('parentGateAnswer').focus(), 200);
+        }
+
+        function closeParentGate() {
+            document.getElementById('parentGateModal').classList.remove('active');
+            pendingRedemption = null;
+        }
+
+        function checkParentGate() {
+            const val = document.getElementById('parentGateAnswer').value.trim().toLowerCase();
+            if (val === parentWord.toLowerCase()) {
+                const action = gateSuccessAction;
+                const reward = pendingRedemption;
+                closeParentGate();
+                if (action === 'redeem') {
+                    completeRedemption(reward);
+                } else {
+                    openParentArea();
+                }
+            } else {
+                document.getElementById('parentGateAnswer').value = '';
+                document.getElementById('parentGateAnswer').focus();
+            }
+        }
+
+        function openParentArea() {
+            document.getElementById('parentWordInput').value = parentWord;
+            document.getElementById('kidModeCooldownInput').value = kidModeCooldownMinutes;
+            renderKidModeStatus();
+            renderParentTaskList();
+            document.getElementById('parentAreaModal').classList.add('active');
+        }
+
+        function renderKidModeStatus() {
+            const el = document.getElementById('kidModeStatus');
+            if (!el) return;
+            el.innerHTML = kidModeEnabled
+                ? '<span style="color:#dc2626;">🔒 Kid Mode is ON for this device</span>'
+                : '<span style="color:#059669;">🔓 Kid Mode is OFF for this device</span>';
+        }
+
+        function closeParentArea(discard) {
+            if (discard !== false) {
+                // Reload the last-saved config so any un-saved edits are discarded
+                loadTaskConfig();
+            }
+            document.getElementById('parentAreaModal').classList.remove('active');
+        }
+
+        const categoryIcons = { potty: '🚽', hygiene: '🧼', chores: '🧺', bonus: '🌟' };
+
+        function renderParentTaskList() {
+            const container = document.getElementById('parentTaskList');
+            container.innerHTML = '';
+            
+            categories.forEach(cat => {
+                const tasksInCat = starActions.filter(t => t.category === cat.id);
+                if (tasksInCat.length === 0) return;
+                
+                const header = document.createElement('div');
+                header.style.cssText = 'font-weight:bold;color:#1e40af;margin:10px 0 6px;';
+                header.textContent = cat.label;
+                container.appendChild(header);
+                
+                tasksInCat.forEach(task => {
+                    const isCustom = customTasks.some(c => c.id === task.id);
+                    const row = document.createElement('div');
+                    row.className = 'parent-task-row';
+                    row.dataset.taskId = task.id;
+                    row.dataset.isCustom = isCustom ? 'true' : 'false';
+                    row.style.cssText = 'border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-bottom:8px;';
+                    row.innerHTML = `
+                        <div style="display:flex;gap:6px;margin-bottom:6px;">
+                            <input type="text" class="pt-emoji" value="${task.emoji}" style="width:50px;padding:6px;text-align:center;border-radius:8px;border:2px solid #ccc;font-size:1.1em;">
+                            <input type="text" class="pt-label" value="${task.label.replace(/"/g, '&quot;')}" style="flex:1;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                            <button onclick="removeParentTaskRow('${task.id}', ${isCustom})" style="background:#dc2626;color:white;border:none;border-radius:8px;padding:0 12px;cursor:pointer;">✕</button>
+                        </div>
+                        <div style="display:flex;gap:6px;">
+                            <input type="text" class="pt-sublabel" value="${(task.subLabel || '').replace(/"/g, '&quot;')}" placeholder="Sub-label" style="flex:1;padding:6px;border-radius:8px;border:2px solid #ccc;font-size:0.85em;">
+                            <input type="number" class="pt-stars" value="${task.stars}" min="1" max="10" style="width:55px;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                            <select class="pt-category" style="padding:6px;border-radius:8px;border:2px solid #ccc;font-size:0.9em;">
+                                ${categories.map(c => `<option value="${c.id}" ${task.category === c.id ? 'selected' : ''}>${categoryIcons[c.id]}</option>`).join('')}
+                            </select>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            });
+            
+            renderHiddenTasksSection();
+        }
+
+        function renderHiddenTasksSection() {
+            const section = document.getElementById('parentHiddenSection');
+            const hiddenTasks = baseStarActions.filter(t => taskOverrides[t.id] && taskOverrides[t.id].hidden);
+            
+            if (hiddenTasks.length === 0) {
+                section.innerHTML = '';
+                return;
+            }
+            
+            section.innerHTML = `<div style="font-weight:bold;color:#6b7280;margin-bottom:6px;">Hidden Tasks</div>` +
+                hiddenTasks.map(t => `
+                    <div style="display:flex;align-items:center;gap:8px;padding:6px;background:#f3f4f6;border-radius:8px;margin-bottom:6px;">
+                        <span style="flex:1;color:#6b7280;">${t.emoji} ${t.label}</span>
+                        <button onclick="restoreParentTask('${t.id}')" style="background:#10b981;color:white;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;">Restore</button>
+                    </div>
+                `).join('');
+        }
+
+        function removeParentTaskRow(taskId, isCustom) {
+            if (isCustom) {
+                customTasks = customTasks.filter(t => t.id !== taskId);
+            } else {
+                taskOverrides[taskId] = { ...(taskOverrides[taskId] || {}), hidden: true };
+            }
+            rebuildStarActions();
+            renderCategoryTabs();
+            renderPottyButtons();
+            renderParentTaskList();
+        }
+
+        function restoreParentTask(taskId) {
+            if (taskOverrides[taskId]) {
+                delete taskOverrides[taskId].hidden;
+                if (Object.keys(taskOverrides[taskId]).length === 0) delete taskOverrides[taskId];
+            }
+            rebuildStarActions();
+            renderCategoryTabs();
+            renderPottyButtons();
+            renderParentTaskList();
+        }
+
+        function addNewParentTask() {
+            const emoji = document.getElementById('newTaskEmoji').value.trim() || '🌟';
+            const label = document.getElementById('newTaskLabel').value.trim();
+            const subLabel = document.getElementById('newTaskSubLabel').value.trim() || 'Great Job!';
+            const stars = Math.max(1, Math.min(10, parseInt(document.getElementById('newTaskStars').value, 10) || 1));
+            const category = document.getElementById('newTaskCategory').value;
+            
+            if (!label) {
+                document.getElementById('newTaskLabel').focus();
+                return;
+            }
+            
+            customTasks.push({
+                id: 'custom_' + Date.now(),
+                category: category,
+                method: 'custom',
+                stars: stars,
+                emoji: emoji,
+                label: label,
+                subLabel: subLabel
+            });
+            
+            document.getElementById('newTaskEmoji').value = '';
+            document.getElementById('newTaskLabel').value = '';
+            document.getElementById('newTaskSubLabel').value = '';
+            document.getElementById('newTaskStars').value = '1';
+            
+            rebuildStarActions();
+            renderCategoryTabs();
+            renderPottyButtons();
+            renderParentTaskList();
+        }
+
+        function saveParentChanges() {
+            const newWord = document.getElementById('parentWordInput').value.trim();
+            if (newWord) parentWord = newWord;
+            
+            const newCooldown = parseInt(document.getElementById('kidModeCooldownInput').value, 10);
+            kidModeCooldownMinutes = isNaN(newCooldown) ? kidModeCooldownMinutes : Math.max(0, newCooldown);
+            
+            document.querySelectorAll('#parentTaskList .parent-task-row').forEach(row => {
+                const taskId = row.dataset.taskId;
+                const isCustom = row.dataset.isCustom === 'true';
+                const emoji = row.querySelector('.pt-emoji').value.trim() || '🌟';
+                const label = row.querySelector('.pt-label').value.trim();
+                const subLabel = row.querySelector('.pt-sublabel').value.trim();
+                const stars = Math.max(1, Math.min(10, parseInt(row.querySelector('.pt-stars').value, 10) || 1));
+                const category = row.querySelector('.pt-category').value;
+                
+                if (!label) return;
+                
+                if (isCustom) {
+                    const custom = customTasks.find(t => t.id === taskId);
+                    if (custom) {
+                        custom.emoji = emoji;
+                        custom.label = label;
+                        custom.subLabel = subLabel;
+                        custom.stars = stars;
+                        custom.category = category;
+                    }
+                } else {
+                    taskOverrides[taskId] = { emoji, label, subLabel, stars, category };
+                }
+            });
+            
+            saveTaskConfig();
+            rebuildStarActions();
+            renderCategoryTabs();
+            renderPottyButtons();
+            closeParentArea(false);
+            
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = '✅ Saved!';
+            celebration.classList.add('show');
+            setTimeout(() => celebration.classList.remove('show'), 1500);
+        }
+
         function trackEvent(actionId) {
             const action = starActions.find(a => a.id === actionId);
             if (!action) return;
+            
+            if (kidModeEnabled && isTaskOnCooldown(actionId)) {
+                showCooldownMessage();
+                return;
+            }
             
             const now = new Date();
             const timeStr = now.toLocaleTimeString('en-US', { 
@@ -1290,10 +1730,50 @@
             // Save to local storage immediately
             localStorage.setItem('pottyTrackerData', JSON.stringify(data));
             
+            recordTaskCooldown(actionId);
+            updateTaskCooldownStates();
+            
             // Sync to sheets in background (non-blocking)
             if (sheetUrl) {
                 addEventToSheets(event);
             }
+        }
+
+        function getCooldowns() {
+            try {
+                return JSON.parse(localStorage.getItem('pottyTrackerCooldowns') || '{}');
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function isTaskOnCooldown(actionId) {
+            const cooldowns = getCooldowns();
+            const lastTap = cooldowns[actionId];
+            if (!lastTap) return false;
+            const elapsedMinutes = (Date.now() - lastTap) / 60000;
+            return elapsedMinutes < kidModeCooldownMinutes;
+        }
+
+        function recordTaskCooldown(actionId) {
+            const cooldowns = getCooldowns();
+            cooldowns[actionId] = Date.now();
+            localStorage.setItem('pottyTrackerCooldowns', JSON.stringify(cooldowns));
+        }
+
+        function showCooldownMessage() {
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = '⏳ Already logged! Try again soon.';
+            celebration.style.fontSize = '1.6rem';
+            celebration.style.maxWidth = '85vw';
+            celebration.style.textAlign = 'center';
+            celebration.classList.add('show');
+            setTimeout(() => {
+                celebration.classList.remove('show');
+                celebration.style.fontSize = '';
+                celebration.style.maxWidth = '';
+                celebration.style.textAlign = '';
+            }, 1500);
         }
 
         function showGamePlayEarned() {
@@ -1332,14 +1812,18 @@
             const celebration = document.getElementById('celebration');
             let emojis;
             
-            if (action.stars >= 5) {
-                emojis = ['🌟🌟🌟🌟🌟', '🏫⭐⭐⭐⭐⭐', '🎉🎊🎉🎊🎉'];
+            if (action.id === 'pee') {
+                emojis = ['💧', '🌠', '⭐'];
+            } else if (action.id === 'poop') {
+                emojis = ['💩', '🌠', '⭐'];
+            } else if (action.stars >= 5) {
+                emojis = ['🌟🌟🌟🌟🌟', '🌠🌠🌠', '🎉🎊🎉🎊🎉'];
             } else if (action.stars >= 3) {
-                emojis = ['🧠🌟🌟🌟', '⭐⭐⭐', '🎉🎊🎉'];
+                emojis = ['🧠🌟🌟🌟', '🌠⭐⭐', '🎉🎊🎉'];
             } else if (action.stars === 2) {
-                emojis = ['🌟🌟', '⭐⭐', '🎉🎊', '💫💫'];
+                emojis = ['🌟🌟', '🌠', '🎉🎊', '💫💫'];
             } else {
-                emojis = ['💧', '💩', '⭐', '🎉'];
+                emojis = ['🌠', '⭐', '🎉', '✨'];
             }
             
             celebration.textContent = emojis[Math.floor(Math.random() * emojis.length)];
@@ -1463,46 +1947,57 @@
         function redeemReward(reward) {
             if (data.totalGamePoints < reward.cost) return;
             
-            if (confirm(`Redeem ${reward.label} for ${reward.cost} points?`)) {
-                data.totalGamePoints -= reward.cost;
-                
-                // Save locally immediately
-                localStorage.setItem('pottyTrackerData', JSON.stringify(data));
-                
-                // Update UI
-                updateUI();
-                
-                // Log redemption to Google Sheets (permanent record)
-                if (sheetUrl) {
-                    addRedemptionToSheets(reward);
-                    // Also update the points total
-                    updateGameStatsToSheets();
-                }
-                
-                const celebration = document.getElementById('celebration');
-                celebration.textContent = `${reward.emoji} ${reward.label}! ${reward.emoji}`;
-                celebration.classList.add('show');
-                
-                setTimeout(() => {
-                    celebration.classList.remove('show');
-                }, 2000);
-                
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.value = 800;
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.5);
+            if (kidModeEnabled) {
+                openParentGate('redeem', reward);
+                return;
             }
+            
+            if (confirm(`Redeem ${reward.label} for ${reward.cost} points?`)) {
+                completeRedemption(reward);
+            }
+        }
+
+        function completeRedemption(reward) {
+            if (!reward || data.totalGamePoints < reward.cost) return;
+            
+            data.totalGamePoints -= reward.cost;
+            
+            // Save locally immediately
+            localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+            
+            // Update UI
+            updateUI();
+            
+            // Log redemption to Google Sheets (permanent record)
+            if (sheetUrl) {
+                addRedemptionToSheets(reward);
+                // Also update the points total
+                updateGameStatsToSheets();
+            }
+            
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = `${reward.emoji} ${reward.label}! ${reward.emoji}`;
+            celebration.classList.add('show');
+            
+            setTimeout(() => {
+                celebration.classList.remove('show');
+            }, 2000);
+            
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
         }
 
         // Game Functions
@@ -1762,6 +2257,8 @@
         }
 
         function spawnDuelTargets() {
+            const pointTiers = [5, 8, 12];
+            
             ['left', 'right'].forEach(side => {
                 const freeHoles = duelHoles.filter(h => h.side === side && !h.occupied);
                 if (freeHoles.length === 0) return;
@@ -1783,7 +2280,7 @@
                     speed: 0,
                     dy: 0,
                     popped: false,
-                    points: 1,
+                    points: pointTiers[Math.floor(Math.random() * pointTiers.length)],
                     life: 55,
                     isDuelTarget: true,
                     holeRef: hole
@@ -1827,7 +2324,7 @@
                 });
             } else if (currentGame === 'duel') {
                 // Divider slides toward whoever's ahead - tug of war style
-                dividerTargetX = Math.max(110, Math.min(290, 200 + (p1Score - p2Score) * 14));
+                dividerTargetX = Math.max(110, Math.min(290, 200 + (p1Score - p2Score) * 3));
                 dividerX += (dividerTargetX - dividerX) * 0.1;
                 
                 ctx.fillStyle = '#dbeafe';
@@ -2490,9 +2987,9 @@
                     
                     if (obj.isDuelTarget) {
                         if (obj.side === 'left') {
-                            p1Score++;
+                            p1Score += obj.points;
                         } else {
-                            p2Score++;
+                            p2Score += obj.points;
                         }
                     }
                     
@@ -2536,11 +3033,13 @@
         });
 
         // Initialize
+        loadKidMode();
         renderCategoryTabs();
         renderPottyButtons();
         renderGameButtons();
         checkSheetUrl();
         loadData();
+        loadTaskConfig();
         
         // Auto-refresh data every 1 hour
         setInterval(() => {
@@ -2548,6 +3047,13 @@
                 loadDataFromSheets();
             }
         }, 3600000); // 1 hour = 3600000 milliseconds
+        
+        // Keep task button cooldown dimming up to date
+        setInterval(() => {
+            if (kidModeEnabled) {
+                updateTaskCooldownStates();
+            }
+        }, 2000);
     </script>
 </body>
 </html>
