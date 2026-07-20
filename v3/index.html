@@ -1128,6 +1128,23 @@
                 
                 container.appendChild(btn);
             });
+            
+            updateTaskCooldownStates();
+        }
+
+        function updateTaskCooldownStates() {
+            starActions.forEach(action => {
+                const btn = document.getElementById('btn-' + action.id);
+                if (!btn) return;
+                
+                if (kidModeEnabled && isTaskOnCooldown(action.id)) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.4';
+                } else {
+                    btn.disabled = false;
+                    btn.style.opacity = '';
+                }
+            });
         }
         // Available mini-games. To add another later, add an entry here plus
         // a rendering branch in gameLoop()/spawnBubble() for its visuals.
@@ -1437,6 +1454,7 @@
             localStorage.setItem('pottyTrackerKidMode', enabled ? 'true' : 'false');
             renderKidModeStatus();
             updateKidModeBadge();
+            updateTaskCooldownStates();
         }
 
         function updateKidModeBadge() {
@@ -1463,9 +1481,11 @@
         function checkParentGate() {
             const val = document.getElementById('parentGateAnswer').value.trim().toLowerCase();
             if (val === parentWord.toLowerCase()) {
+                const action = gateSuccessAction;
+                const reward = pendingRedemption;
                 closeParentGate();
-                if (gateSuccessAction === 'redeem') {
-                    completeRedemption(pendingRedemption);
+                if (action === 'redeem') {
+                    completeRedemption(reward);
                 } else {
                     openParentArea();
                 }
@@ -1711,6 +1731,7 @@
             localStorage.setItem('pottyTrackerData', JSON.stringify(data));
             
             recordTaskCooldown(actionId);
+            updateTaskCooldownStates();
             
             // Sync to sheets in background (non-blocking)
             if (sheetUrl) {
@@ -3026,6 +3047,13 @@
                 loadDataFromSheets();
             }
         }, 3600000); // 1 hour = 3600000 milliseconds
+        
+        // Keep task button cooldown dimming up to date
+        setInterval(() => {
+            if (kidModeEnabled) {
+                updateTaskCooldownStates();
+            }
+        }, 2000);
     </script>
 </body>
 </html>
