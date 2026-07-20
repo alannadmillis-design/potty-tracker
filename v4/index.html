@@ -2436,13 +2436,12 @@
             const baseRadius = type.size === 'large' ? 35 : type.size === 'medium' ? 25 : 18;
             const radius = baseRadius + Math.random() * 8;
             
-            // Space asteroid (default)
-            const asteroidColors = ['#808080', '#a0a0a0', '#606060'];
+            // Space asteroid (default) - flat single-color icon style
             bubbles.push({
                 x: Math.random() * (canvas.width - 60) + 30,
                 y: -40,
                 radius: radius,
-                color: asteroidColors[Math.floor(Math.random() * asteroidColors.length)],
+                color: '#64748b',
                 speed: 2 + Math.random() * 3,
                 dy: 1,
                 popped: false,
@@ -2828,9 +2827,6 @@
                     ctx.ellipse(obj.x, obj.y, obj.radius, obj.radius * 0.9, 0, 0, Math.PI * 2);
                     ctx.fillStyle = obj.color;
                     ctx.fill();
-                    ctx.strokeStyle = '#5c3d24';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
                     
                     ctx.fillStyle = '#000000';
                     ctx.beginPath();
@@ -2856,16 +2852,24 @@
                         return false;
                     }
                     
+                    // Flat bullseye/target icon
                     ctx.beginPath();
                     ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
                     ctx.fillStyle = obj.color;
                     ctx.fill();
-                    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, obj.radius * 0.66, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, obj.radius * 0.33, 0, Math.PI * 2);
+                    ctx.fillStyle = obj.color;
+                    ctx.fill();
                     
                     ctx.fillStyle = '#ffffff';
-                    ctx.font = 'bold 22px Arial';
+                    ctx.font = 'bold 13px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(obj.side === 'left' ? 'P1' : 'P2', obj.x, obj.y);
@@ -2887,9 +2891,6 @@
                     ctx.ellipse(obj.x, obj.y, obj.radius * 0.85, obj.radius, 0, 0, Math.PI * 2);
                     ctx.fillStyle = obj.color;
                     ctx.fill();
-                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
                     
                     ctx.beginPath();
                     ctx.moveTo(obj.x - 4, obj.y + obj.radius);
@@ -2906,11 +2907,6 @@
                     ctx.lineWidth = 1;
                     ctx.stroke();
                     
-                    ctx.beginPath();
-                    ctx.ellipse(obj.x - obj.radius * 0.3, obj.y - obj.radius * 0.4, obj.radius * 0.2, obj.radius * 0.3, 0, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                    ctx.fill();
-                    
                     // Big letter to type, with dark outline for legibility over any balloon color
                     ctx.font = 'bold 40px Arial';
                     ctx.textAlign = 'center';
@@ -2924,19 +2920,17 @@
                     return true;
                 }
                 
-                // Space asteroid (default)
+                // Space asteroid (default) - flat single-color hexagon icon
                 ctx.save();
                 ctx.translate(obj.x, obj.y);
                 ctx.rotate(obj.rotation);
                 
                 ctx.beginPath();
-                const points = 8;
-                for (let i = 0; i < points; i++) {
-                    const angle = (i / points) * Math.PI * 2;
-                    const variance = 0.7 + Math.random() * 0.3;
-                    const r = obj.radius * variance;
-                    const x = Math.cos(angle) * r;
-                    const y = Math.sin(angle) * r;
+                const sides = 6;
+                for (let i = 0; i < sides; i++) {
+                    const angle = (i / sides) * Math.PI * 2;
+                    const x = Math.cos(angle) * obj.radius;
+                    const y = Math.sin(angle) * obj.radius;
                     if (i === 0) {
                         ctx.moveTo(x, y);
                     } else {
@@ -2946,9 +2940,6 @@
                 ctx.closePath();
                 ctx.fillStyle = obj.color;
                 ctx.fill();
-                ctx.strokeStyle = '#404040';
-                ctx.lineWidth = 2;
-                ctx.stroke();
                 
                 ctx.restore();
                 
