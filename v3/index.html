@@ -736,7 +736,7 @@
             
             <div style="background: #fef3c7; border-radius: 12px; padding: 12px; margin-bottom: 15px;">
                 <h3 style="color: #92400e; margin-bottom: 8px;">🧒 Kid Mode (this device only)</h3>
-                <div style="font-size: 0.85em; color: #92400e; margin-bottom: 10px;">When ON: redeeming a reward needs the secret word, and games have a cooldown between plays so points can't be farmed by spamming. Task buttons always stay instant either way. Turn it OFF on your own phone so you can move freely.</div>
+                <div style="font-size: 0.85em; color: #92400e; margin-bottom: 10px;">When ON: redeeming a reward needs the secret word, and task buttons have a short cooldown so they can't be spammed or accidentally double-tapped. Games are unaffected - they're already limited by star cost. Turn it OFF on your own phone so you can move freely.</div>
                 <div id="kidModeStatus" style="font-weight: bold; margin-bottom: 8px;"></div>
                 <div style="display: flex; gap: 10px;">
                     <button onclick="setKidMode(true)" style="flex: 1; background: #dc2626; color: white; border: none; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: bold; cursor: pointer;">Turn ON</button>
@@ -748,9 +748,9 @@
                 <h3 style="color: #1e40af; margin-bottom: 8px;">🔒 Security</h3>
                 <label style="font-size: 0.85em; color: #1e40af;">Secret word (for Parent Settings + reward approval)</label>
                 <input type="text" id="parentWordInput" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid #93c5fd; margin: 4px 0 10px; font-family: inherit;">
-                <label style="font-size: 0.85em; color: #1e40af;">Cooldown between game plays in Kid Mode (minutes)</label>
+                <label style="font-size: 0.85em; color: #1e40af;">Task cooldown in Kid Mode (minutes between repeat taps of the same task)</label>
                 <input type="number" id="kidModeCooldownInput" min="0" max="60" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid #93c5fd; margin: 4px 0; font-family: inherit;">
-                <div style="font-size: 0.75em; color: #1e40af; opacity: 0.8;">Set to 0 for no cooldown. Task buttons (potty, chores, etc.) are never throttled.</div>
+                <div style="font-size: 0.75em; color: #1e40af; opacity: 0.8;">Set to 0 for no cooldown. Games are never throttled - they're already gated by star cost.</div>
             </div>
             
             <div id="parentTaskList" style="max-height: 320px; overflow-y: auto; margin-bottom: 15px;"></div>
@@ -1664,6 +1664,11 @@
             const action = starActions.find(a => a.id === actionId);
             if (!action) return;
             
+            if (kidModeEnabled && isTaskOnCooldown(actionId)) {
+                showCooldownMessage();
+                return;
+            }
+            
             const now = new Date();
             const timeStr = now.toLocaleTimeString('en-US', { 
                 hour: 'numeric', 
@@ -1705,32 +1710,39 @@
             // Save to local storage immediately
             localStorage.setItem('pottyTrackerData', JSON.stringify(data));
             
+            recordTaskCooldown(actionId);
+            
             // Sync to sheets in background (non-blocking)
             if (sheetUrl) {
                 addEventToSheets(event);
             }
         }
 
-        function getLastGamePlayTime() {
-            const val = localStorage.getItem('pottyTrackerLastGamePlay');
-            return val ? parseInt(val, 10) : 0;
+        function getCooldowns() {
+            try {
+                return JSON.parse(localStorage.getItem('pottyTrackerCooldowns') || '{}');
+            } catch (error) {
+                return {};
+            }
         }
 
-        function recordGameCooldown() {
-            localStorage.setItem('pottyTrackerLastGamePlay', Date.now().toString());
+        function isTaskOnCooldown(actionId) {
+            const cooldowns = getCooldowns();
+            const lastTap = cooldowns[actionId];
+            if (!lastTap) return false;
+            const elapsedMinutes = (Date.now() - lastTap) / 60000;
+            return elapsedMinutes < kidModeCooldownMinutes;
         }
 
-        function gameCooldownRemainingSeconds() {
-            if (!kidModeEnabled || kidModeCooldownMinutes <= 0) return 0;
-            const elapsedMs = Date.now() - getLastGamePlayTime();
-            const cooldownMs = kidModeCooldownMinutes * 60000;
-            const remainingMs = cooldownMs - elapsedMs;
-            return remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
+        function recordTaskCooldown(actionId) {
+            const cooldowns = getCooldowns();
+            cooldowns[actionId] = Date.now();
+            localStorage.setItem('pottyTrackerCooldowns', JSON.stringify(cooldowns));
         }
 
         function showCooldownMessage() {
             const celebration = document.getElementById('celebration');
-            celebration.textContent = '⏳ Games are resting! Try again soon.';
+            celebration.textContent = '⏳ Already logged! Try again soon.';
             celebration.style.fontSize = '1.6rem';
             celebration.style.maxWidth = '85vw';
             celebration.style.textAlign = 'center';
@@ -2004,28 +2016,10 @@
         }
 
         function updateGameButtonStates() {
-            const cooldownLeft = gameCooldownRemainingSeconds();
-            
             GAMES.forEach(game => {
                 const btn = document.getElementById('game-btn-' + game.id);
-                if (!btn) return;
-                
-                const costLine = btn.querySelector('.game-card-cost');
-                
-                if (cooldownLeft > 0) {
-                    btn.disabled = true;
-                    if (costLine) {
-                        const mins = Math.floor(cooldownLeft / 60);
-                        const secs = cooldownLeft % 60;
-                        costLine.textContent = mins > 0 ? `⏳ Wait ${mins}m ${secs}s` : `⏳ Wait ${secs}s`;
-                    }
-                } else {
+                if (btn) {
                     btn.disabled = data.totalStars < game.cost;
-                    if (costLine) {
-                        costLine.textContent = game.fullWidth
-                            ? `${game.cost}⭐ per play · 2 players`
-                            : `${game.cost}⭐ per play`;
-                    }
                 }
             });
         }
@@ -2055,14 +2049,6 @@
             const game = GAMES.find(g => g.id === gameId) || GAMES[0];
             
             if (data.totalStars < game.cost) return;
-            if (gameCooldownRemainingSeconds() > 0) {
-                showCooldownMessage();
-                return;
-            }
-            
-            if (kidModeEnabled) {
-                recordGameCooldown();
-            }
             
             currentGame = game.id;
             currentGameCost = game.cost;
@@ -3040,13 +3026,6 @@
                 loadDataFromSheets();
             }
         }, 3600000); // 1 hour = 3600000 milliseconds
-        
-        // Keep the game cooldown countdown live
-        setInterval(() => {
-            if (kidModeEnabled && !gameActive) {
-                updateGameButtonStates();
-            }
-        }, 1000);
     </script>
 </body>
 </html>
