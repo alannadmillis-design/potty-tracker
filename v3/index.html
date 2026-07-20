@@ -667,6 +667,7 @@
             <div class="stars-collected">
                 ⭐ <span id="totalStars">0</span> Stars Collected!
             </div>
+            <div id="kidModeBadge" style="display: none; margin-top: 8px; background: rgba(220,38,38,0.85); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">🔒 Kid Mode</div>
         </div>
 
         <div class="rewards-section">
@@ -716,12 +717,12 @@
 
     <div class="celebration" id="celebration"></div>
 
-    <!-- Parent Gate Modal (simple math check to keep little hands out) -->
+    <!-- Parent Gate Modal (secret word to keep little hands out) -->
     <div class="game-modal" id="parentGateModal">
         <div class="game-container" style="max-width: 340px;">
             <h2 class="game-title" style="font-size: 1.5em;">🔒 Parent Check</h2>
-            <div class="game-instruction" id="parentGateQuestion">What is 6 + 7?</div>
-            <input type="number" id="parentGateAnswer" style="width: 100%; padding: 14px; font-size: 1.3em; text-align: center; border: 3px solid #3b82f6; border-radius: 12px; font-family: inherit; margin-bottom: 15px;">
+            <div class="game-instruction" id="parentGateQuestion">Enter the secret word</div>
+            <input type="text" id="parentGateAnswer" autocomplete="off" autocapitalize="off" style="width: 100%; padding: 14px; font-size: 1.3em; text-align: center; border: 3px solid #3b82f6; border-radius: 12px; font-family: inherit; margin-bottom: 15px;">
             <button class="play-game-button" style="margin-bottom: 10px;" onclick="checkParentGate()">Enter</button>
             <button class="close-game-button" onclick="closeParentGate()">Cancel</button>
         </div>
@@ -732,6 +733,24 @@
         <div class="game-container" style="max-width: 550px; text-align: left;">
             <h2 class="game-title" style="text-align: center;">⚙️ Parent Settings</h2>
             <div class="game-instruction" style="text-align: center;">Edit tasks, star values, and emoji. Changes sync to every device.</div>
+            
+            <div style="background: #fef3c7; border-radius: 12px; padding: 12px; margin-bottom: 15px;">
+                <h3 style="color: #92400e; margin-bottom: 8px;">🧒 Kid Mode (this device only)</h3>
+                <div style="font-size: 0.85em; color: #92400e; margin-bottom: 10px;">When ON: reward redemption needs the secret word, and tasks have a cooldown so they can't be button-mashed. Turn it OFF on your own phone so you can move freely.</div>
+                <div id="kidModeStatus" style="font-weight: bold; margin-bottom: 8px;"></div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="setKidMode(true)" style="flex: 1; background: #dc2626; color: white; border: none; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: bold; cursor: pointer;">Turn ON</button>
+                    <button onclick="setKidMode(false)" style="flex: 1; background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: bold; cursor: pointer;">Turn OFF</button>
+                </div>
+            </div>
+            
+            <div style="background: #dbeafe; border-radius: 12px; padding: 12px; margin-bottom: 15px;">
+                <h3 style="color: #1e40af; margin-bottom: 8px;">🔒 Security</h3>
+                <label style="font-size: 0.85em; color: #1e40af;">Secret word (for Parent Settings + reward approval)</label>
+                <input type="text" id="parentWordInput" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid #93c5fd; margin: 4px 0 10px; font-family: inherit;">
+                <label style="font-size: 0.85em; color: #1e40af;">Task cooldown in Kid Mode (minutes between repeat taps of the same task)</label>
+                <input type="number" id="kidModeCooldownInput" min="0" max="60" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid #93c5fd; margin: 4px 0; font-family: inherit;">
+            </div>
             
             <div id="parentTaskList" style="max-height: 320px; overflow-y: auto; margin-bottom: 15px;"></div>
             
@@ -1351,6 +1370,8 @@
                     if (result.success && result.config) {
                         taskOverrides = result.config.taskOverrides || {};
                         customTasks = result.config.customTasks || [];
+                        parentWord = result.config.parentWord || 'edward';
+                        kidModeCooldownMinutes = result.config.kidModeCooldownMinutes || 3;
                     }
                 } catch (error) {
                     console.error('Error loading task config from sheets:', error);
@@ -1372,6 +1393,8 @@
                     const cfg = JSON.parse(saved);
                     taskOverrides = cfg.taskOverrides || {};
                     customTasks = cfg.customTasks || [];
+                    parentWord = cfg.parentWord || 'edward';
+                    kidModeCooldownMinutes = cfg.kidModeCooldownMinutes || 3;
                 } catch (error) {
                     console.error('Error parsing local task config:', error);
                 }
@@ -1379,7 +1402,7 @@
         }
 
         function saveTaskConfig() {
-            const payload = { taskOverrides, customTasks };
+            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes };
             localStorage.setItem('pottyTrackerTaskConfig', JSON.stringify(payload));
             
             if (sheetUrl) {
@@ -1397,13 +1420,35 @@
         }
 
         // ===== Parent Area =====
-        let parentGateAnswer = 0;
+        let parentWord = 'edward';
+        let kidModeCooldownMinutes = 3;
+        let kidModeEnabled = false; // per-device setting, not synced across devices
+        let gateSuccessAction = null; // what to do after a correct word: 'settings' or 'redeem'
+        let pendingRedemption = null;
 
-        function openParentGate() {
-            const a = Math.floor(Math.random() * 8) + 4;
-            const b = Math.floor(Math.random() * 8) + 3;
-            parentGateAnswer = a + b;
-            document.getElementById('parentGateQuestion').textContent = `What is ${a} + ${b}?`;
+        function loadKidMode() {
+            kidModeEnabled = localStorage.getItem('pottyTrackerKidMode') === 'true';
+            updateKidModeBadge();
+        }
+
+        function setKidMode(enabled) {
+            kidModeEnabled = enabled;
+            localStorage.setItem('pottyTrackerKidMode', enabled ? 'true' : 'false');
+            renderKidModeStatus();
+            updateKidModeBadge();
+        }
+
+        function updateKidModeBadge() {
+            const badge = document.getElementById('kidModeBadge');
+            if (badge) badge.style.display = kidModeEnabled ? 'inline-block' : 'none';
+        }
+
+        function openParentGate(purpose, redemptionReward) {
+            gateSuccessAction = purpose || 'settings';
+            pendingRedemption = redemptionReward || null;
+            document.getElementById('parentGateQuestion').textContent = gateSuccessAction === 'redeem'
+                ? 'Ask a parent to enter the secret word'
+                : 'Enter the secret word';
             document.getElementById('parentGateAnswer').value = '';
             document.getElementById('parentGateModal').classList.add('active');
             setTimeout(() => document.getElementById('parentGateAnswer').focus(), 200);
@@ -1411,13 +1456,18 @@
 
         function closeParentGate() {
             document.getElementById('parentGateModal').classList.remove('active');
+            pendingRedemption = null;
         }
 
         function checkParentGate() {
-            const val = parseInt(document.getElementById('parentGateAnswer').value, 10);
-            if (val === parentGateAnswer) {
+            const val = document.getElementById('parentGateAnswer').value.trim().toLowerCase();
+            if (val === parentWord.toLowerCase()) {
                 closeParentGate();
-                openParentArea();
+                if (gateSuccessAction === 'redeem') {
+                    completeRedemption(pendingRedemption);
+                } else {
+                    openParentArea();
+                }
             } else {
                 document.getElementById('parentGateAnswer').value = '';
                 document.getElementById('parentGateAnswer').focus();
@@ -1425,8 +1475,19 @@
         }
 
         function openParentArea() {
+            document.getElementById('parentWordInput').value = parentWord;
+            document.getElementById('kidModeCooldownInput').value = kidModeCooldownMinutes;
+            renderKidModeStatus();
             renderParentTaskList();
             document.getElementById('parentAreaModal').classList.add('active');
+        }
+
+        function renderKidModeStatus() {
+            const el = document.getElementById('kidModeStatus');
+            if (!el) return;
+            el.innerHTML = kidModeEnabled
+                ? '<span style="color:#dc2626;">🔒 Kid Mode is ON for this device</span>'
+                : '<span style="color:#059669;">🔓 Kid Mode is OFF for this device</span>';
         }
 
         function closeParentArea(discard) {
@@ -1555,6 +1616,12 @@
         }
 
         function saveParentChanges() {
+            const newWord = document.getElementById('parentWordInput').value.trim();
+            if (newWord) parentWord = newWord;
+            
+            const newCooldown = parseInt(document.getElementById('kidModeCooldownInput').value, 10);
+            kidModeCooldownMinutes = isNaN(newCooldown) ? kidModeCooldownMinutes : Math.max(0, newCooldown);
+            
             document.querySelectorAll('#parentTaskList .parent-task-row').forEach(row => {
                 const taskId = row.dataset.taskId;
                 const isCustom = row.dataset.isCustom === 'true';
@@ -1595,6 +1662,11 @@
         function trackEvent(actionId) {
             const action = starActions.find(a => a.id === actionId);
             if (!action) return;
+            
+            if (kidModeEnabled && isTaskOnCooldown(actionId)) {
+                showCooldownMessage();
+                return;
+            }
             
             const now = new Date();
             const timeStr = now.toLocaleTimeString('en-US', { 
@@ -1637,10 +1709,49 @@
             // Save to local storage immediately
             localStorage.setItem('pottyTrackerData', JSON.stringify(data));
             
+            recordTaskCooldown(actionId);
+            
             // Sync to sheets in background (non-blocking)
             if (sheetUrl) {
                 addEventToSheets(event);
             }
+        }
+
+        function getCooldowns() {
+            try {
+                return JSON.parse(localStorage.getItem('pottyTrackerCooldowns') || '{}');
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function isTaskOnCooldown(actionId) {
+            const cooldowns = getCooldowns();
+            const lastTap = cooldowns[actionId];
+            if (!lastTap) return false;
+            const elapsedMinutes = (Date.now() - lastTap) / 60000;
+            return elapsedMinutes < kidModeCooldownMinutes;
+        }
+
+        function recordTaskCooldown(actionId) {
+            const cooldowns = getCooldowns();
+            cooldowns[actionId] = Date.now();
+            localStorage.setItem('pottyTrackerCooldowns', JSON.stringify(cooldowns));
+        }
+
+        function showCooldownMessage() {
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = '⏳ Already logged! Try again soon.';
+            celebration.style.fontSize = '1.6rem';
+            celebration.style.maxWidth = '85vw';
+            celebration.style.textAlign = 'center';
+            celebration.classList.add('show');
+            setTimeout(() => {
+                celebration.classList.remove('show');
+                celebration.style.fontSize = '';
+                celebration.style.maxWidth = '';
+                celebration.style.textAlign = '';
+            }, 1500);
         }
 
         function showGamePlayEarned() {
@@ -1814,46 +1925,57 @@
         function redeemReward(reward) {
             if (data.totalGamePoints < reward.cost) return;
             
-            if (confirm(`Redeem ${reward.label} for ${reward.cost} points?`)) {
-                data.totalGamePoints -= reward.cost;
-                
-                // Save locally immediately
-                localStorage.setItem('pottyTrackerData', JSON.stringify(data));
-                
-                // Update UI
-                updateUI();
-                
-                // Log redemption to Google Sheets (permanent record)
-                if (sheetUrl) {
-                    addRedemptionToSheets(reward);
-                    // Also update the points total
-                    updateGameStatsToSheets();
-                }
-                
-                const celebration = document.getElementById('celebration');
-                celebration.textContent = `${reward.emoji} ${reward.label}! ${reward.emoji}`;
-                celebration.classList.add('show');
-                
-                setTimeout(() => {
-                    celebration.classList.remove('show');
-                }, 2000);
-                
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.value = 800;
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.5);
+            if (kidModeEnabled) {
+                openParentGate('redeem', reward);
+                return;
             }
+            
+            if (confirm(`Redeem ${reward.label} for ${reward.cost} points?`)) {
+                completeRedemption(reward);
+            }
+        }
+
+        function completeRedemption(reward) {
+            if (!reward || data.totalGamePoints < reward.cost) return;
+            
+            data.totalGamePoints -= reward.cost;
+            
+            // Save locally immediately
+            localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+            
+            // Update UI
+            updateUI();
+            
+            // Log redemption to Google Sheets (permanent record)
+            if (sheetUrl) {
+                addRedemptionToSheets(reward);
+                // Also update the points total
+                updateGameStatsToSheets();
+            }
+            
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = `${reward.emoji} ${reward.label}! ${reward.emoji}`;
+            celebration.classList.add('show');
+            
+            setTimeout(() => {
+                celebration.classList.remove('show');
+            }, 2000);
+            
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
         }
 
         // Game Functions
@@ -2889,6 +3011,7 @@
         });
 
         // Initialize
+        loadKidMode();
         renderCategoryTabs();
         renderPottyButtons();
         renderGameButtons();
