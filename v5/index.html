@@ -1680,7 +1680,7 @@
             const board = todayBoard[todayKey()] || {};
             const slots = [
                 { label: 'Day', value: board.day, color: 'rgba(219,234,254,0.9)', textColor: '#1e40af' },
-                { label: 'Month', value: board.month, color: 'rgba(252,231,243,0.9)', textColor: '#9d174d' },
+                { label: 'Month', value: board.month ? (MONTH_EMOJIS[MONTHS.indexOf(board.month)] + ' ' + board.month) : null, color: 'rgba(252,231,243,0.9)', textColor: '#9d174d' },
                 { label: 'Date', value: board.date ? (board.date + ordinalSuffix(board.date)) : null, color: 'rgba(254,243,199,0.9)', textColor: '#92400e' },
                 { label: 'Year', value: board.year, color: 'rgba(237,233,254,0.9)', textColor: '#5b21b6' }
             ];
@@ -1695,6 +1695,7 @@
 
         const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const MONTH_EMOJIS = ['❄️', '💘', '🌱', '🌧️', '🌷', '☀️', '🎆', '🏖️', '🍎', '🎃', '🍂', '🎄'];
         const MOODS = [
             { emoji: '😊', label: 'Happy' },
             { emoji: '😢', label: 'Sad' },
@@ -1828,7 +1829,7 @@
             const container = document.getElementById('fillableTopRow');
             const slots = [
                 { key: 'day', label: 'Day', value: board.day, color: '#dbeafe', textColor: '#1e40af' },
-                { key: 'month', label: 'Month', value: board.month, color: '#fce7f3', textColor: '#9d174d' },
+                { key: 'month', label: 'Month', value: board.month ? (MONTH_EMOJIS[MONTHS.indexOf(board.month)] + ' ' + board.month) : null, color: '#fce7f3', textColor: '#9d174d' },
                 { key: 'date', label: 'Date', value: board.date ? (board.date + ordinalSuffix(board.date)) : null, color: '#fef3c7', textColor: '#92400e' },
                 { key: 'year', label: 'Year', value: board.year, color: '#ede9fe', textColor: '#5b21b6' }
             ];
@@ -1978,9 +1979,9 @@
         function renderCalendarMonthGrid() {
             const board = getTodayBoard();
             const container = document.getElementById('calendarMonthGrid');
-            container.innerHTML = MONTHS.map(month => {
+            container.innerHTML = MONTHS.map((month, i) => {
                 const isFilled = board.month === month;
-                return `<button onpointerdown="startTileDrag(event, 'month', '${month}')" id="calmonth-${month}" style="padding:10px 2px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.72em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : '#fce7f3'};color:${isFilled ? 'white' : '#9d174d'};">${month.slice(0, 3)}${isFilled ? ' ✓' : ''}</button>`;
+                return `<button onpointerdown="startTileDrag(event, 'month', '${month}')" id="calmonth-${month}" style="padding:10px 2px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.72em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : '#fce7f3'};color:${isFilled ? 'white' : '#9d174d'};">${MONTH_EMOJIS[i]} ${month.slice(0, 3)}${isFilled ? ' ✓' : ''}</button>`;
             }).join('');
         }
 
@@ -2122,7 +2123,7 @@
             const year = calendarViewDate.getFullYear();
             const month = calendarViewDate.getMonth();
             
-            document.getElementById('calendarGridMonthLabel').textContent = MONTHS[month] + ' ' + year;
+            document.getElementById('calendarGridMonthLabel').textContent = MONTH_EMOJIS[month] + ' ' + MONTHS[month] + ' ' + year;
             
             const weekdayHeader = document.getElementById('calendarWeekdayHeader');
             weekdayHeader.innerHTML = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => `<div>${d}</div>`).join('');
@@ -2148,9 +2149,9 @@
                         <span style="font-size:0.75em;font-weight:${isToday ? 'bold' : 'normal'};color:${isCrossedOff ? '#9ca3af' : (isToday ? '#7c3aed' : '#374151')};text-decoration:${isCrossedOff ? 'line-through' : 'none'};margin-top:2px;">${d}</span>
                         ${events.slice(0, 2).map(ev => `
                             <span style="font-size:1.3em;line-height:1;margin-top:2px;">${ev.emoji}</span>
-                            <span style="font-size:0.5em;font-weight:bold;color:#7c2d12;line-height:1.15;max-width:96%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.label}</span>
+                            <span style="font-size:0.65em;font-weight:bold;color:#7c2d12;line-height:1.15;max-width:96%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.label}</span>
                         `).join('')}
-                        ${isCrossedOff ? `<span class="crayon-x" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 60 60" style="width:82%;height:82%;"><line x1="10" y1="10" x2="50" y2="50" stroke="#dc2626" stroke-width="11" stroke-linecap="round"/><line x1="50" y1="10" x2="10" y2="50" stroke="#dc2626" stroke-width="11" stroke-linecap="round"/></svg></span>` : ''}
+                        ${isCrossedOff ? `<span class="${dayKey === lastToggledDayKey ? 'crayon-x' : 'crayon-x-static'}" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 60 60" style="width:82%;height:82%;"><line x1="10" y1="10" x2="50" y2="50" stroke="#dc2626" stroke-width="11" stroke-linecap="round"/><line x1="50" y1="10" x2="10" y2="50" stroke="#dc2626" stroke-width="11" stroke-linecap="round"/></svg></span>` : ''}
                     </button>
                 `;
             }
@@ -2159,11 +2160,15 @@
             renderCalendarEventsList();
         }
 
+        let lastToggledDayKey = null;
+
         function toggleCrossOff(dayKey) {
             if (crossedOffDays[dayKey]) {
                 delete crossedOffDays[dayKey];
+                lastToggledDayKey = null;
             } else {
                 crossedOffDays[dayKey] = true;
+                lastToggledDayKey = dayKey;
             }
             saveTaskConfig();
             renderCalendarGrid();
