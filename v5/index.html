@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Potty Star Adventure! 🌟</title>
+    <title>Arthur's Adventures! ⭐</title>
     <style>
         * {
             margin: 0;
@@ -732,7 +732,7 @@
         <div class="loading-indicator" id="loadingIndicator">⏳ Syncing with Google Sheets...</div>
 
         <div class="header">
-            <h1>🚀 Potty Star Adventure! 🌟</h1>
+            <h1>Arthur's Adventures! ⭐</h1>
             <div class="stars-collected">
                 ⭐ <span id="totalStars">0</span> Stars Collected!
             </div>
@@ -903,10 +903,6 @@
                     <span style="font-size: 1.5em; color: #0c4a6e; font-weight: bold;" id="weatherSlotText">Drag your weather here!</span>
                 </div>
                 <div id="weatherGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;"></div>
-                
-                <h3 style="color: #1e40af; margin-bottom: 4px;">👕 Dress for the weather!</h3>
-                <div id="yesterdayOutfitRecap" style="font-size: 0.8em; color: #6b7280; font-style: italic; margin-bottom: 8px;"></div>
-                <div id="outfitGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
                 
                 <h3 style="color: #1e40af; margin-bottom: 4px;">💗 How do I feel today?</h3>
                 <div id="yesterdayMoodRecap" style="font-size: 0.8em; color: #6b7280; font-style: italic; margin-bottom: 8px;"></div>
@@ -1715,20 +1711,7 @@
             { emoji: '🌫️', label: 'Foggy' },
             { emoji: '🥵', label: 'Hot' }
         ];
-        const OUTFIT_OPTIONS = [
-            { emoji: '👕', label: 'T-Shirt' },
-            { emoji: '🩳', label: 'Shorts' },
-            { emoji: '👖', label: 'Pants' },
-            { emoji: '👗', label: 'Dress' },
-            { emoji: '🧥', label: 'Jacket' },
-            { emoji: '🧣', label: 'Scarf' },
-            { emoji: '🧤', label: 'Mittens' },
-            { emoji: '🥾', label: 'Boots' },
-            { emoji: '🩱', label: 'Swimsuit' },
-            { emoji: '🕶️', label: 'Sunglasses' },
-            { emoji: '☂️', label: 'Umbrella' },
-            { emoji: '🧦', label: 'Warm Socks' }
-        ];
+
         
         let calendarViewDate = new Date();
 
@@ -1787,7 +1770,6 @@
             renderCalendarYearGrid();
             renderWeatherGrid();
             renderWeatherSlot();
-            renderOutfitGrid();
             renderMoodTracker();
             renderYesterdayRecaps();
             showCalendarTab('board');
@@ -1808,17 +1790,6 @@
             
             const weatherEl = document.getElementById('yesterdayWeatherRecap');
             weatherEl.textContent = yBoard.weather ? `Yesterday it was ${yBoard.weatherEmoji} ${yBoard.weather}.` : "We didn't record yesterday's weather!";
-            
-            const outfitEl = document.getElementById('yesterdayOutfitRecap');
-            if (yBoard.outfit && yBoard.outfit.length > 0) {
-                const outfitEmojis = yBoard.outfit.map(label => {
-                    const found = OUTFIT_OPTIONS.find(o => o.label === label);
-                    return found ? found.emoji : '';
-                }).join('');
-                outfitEl.textContent = `Yesterday I wore ${outfitEmojis}`;
-            } else {
-                outfitEl.textContent = "We didn't pick an outfit yesterday!";
-            }
             
             const moodEl = document.getElementById('yesterdayMoodRecap');
             moodEl.textContent = yBoard.mood ? `Yesterday I felt ${yBoard.moodEmoji} ${yBoard.mood}.` : "We didn't record yesterday's mood!";
@@ -2032,36 +2003,6 @@
             }).join('');
         }
 
-        // ===== Outfit (multi-select) =====
-        function renderOutfitGrid() {
-            const board = getTodayBoard();
-            const outfit = board.outfit || [];
-            const container = document.getElementById('outfitGrid');
-            container.innerHTML = OUTFIT_OPTIONS.map(o => {
-                const isSelected = outfit.includes(o.label);
-                return `
-                    <button onclick="toggleOutfitItem('${o.emoji}', '${o.label}')" style="padding:8px 2px;border-radius:12px;border:${isSelected ? '3px solid #16a34a' : '2px solid #e5e7eb'};font-family:inherit;cursor:pointer;background:${isSelected ? '#dcfce7' : 'white'};display:flex;flex-direction:column;align-items:center;gap:2px;">
-                        <div style="font-size:1.4em;">${o.emoji}</div>
-                        <div style="font-size:0.6em;font-weight:bold;color:#14532d;">${o.label}</div>
-                    </button>
-                `;
-            }).join('');
-        }
-
-        function toggleOutfitItem(emoji, label) {
-            const board = getTodayBoard();
-            if (!board.outfit) board.outfit = [];
-            const idx = board.outfit.indexOf(label);
-            if (idx >= 0) {
-                board.outfit.splice(idx, 1);
-            } else {
-                board.outfit.push(label);
-            }
-            syncBoardEntryToSheets(todayKey(), board);
-            renderOutfitGrid();
-            renderTodayBoardSummary();
-        }
-
         // ===== Mood (single-select) =====
         function renderMoodTracker() {
             const board = getTodayBoard();
@@ -2096,13 +2037,6 @@
             
             const parts = [];
             if (board.weatherEmoji) parts.push(board.weatherEmoji + ' ' + board.weather);
-            if (board.outfit && board.outfit.length > 0) {
-                const outfitEmojis = board.outfit.map(label => {
-                    const found = OUTFIT_OPTIONS.find(o => o.label === label);
-                    return found ? found.emoji : '';
-                }).join('');
-                if (outfitEmojis) parts.push(outfitEmojis);
-            }
             if (board.moodEmoji) parts.push(board.moodEmoji + ' ' + board.mood);
             
             if (parts.length === 0) {

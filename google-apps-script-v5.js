@@ -1,4 +1,4 @@
-// Google Apps Script for Potty Tracker
+// Google Apps Script for Arthur's Adventures
 // Copy this entire code into your Google Apps Script editor
 
 function doGet(e) {
@@ -503,7 +503,7 @@ function sendRedemptionEmail(redemption) {
   }
   
   // Create the email
-  const subject = redemption.emoji + ' Potty Tracker: Reward Redeemed!';
+  const subject = redemption.emoji + " Arthur's Adventures: Reward Redeemed!";
   const body = `Great news!\n\n` +
                `Your child just redeemed a reward:\n\n` +
                `${redemption.emoji} ${redemption.label}\n` +
