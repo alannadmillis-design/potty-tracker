@@ -1,0 +1,3474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Potty Star Adventure! 🌟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .stars-collected {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 20px;
+            font-size: 1.5em;
+            backdrop-filter: blur(10px);
+        }
+
+        .button-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .category-tab {
+            flex: 1;
+            min-width: 90px;
+            padding: 12px 8px;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.25);
+            color: white;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            text-align: center;
+        }
+
+        .category-tab:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        .category-tab.active {
+            background: white;
+            color: #1e3a8a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+        }
+
+        .potty-button {
+            padding: 18px 10px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+            font-weight: bold;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            min-height: 92px;
+        }
+
+        .task-label {
+            font-size: 0.72em;
+            line-height: 1.15;
+            text-align: center;
+        }
+
+        .potty-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+        }
+
+        .potty-button:active {
+            transform: translateY(-2px);
+        }
+
+        .potty-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .button-label {
+            font-size: 0.75em;
+            opacity: 0.9;
+        }
+
+        /* Category-based button colors */
+        .cat-potty {
+            background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+            color: white;
+        }
+
+        .cat-hygiene {
+            background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .cat-chores {
+            background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .cat-bonus {
+            background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
+            color: white;
+        }
+
+        .school-button {
+            grid-column: 1 / -1;
+        }
+
+        .rewards-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .rewards-section h2 {
+            color: #1e40af;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .game-plays-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .game-plays-display h2 {
+            color: #000000;
+            margin: 0;
+        }
+
+        .game-plays-count {
+            font-size: 2em;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .play-game-button {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.5em;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .play-game-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+        }
+
+        .play-game-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            border-radius: 20px;
+            height: 30px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .progress-label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e3a8a;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+            pointer-events: none;
+        }
+
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .achievement {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            position: relative;
+            transition: transform 0.3s;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .achievement.locked {
+            background: #e0e0e0;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .achievement.unlocked:hover {
+            transform: scale(1.05);
+        }
+
+        .achievement-label {
+            font-size: 0.28em;
+            margin-top: 5px;
+            text-align: center;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .achievement-cost {
+            font-size: 0.35em;
+            color: #000;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+
+        .history {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .history h2 {
+            color: #1e40af;
+            margin-bottom: 15px;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            background: #f9fafb;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 6px solid #9ca3af;
+        }
+
+        .history-item.cat-potty-border { border-left-color: #059669; }
+        .history-item.cat-hygiene-border { border-left-color: #2563eb; }
+        .history-item.cat-chores-border { border-left-color: #7c3aed; }
+        .history-item.cat-bonus-border { border-left-color: #db2777; }
+
+        .history-emoji-badge {
+            font-size: 1.8em;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .history-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .history-desc {
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .history-sublabel {
+            font-size: 0.8em;
+            color: #6b7280;
+        }
+
+        .history-meta {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .history-stars {
+            font-size: 0.95em;
+        }
+
+        .history-time {
+            font-size: 0.75em;
+            color: #9ca3af;
+        }
+
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5em;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 2000;
+        }
+
+        .celebration.show {
+            animation: celebrate 1s;
+        }
+
+        @keyframes celebrate {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Game Earned Modal */
+        .game-earned-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-earned-modal.show {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        .game-earned-content {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 30px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 90%;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .game-earned-emoji {
+            font-size: 5em;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .game-earned-title {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #000000;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
+        }
+
+        .game-earned-subtitle {
+            font-size: 1.5em;
+            color: #1e3a8a;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .game-earned-button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.5em;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+
+        .game-earned-button:hover {
+            transform: scale(1.05);
+        }
+
+        .game-earned-button:active {
+            transform: scale(0.95);
+        }
+
+        .reset-button {
+            background: #000000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: inherit;
+            font-weight: bold;
+        }
+
+        .reset-stars-button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-family: inherit;
+            font-weight: bold;
+            width: 100%;
+            font-size: 1em;
+        }
+
+        .reset-stars-button:hover {
+            background: #b91c1c;
+        }
+
+        .loading-indicator {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .loading-indicator.show {
+            display: block;
+        }
+
+        /* Game Modal Styles */
+        .game-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-modal.active {
+            display: flex;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .game-title {
+            color: #1e40af;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .game-canvas {
+            background: #000033;
+            border-radius: 10px;
+            margin: 20px 0;
+            cursor: crosshair;
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .game-score {
+            font-size: 1.5em;
+            color: #1e40af;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .game-timer {
+            font-size: 1.3em;
+            color: #dc2626;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .game-over-screen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .game-over-screen.show {
+            display: block;
+        }
+
+        .game-over-title {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .game-over-score {
+            font-size: 2em;
+            color: #fbbf24;
+            margin-bottom: 20px;
+        }
+
+        .close-game-button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .game-instruction {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .game-buttons-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .game-select-card {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 20px 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 1em;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .game-select-card:hover:not(:disabled) {
+            transform: translateY(-4px);
+        }
+
+        .game-select-card:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .game-select-card.battle-card:not(:disabled) {
+            background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+        }
+
+        .game-select-card.duel-card:not(:disabled) {
+            background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%);
+        }
+
+        .game-card-cost {
+            font-size: 0.75em;
+            opacity: 0.9;
+        }
+
+        .setup-notice {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: #92400e;
+        }
+
+        .setup-notice h3 {
+            margin-bottom: 10px;
+            color: #b45309;
+        }
+
+        .setup-notice code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="setup-notice" id="setupNotice">
+            <h3>⚙️ Setup Required</h3>
+            <p>Please configure your Google Sheets Web App URL below:</p>
+            <input type="text" id="sheetUrlInput" placeholder="Paste your Google Sheets Web App URL here" 
+                   style="width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc;">
+            <button onclick="saveSheetUrl()" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">Save URL</button>
+            <p style="margin-top: 10px; font-size: 0.9em;">See the setup instructions file for help.</p>
+        </div>
+
+        <div class="loading-indicator" id="loadingIndicator">⏳ Syncing with Google Sheets...</div>
+
+        <div class="header">
+            <h1>🚀 Potty Star Adventure! 🌟</h1>
+            <div class="stars-collected">
+                ⭐ <span id="totalStars">0</span> Stars Collected!
+            </div>
+            <div id="kidModeBadge" style="display: none; margin-top: 8px; background: rgba(220,38,38,0.85); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">🔒 Kid Mode</div>
+        </div>
+
+        <div class="rewards-section">
+            <h3 style="color: #1e40af; margin-bottom: 10px; text-align: center;">Next Game Play Progress:</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+                <div class="progress-label" id="progressLabel">0/5 ⭐</div>
+            </div>
+        </div>
+
+        <div class="category-tabs" id="categoryTabs">
+            <!-- Tabs generated dynamically from CATEGORIES config -->
+        </div>
+
+        <div class="button-container" id="pottyButtonsContainer">
+            <!-- Buttons generated dynamically from starActions config, filtered by active category -->
+        </div>
+
+        <div class="rewards-section">
+            <div class="game-plays-display">
+                <h2>🎮 Game Points</h2>
+                <div class="game-plays-count">
+                    <span id="gamePlays">0</span> pts
+                </div>
+            </div>
+            <div style="text-align: center; margin-bottom: 15px; color: #1e40af; font-weight: bold; font-size: 1.1em;">
+                Pick a game to earn points!
+            </div>
+            <div class="game-buttons-grid" id="gameButtonsGrid">
+                <!-- Buttons generated dynamically from GAMES config -->
+            </div>
+            
+            <h2 style="margin-top: 25px;">🎁 Redeem Rewards!</h2>
+            <div class="achievement-grid" id="achievementGrid"></div>
+            
+            <h2 style="margin-top: 25px;">📦 Reward Tracker</h2>
+            <div style="text-align: center; color: #6b7280; font-size: 0.85em; margin-bottom: 10px;" id="rewardTrackerHint">Rewards waiting to be given show up here!</div>
+            <div id="rewardTrackerList"></div>
+        </div>
+
+        <div id="todayDateBanner" style="text-align: center; background: rgba(255,255,255,0.85); border-radius: 16px; padding: 12px; margin-bottom: 15px; color: #1e3a8a; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></div>
+
+        <div class="history">
+            <h2>📅 Today's Adventures</h2>
+            <div class="history-list" id="historyList"></div>
+            <button class="reset-button" onclick="resetData()">Start New Day</button>
+            <button class="reset-stars-button" onclick="resetStars()">⭐ Reset All Stars</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="openParentGate()" style="background: rgba(255,255,255,0.9); color: #1e3a8a; border: none; padding: 12px 24px; border-radius: 12px; font-family: inherit; font-weight: bold; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">⚙️ Parent Settings</button>
+        </div>
+    </div>
+
+    <div class="celebration" id="celebration"></div>
+
+    <!-- Parent Gate Modal (secret word to keep little hands out) -->
+    <div class="game-modal" id="parentGateModal">
+        <div class="game-container" style="max-width: 340px;">
+            <h2 class="game-title" style="font-size: 1.5em;">🔒 Parent Check</h2>
+            <div class="game-instruction" id="parentGateQuestion">Enter the secret word</div>
+            <input type="password" id="parentGateAnswer" autocomplete="off" autocapitalize="off" style="width: 100%; padding: 14px; font-size: 1.3em; text-align: center; border: 3px solid #3b82f6; border-radius: 12px; font-family: inherit; margin-bottom: 15px;">
+            <button class="play-game-button" style="margin-bottom: 10px;" onclick="checkParentGate()">Enter</button>
+            <button class="close-game-button" onclick="closeParentGate()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Parent Area Modal -->
+    <div class="game-modal" id="parentAreaModal">
+        <div class="game-container" style="max-width: 550px; text-align: left;">
+            <h2 class="game-title" style="text-align: center;">⚙️ Parent Settings</h2>
+            <div class="game-instruction" style="text-align: center;">Edit tasks, star values, and emoji. Changes sync to every device.</div>
+            
+            <div style="background: #fef3c7; border-radius: 12px; padding: 12px; margin-bottom: 15px;">
+                <h3 style="color: #92400e; margin-bottom: 8px;">🧒 Kid Mode (this device only)</h3>
+                <div style="font-size: 0.85em; color: #92400e; margin-bottom: 10px;">When ON: redeeming a reward needs the secret word, and task buttons have a short cooldown so they can't be spammed or accidentally double-tapped. Games are unaffected - they're already limited by star cost. Turn it OFF on your own phone so you can move freely.</div>
+                <div id="kidModeStatus" style="font-weight: bold; margin-bottom: 8px;"></div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="setKidMode(true)" style="flex: 1; background: #dc2626; color: white; border: none; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: bold; cursor: pointer;">Turn ON</button>
+                    <button onclick="setKidMode(false)" style="flex: 1; background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; font-family: inherit; font-weight: bold; cursor: pointer;">Turn OFF</button>
+                </div>
+            </div>
+            
+            <div style="background: #dbeafe; border-radius: 12px; padding: 12px; margin-bottom: 15px;">
+                <h3 style="color: #1e40af; margin-bottom: 8px;">🔒 Security</h3>
+                <label style="font-size: 0.85em; color: #1e40af;">Secret word (for Parent Settings + reward approval)</label>
+                <input type="text" id="parentWordInput" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid #93c5fd; margin: 4px 0 10px; font-family: inherit;">
+                <label style="font-size: 0.85em; color: #1e40af;">Task cooldown in Kid Mode (minutes between repeat taps of the same task)</label>
+                <input type="number" id="kidModeCooldownInput" min="0" max="60" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid #93c5fd; margin: 4px 0; font-family: inherit;">
+                <div style="font-size: 0.75em; color: #1e40af; opacity: 0.8;">Set to 0 for no cooldown. Games are never throttled - they're already gated by star cost.</div>
+            </div>
+            
+            <div id="parentTaskList" style="max-height: 320px; overflow-y: auto; margin-bottom: 15px;"></div>
+            
+            <div id="parentHiddenSection" style="margin-bottom: 15px;"></div>
+            
+            <h3 style="color: #1e40af; margin-bottom: 10px;">➕ Add New Task</h3>
+            <div style="display: grid; grid-template-columns: 60px 1fr; gap: 8px; margin-bottom: 8px;">
+                <input type="text" id="newTaskEmoji" placeholder="🌟" style="padding: 8px; text-align: center; border-radius: 8px; border: 2px solid #ccc; font-size: 1.2em;">
+                <input type="text" id="newTaskLabel" placeholder="Task name" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 70px 110px; gap: 8px; margin-bottom: 12px;">
+                <input type="text" id="newTaskSubLabel" placeholder="Sub-label (e.g. Great Job!)" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc;">
+                <input type="number" id="newTaskStars" placeholder="Stars" min="1" max="10" value="1" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc;">
+                <select id="newTaskCategory" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc;">
+                    <option value="potty">🚽 Potty</option>
+                    <option value="hygiene">🧼 Hygiene</option>
+                    <option value="chores">🧺 Chores</option>
+                    <option value="bonus" selected>🌟 Bonus</option>
+                </select>
+            </div>
+            <button class="play-game-button" style="margin-bottom: 15px;" onclick="addNewParentTask()">Add Task</button>
+            
+            <details style="margin-bottom: 15px;">
+                <summary style="cursor: pointer; font-weight: bold; color: #1e40af; padding: 8px 0;">🎮 Edit Games (name, emoji, cost, color)</summary>
+                <div id="parentGamesList" style="margin-top: 10px;"></div>
+            </details>
+            
+            <details style="margin-bottom: 15px;">
+                <summary style="cursor: pointer; font-weight: bold; color: #1e40af; padding: 8px 0;">🎁 Edit Rewards (label, emoji, cost)</summary>
+                <div id="parentRewardsList" style="max-height: 320px; overflow-y: auto; margin-top: 10px;"></div>
+            </details>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="play-game-button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="saveParentChanges()">💾 Save Changes</button>
+                <button class="close-game-button" onclick="closeParentArea()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Earned Modal -->
+    <div class="game-earned-modal" id="gameEarnedModal">
+        <div class="game-earned-content">
+            <div class="game-earned-emoji">🎮</div>
+            <div class="game-earned-title">YOU EARNED A GAME!</div>
+            <div class="game-earned-subtitle">5 Stars Complete! 🌟</div>
+            <button class="game-earned-button" onclick="closeGameEarnedModal()">AWESOME!</button>
+        </div>
+    </div>
+
+    <!-- Game Modal -->
+    <div class="game-modal" id="gameModal">
+        <div class="game-container">
+            <h2 class="game-title" id="gameModalTitle">🚀 Space Laser Battle! 🚀</h2>
+            <div class="game-instruction" id="gameModalInstruction">Tap the asteroids to blast them with your laser!</div>
+            <div class="game-timer">Time: <span id="gameTimer">30</span>s</div>
+            <div class="game-score" id="gameScoreLine">Score: <span id="gameScore">0</span></div>
+            <div style="position: relative;">
+                <canvas id="gameCanvas" class="game-canvas" width="400" height="500"></canvas>
+                <div class="game-over-screen" id="gameOverScreen">
+                    <div class="game-over-title">🎉 MISSION COMPLETE! 🎉</div>
+                    <div class="game-over-score">Final Score: <span id="finalScore">0</span></div>
+                    <div id="gameOverSubtext" style="font-size: 1.2em; margin-bottom: 20px;">Great job!</div>
+                </div>
+            </div>
+            <div id="balloonLetterWrap" style="display: none; margin-top: 15px;">
+                <div style="color: #1e40af; font-weight: bold; margin-bottom: 8px;">Type the letter on the balloon!</div>
+                <input type="text" id="balloonLetterInput" autocomplete="off" autocapitalize="characters"
+                       style="width: 100%; padding: 14px; font-size: 1.5em; text-align: center; text-transform: uppercase; border: 3px solid #3b82f6; border-radius: 12px; font-family: inherit;">
+            </div>
+            <button class="close-game-button" onclick="closeGame()">Close Game</button>
+        </div>
+    </div>
+
+    <script>
+        // Reworked reward list - broad mix of treats, privileges, screen time, and bigger outings
+        const baseRewards = [
+            { id: 'cookie', emoji: '🍪', label: 'Chocolate Chip Cookie', cost: 100 },
+            { id: 'ytkids', emoji: '📺', label: '1 YTKids Video', cost: 125 },
+            { id: 'pillowfight', emoji: '💥', label: 'Pillow Throw Time', cost: 150 },
+            { id: 'dadgame10', emoji: '🎮', label: 'Dad Plays Video Games for 10 Min', cost: 175 },
+            { id: 'coke', emoji: '🥤', label: 'Coke from McDonalds', cost: 200 },
+            { id: 'icecream', emoji: '🍦', label: 'Ice Cream', cost: 225 },
+            { id: 'hotwheels', emoji: '🚗', label: 'New Hot Wheels Car', cost: 250 },
+            { id: 'momgame15', emoji: '🎮', label: 'Mom Plays Video Games for 15 Min', cost: 300 },
+            { id: 'doordash', emoji: '🥡', label: 'Your Choice DoorDash', cost: 325 },
+            { id: 'book', emoji: '📚', label: 'New Book', cost: 350 },
+            { id: 'showsnight', emoji: '🎬', label: 'Play Shows Night', cost: 400 },
+            { id: 'parentsgame30', emoji: '🎮', label: 'Mom or Dad Play Video Games for 30 Min', cost: 450 },
+            { id: 'newtoy', emoji: '⚽', label: 'New Toy', cost: 500 },
+            { id: 'activity', emoji: '🎪', label: 'Activity with Mom & Dad', cost: 600 },
+            { id: 'bowling', emoji: '🎳', label: 'Go Bowling', cost: 650 },
+            { id: 'minigolf', emoji: '⛳', label: 'Play Minigolf', cost: 700 },
+            { id: 'newvideogame', emoji: '🎮', label: 'New Video Game', cost: 750 },
+            { id: 'sleepparents', emoji: '🛏️', label: "Sleep in Mom & Dad's Bed", cost: 850 },
+            { id: 'mallgame', emoji: '🕹️', label: 'Play a Mall Game', cost: 1000 },
+            { id: 'nuggie', emoji: '🍗', label: 'Nuggie Party', cost: 1500 }
+        ];
+
+        let rewardOverrides = {};
+        let rewards = [];
+
+        function rebuildRewards() {
+            rewards = baseRewards
+                .map(r => {
+                    const o = rewardOverrides[r.id];
+                    return o ? { ...r, ...o } : r;
+                })
+                .sort((a, b) => a.cost - b.cost);
+        }
+
+        rebuildRewards();
+
+        // Tabs shown above the star-earning buttons
+        const categories = [
+            { id: 'potty', label: '🚽 Potty' },
+            { id: 'hygiene', label: '🧼 Hygiene' },
+            { id: 'chores', label: '🧺 Chores' },
+            { id: 'bonus', label: '🌟 Bonus' }
+        ];
+
+        let activeCategory = 'potty';
+
+        // Configuration for every way to earn stars, grouped by category (tab).
+        // To add a new way to earn stars later, just add a new object here —
+        // no other code needs to change. cssClass controls color:
+        // cat-potty = green, cat-hygiene = blue, cat-chores = purple, cat-bonus = pink
+        // cssClass controls color by category: cat-potty = green, cat-hygiene = blue,
+        // cat-chores = purple, cat-bonus = pink
+        const baseStarActions = [
+            // ---- Potty ----
+            {
+                id: 'pee',
+                category: 'potty',
+                method: 'pee',
+                stars: 1,
+                emoji: '💧',
+                label: 'Pee',
+                subLabel: 'Nice Job!',
+                cssClass: 'cat-potty'
+            },
+            {
+                id: 'poop',
+                category: 'potty',
+                method: 'poop',
+                stars: 2,
+                emoji: '💩',
+                label: 'Poop',
+                subLabel: 'Way To Go!',
+                cssClass: 'cat-potty'
+            },
+            {
+                id: 'tier3',
+                category: 'potty',
+                method: 'remembered',
+                stars: 3,
+                emoji: '🧠',
+                label: 'Remembered to Go!',
+                subLabel: 'All By Myself',
+                cssClass: 'cat-potty'
+            },
+            // ---- Hygiene ----
+            {
+                id: 'brushTeeth',
+                category: 'hygiene',
+                method: 'hygiene',
+                stars: 1,
+                emoji: '🦷',
+                label: 'Brush Teeth',
+                subLabel: 'Squeaky Clean!',
+                cssClass: 'cat-hygiene'
+            },
+            {
+                id: 'washHands',
+                category: 'hygiene',
+                method: 'hygiene',
+                stars: 1,
+                emoji: '🧼',
+                label: 'Wash Hands',
+                subLabel: 'All Clean!',
+                cssClass: 'cat-hygiene'
+            },
+            {
+                id: 'washHair',
+                category: 'hygiene',
+                method: 'hygiene',
+                stars: 2,
+                emoji: '🧴',
+                label: 'Wash Hair',
+                subLabel: 'All Clean!',
+                cssClass: 'cat-hygiene'
+            },
+            {
+                id: 'washBody',
+                category: 'hygiene',
+                method: 'hygiene',
+                stars: 2,
+                emoji: '🛁',
+                label: 'Wash Body',
+                subLabel: 'All Clean!',
+                cssClass: 'cat-hygiene'
+            },
+            // ---- Chores ----
+            {
+                id: 'ownLaundry',
+                category: 'chores',
+                method: 'chore',
+                stars: 2,
+                emoji: '👕',
+                label: 'Put Away Your Laundry',
+                subLabel: 'Great Job!',
+                cssClass: 'cat-chores'
+            },
+            {
+                id: 'franklinLaundry',
+                category: 'chores',
+                method: 'chore',
+                stars: 2,
+                emoji: '🧦',
+                label: "Put Away Franklin's Laundry",
+                subLabel: 'Helping Out!',
+                cssClass: 'cat-chores'
+            },
+            {
+                id: 'familyLaundry',
+                category: 'chores',
+                method: 'chore',
+                stars: 3,
+                emoji: '👨‍👩‍👧‍👦',
+                label: 'Fold or Put Away Family Laundry',
+                subLabel: 'Towels & More',
+                cssClass: 'cat-chores'
+            },
+            {
+                id: 'sortLaundry',
+                category: 'chores',
+                method: 'chore',
+                stars: 2,
+                emoji: '🔀',
+                label: 'Sort the Laundry',
+                subLabel: 'Mine vs Franklin\'s',
+                cssClass: 'cat-chores'
+            },
+            {
+                id: 'getSnack',
+                category: 'chores',
+                method: 'chore',
+                stars: 1,
+                emoji: '🍎🥤',
+                label: 'Get Own Snack or Drink',
+                subLabel: 'I Did It Myself!',
+                cssClass: 'cat-chores'
+            },
+            {
+                id: 'pickUpTrash',
+                category: 'chores',
+                method: 'chore',
+                stars: 2,
+                emoji: '🗑️',
+                label: 'Pick Up All the Trash',
+                subLabel: 'Whole Room!',
+                cssClass: 'cat-chores'
+            },
+            {
+                id: 'pickUpDishes',
+                category: 'chores',
+                method: 'chore',
+                stars: 2,
+                emoji: '🍽️',
+                label: 'Pick Up All the Dishes',
+                subLabel: 'Whole Room!',
+                cssClass: 'cat-chores'
+            },
+            {
+                id: 'hangBackpack',
+                category: 'chores',
+                method: 'chore',
+                stars: 1,
+                emoji: '🎒',
+                label: 'Hang Up Backpack or Lunchbox',
+                subLabel: 'Nice and Tidy!',
+                cssClass: 'cat-chores'
+            },
+            // ---- Bonus ----
+            {
+                id: 'school',
+                category: 'bonus',
+                method: 'school',
+                stars: 5,
+                emoji: '🏫',
+                label: 'Used Potty at School!',
+                subLabel: 'Super Achievement!',
+                cssClass: 'cat-bonus',
+                fullWidth: true
+            },
+            {
+                id: 'newFood',
+                category: 'bonus',
+                method: 'bonus',
+                stars: 3,
+                emoji: '🍣',
+                label: 'Try a New Food',
+                subLabel: 'Adventurous Eater!',
+                cssClass: 'cat-bonus'
+            },
+            {
+                id: 'packBackpack',
+                category: 'bonus',
+                method: 'bonus',
+                stars: 2,
+                emoji: '🎒',
+                label: 'Pack Your Backpack',
+                subLabel: 'Ready to Go!',
+                cssClass: 'cat-bonus'
+            },
+            {
+                id: 'parentChoice',
+                category: 'bonus',
+                method: 'bonus',
+                stars: 1,
+                emoji: '🎯',
+                label: "Parent's Choice",
+                subLabel: 'Great Job!',
+                cssClass: 'cat-bonus'
+            }
+        ];
+
+        // Parent-editable layer on top of the built-in defaults above.
+        // taskOverrides: { taskId: { emoji, label, subLabel, stars, category, hidden } }
+        // customTasks: brand-new tasks the parent added from scratch
+        let taskOverrides = {};
+        let redemptionLog = [];
+        let customTasks = [];
+        let starActions = [];
+
+        function cssClassForCategory(category) {
+            return 'cat-' + category;
+        }
+
+        function rebuildStarActions() {
+            const merged = baseStarActions
+                .map(task => {
+                    const override = taskOverrides[task.id];
+                    if (!override) return task;
+                    if (override.hidden) return null;
+                    const category = override.category || task.category;
+                    return { ...task, ...override, category, cssClass: cssClassForCategory(category) };
+                })
+                .filter(Boolean);
+            
+            const customs = customTasks.map(t => ({ ...t, cssClass: cssClassForCategory(t.category) }));
+            
+            starActions = merged.concat(customs);
+        }
+
+        rebuildStarActions();
+
+        function renderCategoryTabs() {
+            const tabsContainer = document.getElementById('categoryTabs');
+            tabsContainer.innerHTML = '';
+            
+            categories.forEach(cat => {
+                const tab = document.createElement('button');
+                tab.className = 'category-tab' + (cat.id === activeCategory ? ' active' : '');
+                tab.textContent = cat.label;
+                tab.onclick = () => switchCategory(cat.id);
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        function switchCategory(categoryId) {
+            activeCategory = categoryId;
+            renderCategoryTabs();
+            renderPottyButtons();
+        }
+
+        function renderPottyButtons() {
+            const container = document.getElementById('pottyButtonsContainer');
+            container.innerHTML = '';
+            
+            const visibleActions = starActions
+                .filter(action => action.category === activeCategory)
+                .sort((a, b) => a.stars - b.stars);
+            
+            visibleActions.forEach(action => {
+                const btn = document.createElement('button');
+                btn.className = 'potty-button ' + action.cssClass;
+                btn.id = 'btn-' + action.id;
+                if (action.fullWidth) {
+                    btn.style.gridColumn = '1 / -1';
+                }
+                btn.onclick = () => trackEvent(action.id);
+                
+                const starEmoji = '⭐'.repeat(action.stars);
+                btn.innerHTML = `
+                    <div style="font-size: 1.4em;">${action.emoji}${starEmoji}</div>
+                    <div class="task-label">${action.label}</div>
+                    <div class="button-label">${action.subLabel}</div>
+                `;
+                
+                container.appendChild(btn);
+            });
+            
+            updateTaskCooldownStates();
+        }
+
+        function updateTaskCooldownStates() {
+            starActions.forEach(action => {
+                const btn = document.getElementById('btn-' + action.id);
+                if (!btn) return;
+                
+                if (kidModeEnabled && isTaskOnCooldown(action.id)) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.4';
+                } else {
+                    btn.disabled = false;
+                    btn.style.opacity = '';
+                }
+            });
+        }
+        // Available mini-games. To add another later, add an entry here plus
+        // a rendering branch in gameLoop()/spawnBubble() for its visuals.
+        const baseGames = [
+            { id: 'space', name: 'Space Laser Battle', emoji: '🚀', cost: 5, color: '#3b82f6', instruction: 'Tap the asteroids to blast them with your laser!' },
+            { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', cost: 5, color: '#3b82f6', instruction: 'Tap the balloons before they float away!' },
+            { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', cost: 5, color: '#3b82f6', instruction: 'Tap the moles as they pop up from their holes!' },
+            { id: 'battle', name: 'Sock Monster SHOWDOWN', emoji: '🥊', cost: 5, color: '#ea580c', instruction: 'Aim and fire pillows at the Sock Monster! Land combos to charge your MEGA SMASH!', isBattle: true },
+            { id: 'duel', name: 'Duel', emoji: '⚡', cost: 10, color: '#6d28d9', instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true, fullWidth: true }
+        ];
+
+        let gameOverrides = {};
+        let GAMES = [];
+
+        function darkenColor(hex, amount) {
+            const num = parseInt(hex.replace('#', ''), 16);
+            const r = Math.max(0, (num >> 16) - amount);
+            const g = Math.max(0, ((num >> 8) & 0x00FF) - amount);
+            const b = Math.max(0, (num & 0x0000FF) - amount);
+            return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+        }
+
+        function rebuildGames() {
+            GAMES = baseGames.map(g => {
+                const o = gameOverrides[g.id];
+                return o ? { ...g, ...o } : g;
+            });
+        }
+
+        rebuildGames();
+        // Polyfill for older browsers/WebViews without native roundRect support (used for pillow shapes)
+        if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (typeof r === 'undefined') r = 5;
+                this.beginPath();
+                this.moveTo(x + r, y);
+                this.arcTo(x + w, y, x + w, y + h, r);
+                this.arcTo(x + w, y + h, x, y + h, r);
+                this.arcTo(x, y + h, x, y, r);
+                this.arcTo(x, y, x + w, y, r);
+                this.closePath();
+                return this;
+            };
+        }
+
+        // Illustrated game sprites - loaded once, cached, drawn via ctx.drawImage()
+        const ASSET_BASE = '/potty-tracker/assets/games/';
+        const spriteCache = {};
+        function loadSprite(key, filename) {
+            const img = new Image();
+            img.src = ASSET_BASE + filename;
+            spriteCache[key] = img;
+        }
+        loadSprite('asteroid', 'asteroid.png');
+        loadSprite('mole', 'mole.png');
+        loadSprite('sockNeutral', 'sock-neutral.png');
+        loadSprite('sockMad', 'sock-mad.png');
+        loadSprite('sockDefeated', 'sock-defeated.png');
+        loadSprite('targetBlue', 'target-blue.png');
+        loadSprite('targetRed', 'target-red.png');
+        loadSprite('balloonRed', 'balloon-red.png');
+        loadSprite('balloonOrange', 'balloon-orange.png');
+        loadSprite('balloonYellow', 'balloon-yellow.png');
+        loadSprite('balloonTeal', 'balloon-teal.png');
+        loadSprite('balloonBlue', 'balloon-blue.png');
+        loadSprite('balloonPurple', 'balloon-purple.png');
+        
+        function drawSprite(key, x, y, size, rotation) {
+            const img = spriteCache[key];
+            if (!img || !img.complete || img.naturalWidth === 0) return false;
+            ctx.save();
+            ctx.translate(x, y);
+            if (rotation) ctx.rotate(rotation);
+            ctx.drawImage(img, -size / 2, -size / 2, size, size);
+            ctx.restore();
+            return true;
+        }
+
+        let currentGame = 'space';
+        let moleHoles = [];
+
+        let data = {
+            events: [],
+            totalStars: 0,
+            totalGamePoints: 0
+        };
+
+        let gameActive = false;
+        let gameScore = 0;
+        let bubbles = [];
+        let gameInterval;
+        let timerInterval;
+        let timeRemaining = 30;
+        let canvas, ctx;
+        let lasers = [];
+        let explosions = [];
+        let sheetUrl = '';
+
+        // Google Sheets Functions
+        function saveSheetUrl() {
+            const url = document.getElementById('sheetUrlInput').value.trim();
+            if (url) {
+                localStorage.setItem('pottyTrackerSheetUrl', url);
+                sheetUrl = url;
+                document.getElementById('setupNotice').style.display = 'none';
+                loadData();
+            } else {
+                alert('Please enter a valid URL');
+            }
+        }
+
+        function checkSheetUrl() {
+            sheetUrl = localStorage.getItem('pottyTrackerSheetUrl');
+            if (sheetUrl) {
+                document.getElementById('setupNotice').style.display = 'none';
+                document.getElementById('sheetUrlInput').value = sheetUrl;
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loadingIndicator').classList.add('show');
+            disableButtons(true);
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingIndicator').classList.remove('show');
+            disableButtons(false);
+        }
+
+        function disableButtons(disabled) {
+            starActions.forEach(action => {
+                const btn = document.getElementById('btn-' + action.id);
+                if (btn) btn.disabled = disabled;
+            });
+        }
+
+        async function loadDataFromSheets() {
+            if (!sheetUrl) return;
+            
+            showLoading();
+            try {
+                const response = await fetch(sheetUrl + '?action=getData');
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Just update the data silently, don't trigger any celebrations
+                    data.totalStars = result.data.totalStars || 0;
+                    data.totalGamePoints = result.data.totalGamePoints || 0;
+                    data.events = result.data.events || [];
+                    
+                    checkForNewDay();
+                    
+                    // Also save to localStorage
+                    localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+                    
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Error loading from sheets:', error);
+                // Fall back to localStorage
+                const saved = localStorage.getItem('pottyTrackerData');
+                if (saved) {
+                    data = JSON.parse(saved);
+                    if (data.totalGamePoints === undefined || isNaN(data.totalGamePoints)) {
+                        data.totalGamePoints = 0;
+                    }
+                    updateUI();
+                }
+            }
+            hideLoading();
+        }
+
+        async function saveDataToSheets() {
+            if (!sheetUrl) return;
+            
+            try {
+                // Don't show loading or disable buttons - do it in background
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'saveData',
+                        data: data
+                    })
+                });
+                
+                // Don't wait for response or reload
+            } catch (error) {
+                console.error('Error saving to sheets:', error);
+            }
+        }
+
+        async function updateGameStatsToSheets() {
+            if (!sheetUrl) return;
+            
+            try {
+                // Update just the stars and points, not events
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'updateGameStats',
+                        totalStars: data.totalStars,
+                        totalGamePoints: data.totalGamePoints
+                    })
+                });
+            } catch (error) {
+                console.error('Error updating game stats:', error);
+            }
+        }
+
+        async function addRedemptionToSheets(redemption) {
+            if (!sheetUrl) return;
+            
+            try {
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addRedemption',
+                        redemption: {
+                            label: redemption.label,
+                            cost: redemption.cost,
+                            emoji: redemption.emoji,
+                            id: redemption.id
+                        }
+                    })
+                });
+            } catch (error) {
+                console.error('Error adding redemption:', error);
+            }
+        }
+
+        async function loadRedemptionLog() {
+            if (!sheetUrl) {
+                renderRewardTracker();
+                return;
+            }
+            
+            try {
+                const response = await fetch(sheetUrl + '?action=getRedemptions');
+                const result = await response.json();
+                if (result.success) {
+                    redemptionLog = (result.redemptions || []).filter(r => r.id);
+                }
+            } catch (error) {
+                console.error('Error loading redemption log:', error);
+            }
+            
+            renderRewardTracker();
+        }
+
+        function renderRewardTracker() {
+            const container = document.getElementById('rewardTrackerList');
+            const hint = document.getElementById('rewardTrackerHint');
+            if (!container) return;
+            
+            const pending = redemptionLog.filter(r => !r.fulfilled);
+            const fulfilled = redemptionLog.filter(r => r.fulfilled).slice(0, 5);
+            const sorted = [...pending, ...fulfilled];
+            
+            if (sorted.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:10px;">No rewards redeemed yet!</div>';
+                if (hint) hint.style.display = 'block';
+                return;
+            }
+            
+            if (hint) hint.style.display = pending.length > 0 ? 'block' : 'none';
+            
+            container.innerHTML = sorted.map(r => {
+                const dateStr = r.timestamp ? new Date(r.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+                return `
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px;margin-bottom:8px;border-radius:12px;background:${r.fulfilled ? '#f3f4f6' : '#fef3c7'};border-left:5px solid ${r.fulfilled ? '#9ca3af' : '#f59e0b'};">
+                        <button onclick="toggleRedemptionFulfilled('${r.id}', ${!r.fulfilled})" style="width:32px;height:32px;flex-shrink:0;border-radius:50%;border:2px solid ${r.fulfilled ? '#10b981' : '#d1d5db'};background:${r.fulfilled ? '#10b981' : 'white'};color:white;font-weight:bold;cursor:pointer;font-size:1em;">${r.fulfilled ? '✓' : ''}</button>
+                        <div style="font-size:1.4em;">${r.emoji}</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:bold;color:#1f2937;text-decoration:${r.fulfilled ? 'line-through' : 'none'};opacity:${r.fulfilled ? '0.6' : '1'};">${r.label}</div>
+                            <div style="font-size:0.75em;color:#9ca3af;">${dateStr} &middot; ${r.cost} pts ${r.fulfilled ? '&middot; Given!' : '&middot; Waiting...'}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleRedemptionFulfilled(id, fulfilled) {
+            if (kidModeEnabled) {
+                openParentGate('fulfill', null, { id, fulfilled });
+                return;
+            }
+            
+            applyRedemptionFulfilled(id, fulfilled);
+        }
+
+        function applyRedemptionFulfilled(id, fulfilled) {
+            const entry = redemptionLog.find(r => r.id === id);
+            if (entry) entry.fulfilled = fulfilled;
+            renderRewardTracker();
+            
+            if (sheetUrl) {
+                try {
+                    fetch(sheetUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'setRedemptionFulfilled', id, fulfilled })
+                    });
+                } catch (error) {
+                    console.error('Error updating redemption status:', error);
+                }
+            }
+        }
+
+        async function addEventToSheets(event) {
+            if (!sheetUrl) return;
+            
+            try {
+                // Don't show loading or disable buttons - do it in background
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addEvent',
+                        event: event
+                    })
+                });
+                
+                // Don't wait for response or reload
+            } catch (error) {
+                console.error('Error adding event:', error);
+            }
+        }
+
+        function ordinalSuffix(day) {
+            if (day % 10 === 1 && day !== 11) return 'st';
+            if (day % 10 === 2 && day !== 12) return 'nd';
+            if (day % 10 === 3 && day !== 13) return 'rd';
+            return 'th';
+        }
+
+        function renderTodayDate() {
+            const el = document.getElementById('todayDateBanner');
+            if (!el) return;
+            const today = new Date();
+            const weekday = today.toLocaleDateString('en-US', { weekday: 'long' });
+            const month = today.toLocaleDateString('en-US', { month: 'long' });
+            const day = today.getDate();
+            el.textContent = `🌞 Today is ${weekday}, ${month} ${day}${ordinalSuffix(day)}!`;
+        }
+
+        function checkForNewDay() {
+            if (!data.events || data.events.length === 0) return;
+            
+            const todayStr = new Date().toDateString();
+            const lastEvent = data.events[data.events.length - 1];
+            const lastEventDate = lastEvent.timestamp ? new Date(lastEvent.timestamp).toDateString() : null;
+            
+            if (lastEventDate && lastEventDate !== todayStr) {
+                // A new day has started since these events were logged - start fresh automatically
+                data.events = [];
+                localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+                if (sheetUrl) {
+                    saveDataToSheets();
+                }
+            }
+        }
+
+        function loadData() {
+            if (sheetUrl) {
+                loadDataFromSheets();
+            } else {
+                // Fallback to localStorage if no sheet URL
+                const saved = localStorage.getItem('pottyTrackerData');
+                if (saved) {
+                    data = JSON.parse(saved);
+                    if (data.totalGamePoints === undefined || isNaN(data.totalGamePoints)) {
+                        data.totalGamePoints = 0;
+                    }
+                }
+                checkForNewDay();
+                updateUI();
+            }
+        }
+
+        function saveData() {
+            // Save to localStorage immediately (instant)
+            localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+            
+            // Save to sheets in background (non-blocking)
+            if (sheetUrl) {
+                saveDataToSheets();
+            }
+        }
+
+        async function loadTaskConfig() {
+            if (sheetUrl) {
+                try {
+                    const response = await fetch(sheetUrl + '?action=getTaskConfig');
+                    const result = await response.json();
+                    if (result.success && result.config) {
+                        taskOverrides = result.config.taskOverrides || {};
+                        customTasks = result.config.customTasks || [];
+                        parentWord = result.config.parentWord || 'edward';
+                        kidModeCooldownMinutes = result.config.kidModeCooldownMinutes || 3;
+                        gameOverrides = result.config.gameOverrides || {};
+                        rewardOverrides = result.config.rewardOverrides || {};
+                    }
+                } catch (error) {
+                    console.error('Error loading task config from sheets:', error);
+                    loadTaskConfigLocal();
+                }
+            } else {
+                loadTaskConfigLocal();
+            }
+            
+            rebuildStarActions();
+            rebuildGames();
+            rebuildRewards();
+            renderCategoryTabs();
+            renderPottyButtons();
+            renderGameButtons();
+        }
+
+        function loadTaskConfigLocal() {
+            const saved = localStorage.getItem('pottyTrackerTaskConfig');
+            if (saved) {
+                try {
+                    const cfg = JSON.parse(saved);
+                    taskOverrides = cfg.taskOverrides || {};
+                    customTasks = cfg.customTasks || [];
+                    parentWord = cfg.parentWord || 'edward';
+                    kidModeCooldownMinutes = cfg.kidModeCooldownMinutes || 3;
+                    gameOverrides = cfg.gameOverrides || {};
+                    rewardOverrides = cfg.rewardOverrides || {};
+                } catch (error) {
+                    console.error('Error parsing local task config:', error);
+                }
+            }
+        }
+
+        function saveTaskConfig() {
+            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes, gameOverrides, rewardOverrides };
+            localStorage.setItem('pottyTrackerTaskConfig', JSON.stringify(payload));
+            
+            if (sheetUrl) {
+                try {
+                    fetch(sheetUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'saveTaskConfig', config: payload })
+                    });
+                } catch (error) {
+                    console.error('Error saving task config to sheets:', error);
+                }
+            }
+        }
+
+        // ===== Parent Area =====
+        let parentWord = 'edward';
+        let kidModeCooldownMinutes = 3;
+        let kidModeEnabled = false; // per-device setting, not synced across devices
+        let gateSuccessAction = null; // what to do after a correct word: 'settings' or 'redeem'
+        let pendingRedemption = null;
+
+        function loadKidMode() {
+            kidModeEnabled = localStorage.getItem('pottyTrackerKidMode') === 'true';
+            updateKidModeBadge();
+        }
+
+        function setKidMode(enabled) {
+            kidModeEnabled = enabled;
+            localStorage.setItem('pottyTrackerKidMode', enabled ? 'true' : 'false');
+            renderKidModeStatus();
+            updateKidModeBadge();
+            updateTaskCooldownStates();
+        }
+
+        function updateKidModeBadge() {
+            const badge = document.getElementById('kidModeBadge');
+            if (badge) badge.style.display = kidModeEnabled ? 'inline-block' : 'none';
+        }
+
+        let pendingFulfillment = null;
+
+        function openParentGate(purpose, redemptionReward, fulfillmentPayload) {
+            gateSuccessAction = purpose || 'settings';
+            pendingRedemption = redemptionReward || null;
+            pendingFulfillment = fulfillmentPayload || null;
+            document.getElementById('parentGateQuestion').textContent = gateSuccessAction === 'redeem' || gateSuccessAction === 'fulfill'
+                ? 'Ask a parent to enter the secret word'
+                : 'Enter the secret word';
+            document.getElementById('parentGateAnswer').value = '';
+            document.getElementById('parentGateModal').classList.add('active');
+            setTimeout(() => document.getElementById('parentGateAnswer').focus(), 200);
+        }
+
+        function closeParentGate() {
+            document.getElementById('parentGateModal').classList.remove('active');
+            pendingRedemption = null;
+            pendingFulfillment = null;
+        }
+
+        function checkParentGate() {
+            const val = document.getElementById('parentGateAnswer').value.trim().toLowerCase();
+            if (val === parentWord.toLowerCase()) {
+                const action = gateSuccessAction;
+                const reward = pendingRedemption;
+                const fulfillment = pendingFulfillment;
+                closeParentGate();
+                if (action === 'redeem') {
+                    completeRedemption(reward);
+                } else if (action === 'fulfill') {
+                    if (fulfillment) applyRedemptionFulfilled(fulfillment.id, fulfillment.fulfilled);
+                } else {
+                    openParentArea();
+                }
+            } else {
+                document.getElementById('parentGateAnswer').value = '';
+                document.getElementById('parentGateAnswer').focus();
+            }
+        }
+
+        function openParentArea() {
+            document.getElementById('parentWordInput').value = parentWord;
+            document.getElementById('kidModeCooldownInput').value = kidModeCooldownMinutes;
+            renderKidModeStatus();
+            renderParentTaskList();
+            renderParentGamesList();
+            renderParentRewardsList();
+            document.getElementById('parentAreaModal').classList.add('active');
+        }
+
+        function renderKidModeStatus() {
+            const el = document.getElementById('kidModeStatus');
+            if (!el) return;
+            el.innerHTML = kidModeEnabled
+                ? '<span style="color:#dc2626;">🔒 Kid Mode is ON for this device</span>'
+                : '<span style="color:#059669;">🔓 Kid Mode is OFF for this device</span>';
+        }
+
+        function closeParentArea(discard) {
+            if (discard !== false) {
+                // Reload the last-saved config so any un-saved edits are discarded
+                loadTaskConfig();
+            }
+            document.getElementById('parentAreaModal').classList.remove('active');
+        }
+
+        const categoryIcons = { potty: '🚽', hygiene: '🧼', chores: '🧺', bonus: '🌟' };
+
+        function renderParentTaskList() {
+            const container = document.getElementById('parentTaskList');
+            container.innerHTML = '';
+            
+            categories.forEach(cat => {
+                const tasksInCat = starActions.filter(t => t.category === cat.id);
+                if (tasksInCat.length === 0) return;
+                
+                const header = document.createElement('div');
+                header.style.cssText = 'font-weight:bold;color:#1e40af;margin:10px 0 6px;';
+                header.textContent = cat.label;
+                container.appendChild(header);
+                
+                tasksInCat.forEach(task => {
+                    const isCustom = customTasks.some(c => c.id === task.id);
+                    const row = document.createElement('div');
+                    row.className = 'parent-task-row';
+                    row.dataset.taskId = task.id;
+                    row.dataset.isCustom = isCustom ? 'true' : 'false';
+                    row.style.cssText = 'border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-bottom:8px;';
+                    row.innerHTML = `
+                        <div style="display:flex;gap:6px;margin-bottom:6px;">
+                            <input type="text" class="pt-emoji" value="${task.emoji}" style="width:50px;padding:6px;text-align:center;border-radius:8px;border:2px solid #ccc;font-size:1.1em;">
+                            <input type="text" class="pt-label" value="${task.label.replace(/"/g, '&quot;')}" style="flex:1;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                            <button onclick="removeParentTaskRow('${task.id}', ${isCustom})" style="background:#dc2626;color:white;border:none;border-radius:8px;padding:0 12px;cursor:pointer;">✕</button>
+                        </div>
+                        <div style="display:flex;gap:6px;">
+                            <input type="text" class="pt-sublabel" value="${(task.subLabel || '').replace(/"/g, '&quot;')}" placeholder="Sub-label" style="flex:1;padding:6px;border-radius:8px;border:2px solid #ccc;font-size:0.85em;">
+                            <input type="number" class="pt-stars" value="${task.stars}" min="1" max="10" style="width:55px;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                            <select class="pt-category" style="padding:6px;border-radius:8px;border:2px solid #ccc;font-size:0.9em;">
+                                ${categories.map(c => `<option value="${c.id}" ${task.category === c.id ? 'selected' : ''}>${categoryIcons[c.id]}</option>`).join('')}
+                            </select>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            });
+            
+            renderHiddenTasksSection();
+        }
+
+        function renderHiddenTasksSection() {
+            const section = document.getElementById('parentHiddenSection');
+            const hiddenTasks = baseStarActions.filter(t => taskOverrides[t.id] && taskOverrides[t.id].hidden);
+            
+            if (hiddenTasks.length === 0) {
+                section.innerHTML = '';
+                return;
+            }
+            
+            section.innerHTML = `<div style="font-weight:bold;color:#6b7280;margin-bottom:6px;">Hidden Tasks</div>` +
+                hiddenTasks.map(t => `
+                    <div style="display:flex;align-items:center;gap:8px;padding:6px;background:#f3f4f6;border-radius:8px;margin-bottom:6px;">
+                        <span style="flex:1;color:#6b7280;">${t.emoji} ${t.label}</span>
+                        <button onclick="restoreParentTask('${t.id}')" style="background:#10b981;color:white;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;">Restore</button>
+                    </div>
+                `).join('');
+        }
+
+        function renderParentGamesList() {
+            const container = document.getElementById('parentGamesList');
+            container.innerHTML = GAMES.map(game => `
+                <div class="parent-game-row" data-game-id="${game.id}" style="border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-bottom:8px;">
+                    <div style="display:flex;gap:6px;margin-bottom:6px;">
+                        <input type="text" class="pg-emoji" value="${game.emoji}" style="width:50px;padding:6px;text-align:center;border-radius:8px;border:2px solid #ccc;font-size:1.1em;">
+                        <input type="text" class="pg-name" value="${game.name.replace(/"/g, '&quot;')}" style="flex:1;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                    </div>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <label style="font-size:0.8em;color:#6b7280;">Cost</label>
+                        <input type="number" class="pg-cost" value="${game.cost}" min="1" max="50" style="width:55px;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                        <label style="font-size:0.8em;color:#6b7280;">Color</label>
+                        <input type="color" class="pg-color" value="${game.color || '#3b82f6'}" style="width:44px;height:34px;padding:2px;border-radius:8px;border:2px solid #ccc;cursor:pointer;">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderParentRewardsList() {
+            const container = document.getElementById('parentRewardsList');
+            container.innerHTML = rewards.map(reward => `
+                <div class="parent-reward-row" data-reward-id="${reward.id}" style="border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-bottom:8px;">
+                    <div style="display:flex;gap:6px;">
+                        <input type="text" class="pr-emoji" value="${reward.emoji}" style="width:50px;padding:6px;text-align:center;border-radius:8px;border:2px solid #ccc;font-size:1.1em;">
+                        <input type="text" class="pr-label" value="${reward.label.replace(/"/g, '&quot;')}" style="flex:1;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                        <input type="number" class="pr-cost" value="${reward.cost}" min="1" max="10000" style="width:70px;padding:6px;border-radius:8px;border:2px solid #ccc;">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeParentTaskRow(taskId, isCustom) {
+            if (isCustom) {
+                customTasks = customTasks.filter(t => t.id !== taskId);
+            } else {
+                taskOverrides[taskId] = { ...(taskOverrides[taskId] || {}), hidden: true };
+            }
+            rebuildStarActions();
+            renderCategoryTabs();
+            renderPottyButtons();
+            renderParentTaskList();
+        }
+
+        function restoreParentTask(taskId) {
+            if (taskOverrides[taskId]) {
+                delete taskOverrides[taskId].hidden;
+                if (Object.keys(taskOverrides[taskId]).length === 0) delete taskOverrides[taskId];
+            }
+            rebuildStarActions();
+            renderCategoryTabs();
+            renderPottyButtons();
+            renderParentTaskList();
+        }
+
+        function addNewParentTask() {
+            const emoji = document.getElementById('newTaskEmoji').value.trim() || '🌟';
+            const label = document.getElementById('newTaskLabel').value.trim();
+            const subLabel = document.getElementById('newTaskSubLabel').value.trim() || 'Great Job!';
+            const stars = Math.max(1, Math.min(10, parseInt(document.getElementById('newTaskStars').value, 10) || 1));
+            const category = document.getElementById('newTaskCategory').value;
+            
+            if (!label) {
+                document.getElementById('newTaskLabel').focus();
+                return;
+            }
+            
+            customTasks.push({
+                id: 'custom_' + Date.now(),
+                category: category,
+                method: 'custom',
+                stars: stars,
+                emoji: emoji,
+                label: label,
+                subLabel: subLabel
+            });
+            
+            document.getElementById('newTaskEmoji').value = '';
+            document.getElementById('newTaskLabel').value = '';
+            document.getElementById('newTaskSubLabel').value = '';
+            document.getElementById('newTaskStars').value = '1';
+            
+            rebuildStarActions();
+            renderCategoryTabs();
+            renderPottyButtons();
+            renderParentTaskList();
+        }
+
+        function saveParentChanges() {
+            const newWord = document.getElementById('parentWordInput').value.trim();
+            if (newWord) parentWord = newWord;
+            
+            const newCooldown = parseInt(document.getElementById('kidModeCooldownInput').value, 10);
+            kidModeCooldownMinutes = isNaN(newCooldown) ? kidModeCooldownMinutes : Math.max(0, newCooldown);
+            
+            document.querySelectorAll('#parentTaskList .parent-task-row').forEach(row => {
+                const taskId = row.dataset.taskId;
+                const isCustom = row.dataset.isCustom === 'true';
+                const emoji = row.querySelector('.pt-emoji').value.trim() || '🌟';
+                const label = row.querySelector('.pt-label').value.trim();
+                const subLabel = row.querySelector('.pt-sublabel').value.trim();
+                const stars = Math.max(1, Math.min(10, parseInt(row.querySelector('.pt-stars').value, 10) || 1));
+                const category = row.querySelector('.pt-category').value;
+                
+                if (!label) return;
+                
+                if (isCustom) {
+                    const custom = customTasks.find(t => t.id === taskId);
+                    if (custom) {
+                        custom.emoji = emoji;
+                        custom.label = label;
+                        custom.subLabel = subLabel;
+                        custom.stars = stars;
+                        custom.category = category;
+                    }
+                } else {
+                    taskOverrides[taskId] = { emoji, label, subLabel, stars, category };
+                }
+            });
+            
+            document.querySelectorAll('#parentGamesList .parent-game-row').forEach(row => {
+                const gameId = row.dataset.gameId;
+                const emoji = row.querySelector('.pg-emoji').value.trim() || '🎮';
+                const name = row.querySelector('.pg-name').value.trim();
+                const cost = Math.max(1, Math.min(50, parseInt(row.querySelector('.pg-cost').value, 10) || 5));
+                const color = row.querySelector('.pg-color').value;
+                
+                if (!name) return;
+                
+                gameOverrides[gameId] = { emoji, name, cost, color };
+            });
+            
+            document.querySelectorAll('#parentRewardsList .parent-reward-row').forEach(row => {
+                const rewardId = row.dataset.rewardId;
+                const emoji = row.querySelector('.pr-emoji').value.trim() || '🎁';
+                const label = row.querySelector('.pr-label').value.trim();
+                const cost = Math.max(1, Math.min(10000, parseInt(row.querySelector('.pr-cost').value, 10) || 100));
+                
+                if (!label) return;
+                
+                rewardOverrides[rewardId] = { emoji, label, cost };
+            });
+            
+            saveTaskConfig();
+            rebuildStarActions();
+            rebuildGames();
+            rebuildRewards();
+            renderCategoryTabs();
+            renderPottyButtons();
+            renderGameButtons();
+            closeParentArea(false);
+            
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = '✅ Saved!';
+            celebration.classList.add('show');
+            setTimeout(() => celebration.classList.remove('show'), 1500);
+        }
+
+        function trackEvent(actionId) {
+            const action = starActions.find(a => a.id === actionId);
+            if (!action) return;
+            
+            if (kidModeEnabled && isTaskOnCooldown(actionId)) {
+                showCooldownMessage();
+                return;
+            }
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            
+            const starsEarned = action.stars;
+            
+            const event = { 
+                actionId: action.id,
+                category: action.category,
+                method: action.method,
+                label: action.label,
+                subLabel: action.subLabel,
+                emoji: action.emoji,
+                time: timeStr, 
+                stars: starsEarned,
+                timestamp: new Date().toISOString()
+            };
+            
+            data.events.push(event);
+            data.totalStars += starsEarned;
+            
+            // Check if earned a game play
+            const prevGamePlays = Math.floor((data.totalStars - starsEarned) / 5);
+            const newGamePlays = Math.floor(data.totalStars / 5);
+            const gamePlaysEarned = newGamePlays - prevGamePlays;
+            
+            if (gamePlaysEarned > 0) {
+                showGamePlayEarned();
+            }
+            
+            celebrate(action);
+            
+            // Update UI immediately
+            updateUI();
+            
+            // Save to local storage immediately
+            localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+            
+            recordTaskCooldown(actionId);
+            updateTaskCooldownStates();
+            
+            // Sync to sheets in background (non-blocking)
+            if (sheetUrl) {
+                addEventToSheets(event);
+            }
+        }
+
+        function getCooldowns() {
+            try {
+                return JSON.parse(localStorage.getItem('pottyTrackerCooldowns') || '{}');
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function isTaskOnCooldown(actionId) {
+            const cooldowns = getCooldowns();
+            const lastTap = cooldowns[actionId];
+            if (!lastTap) return false;
+            const elapsedMinutes = (Date.now() - lastTap) / 60000;
+            return elapsedMinutes < kidModeCooldownMinutes;
+        }
+
+        function recordTaskCooldown(actionId) {
+            const cooldowns = getCooldowns();
+            cooldowns[actionId] = Date.now();
+            localStorage.setItem('pottyTrackerCooldowns', JSON.stringify(cooldowns));
+        }
+
+        function showCooldownMessage() {
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = '⏳ Already logged! Try again soon.';
+            celebration.style.fontSize = '1.6rem';
+            celebration.style.maxWidth = '85vw';
+            celebration.style.textAlign = 'center';
+            celebration.classList.add('show');
+            setTimeout(() => {
+                celebration.classList.remove('show');
+                celebration.style.fontSize = '';
+                celebration.style.maxWidth = '';
+                celebration.style.textAlign = '';
+            }, 1500);
+        }
+
+        function showGamePlayEarned() {
+            // Show the game earned modal
+            const modal = document.getElementById('gameEarnedModal');
+            modal.classList.add('show');
+            
+            // Play exciting sound
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Play a sequence of tones for fanfare
+            [0, 0.15, 0.3].forEach((delay, i) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 400 + (i * 200); // Rising tones
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime + delay);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + delay + 0.3);
+                
+                oscillator.start(audioContext.currentTime + delay);
+                oscillator.stop(audioContext.currentTime + delay + 0.3);
+            });
+        }
+
+        function closeGameEarnedModal() {
+            const modal = document.getElementById('gameEarnedModal');
+            modal.classList.remove('show');
+        }
+
+        function celebrate(action) {
+            const celebration = document.getElementById('celebration');
+            let emojis;
+            
+            if (action.id === 'pee') {
+                emojis = ['💧', '🌠', '⭐'];
+            } else if (action.id === 'poop') {
+                emojis = ['💩', '🌠', '⭐'];
+            } else if (action.stars >= 5) {
+                emojis = ['🌟🌟🌟🌟🌟', '🌠🌠🌠', '🎉🎊🎉🎊🎉'];
+            } else if (action.stars >= 3) {
+                emojis = ['🧠🌟🌟🌟', '🌠⭐⭐', '🎉🎊🎉'];
+            } else if (action.stars === 2) {
+                emojis = ['🌟🌟', '🌠', '🎉🎊', '💫💫'];
+            } else {
+                emojis = ['🌠', '⭐', '🎉', '✨'];
+            }
+            
+            celebration.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            celebration.classList.add('show');
+            
+            setTimeout(() => {
+                celebration.classList.remove('show');
+            }, 1000);
+
+            // Play a sound effect - pitch rises with more stars
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 700 + (action.stars * 100);
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        function updateUI() {
+            document.getElementById('totalStars').textContent = data.totalStars;
+
+            if (data.totalGamePoints === undefined || isNaN(data.totalGamePoints)) {
+                data.totalGamePoints = 0;
+            }
+
+            document.getElementById('gamePlays').textContent = data.totalGamePoints;
+            
+            updateGameButtonStates();
+
+            const starsToNextGame = data.totalStars % 5;
+            const progress = (starsToNextGame / 5) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressLabel').textContent = `${starsToNextGame}/5 ⭐`;
+
+            const grid = document.getElementById('achievementGrid');
+            grid.innerHTML = '';
+            
+            rewards.forEach(reward => {
+                const div = document.createElement('div');
+                div.className = 'achievement';
+                
+                if (data.totalGamePoints >= reward.cost) {
+                    div.classList.add('unlocked');
+                    div.onclick = () => redeemReward(reward);
+                    div.innerHTML = `${reward.emoji}<div class="achievement-label">${reward.label}</div><div class="achievement-cost">${reward.cost} pts</div>`;
+                } else {
+                    div.classList.add('locked');
+                    div.innerHTML = `${reward.emoji}<div class="achievement-label">${reward.label}</div><div class="achievement-cost">🔒 ${reward.cost} pts</div>`;
+                }
+                
+                grid.appendChild(div);
+            });
+
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            
+            if (data.events.length === 0) {
+                historyList.innerHTML = '<div class="history-item">No adventures logged yet today! 🌟</div>';
+            } else {
+                [...data.events].reverse().forEach(event => {
+                    const div = document.createElement('div');
+                    
+                    let emoji, description, subLabel, category;
+                    
+                    if (event.label) {
+                        // New-format event (has label/emoji/subLabel from starActions config)
+                        emoji = event.emoji || '⭐';
+                        description = event.label;
+                        subLabel = event.subLabel || '';
+                        category = event.category || 'potty';
+                    } else if (event.method === 'school') {
+                        // Old-format fallback
+                        emoji = '🏫';
+                        description = 'School Potty';
+                        subLabel = 'Super Achievement!';
+                        category = 'bonus';
+                    } else {
+                        // Old-format fallback
+                        emoji = event.type === 'pee' ? '💧' : '💩';
+                        description = event.type === 'pee' ? 'Pee' : 'Poop';
+                        subLabel = event.method === 'own' ? 'On My Own!' : 'With Reminder';
+                        category = 'potty';
+                    }
+                    
+                    div.className = 'history-item cat-' + category + '-border';
+                    
+                    const stars = event.stars || 1;
+                    const starEmoji = '⭐'.repeat(stars);
+                    div.innerHTML = `
+                        <div class="history-emoji-badge">${emoji}</div>
+                        <div class="history-text">
+                            <div class="history-desc">${description}</div>
+                            <div class="history-sublabel">${subLabel}</div>
+                        </div>
+                        <div class="history-meta">
+                            <div class="history-stars">${starEmoji}</div>
+                            <div class="history-time">${event.time}</div>
+                        </div>
+                    `;
+                    historyList.appendChild(div);
+                });
+            }
+        }
+
+        function resetData() {
+            if (confirm('Start a new day? This will save your stars and game points but clear today\'s visits!')) {
+                data = { 
+                    events: [], 
+                    totalStars: data.totalStars, 
+                    totalGamePoints: data.totalGamePoints,
+                    date: new Date().toDateString() 
+                };
+                saveData();
+                updateUI();
+            }
+        }
+
+        function resetStars() {
+            if (confirm('Are you sure you want to reset ALL stars and game points? This will clear everything!')) {
+                data = { events: [], totalStars: 0, totalGamePoints: 0, date: new Date().toDateString() };
+                saveData();
+                updateUI();
+            }
+        }
+
+        function redeemReward(reward) {
+            if (data.totalGamePoints < reward.cost) return;
+            
+            if (kidModeEnabled) {
+                openParentGate('redeem', reward);
+                return;
+            }
+            
+            if (confirm(`Redeem ${reward.label} for ${reward.cost} points?`)) {
+                completeRedemption(reward);
+            }
+        }
+
+        function completeRedemption(reward) {
+            if (!reward || data.totalGamePoints < reward.cost) return;
+            
+            data.totalGamePoints -= reward.cost;
+            
+            // Save locally immediately
+            localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+            
+            // Update UI
+            updateUI();
+            
+            const redemptionId = 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+            const trackedReward = { ...reward, id: redemptionId };
+            
+            // Optimistically show it in the Reward Tracker right away
+            redemptionLog.unshift({
+                id: redemptionId,
+                label: reward.label,
+                cost: reward.cost,
+                emoji: reward.emoji,
+                timestamp: new Date().toISOString(),
+                fulfilled: false
+            });
+            renderRewardTracker();
+            
+            // Log redemption to Google Sheets (permanent record)
+            if (sheetUrl) {
+                addRedemptionToSheets(trackedReward);
+                // Also update the points total
+                updateGameStatsToSheets();
+            }
+            
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = `${reward.emoji} ${reward.label}! ${reward.emoji}`;
+            celebration.classList.add('show');
+            
+            setTimeout(() => {
+                celebration.classList.remove('show');
+            }, 2000);
+            
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        // Game Functions
+        function renderGameButtons() {
+            const container = document.getElementById('gameButtonsGrid');
+            container.innerHTML = '';
+            
+            GAMES.forEach(game => {
+                const btn = document.createElement('button');
+                btn.className = 'game-select-card';
+                btn.id = 'game-btn-' + game.id;
+                btn.onclick = () => startGame(game.id);
+                
+                const color = game.color || '#3b82f6';
+                btn.style.background = `linear-gradient(135deg, ${color} 0%, ${darkenColor(color, 40)} 100%)`;
+                
+                if (game.fullWidth) {
+                    btn.style.gridColumn = '1 / -1';
+                    btn.style.flexDirection = 'row';
+                    btn.style.justifyContent = 'center';
+                    btn.innerHTML = `
+                        <div style="font-size: 2.2em;">${game.emoji}</div>
+                        <div style="text-align: left;">
+                            <div>${game.name}</div>
+                            <div class="game-card-cost">${game.cost}⭐ per play &middot; 2 players</div>
+                        </div>
+                    `;
+                } else {
+                    btn.innerHTML = `
+                        <div style="font-size: 2.2em;">${game.emoji}</div>
+                        <div>${game.name}</div>
+                        <div class="game-card-cost">${game.cost}⭐ per play</div>
+                    `;
+                }
+                
+                container.appendChild(btn);
+            });
+            
+            updateGameButtonStates();
+        }
+
+        function updateGameButtonStates() {
+            GAMES.forEach(game => {
+                const btn = document.getElementById('game-btn-' + game.id);
+                if (!btn) return;
+                
+                const affordable = data.totalStars >= game.cost;
+                btn.disabled = !affordable;
+                
+                const color = game.color || '#3b82f6';
+                btn.style.background = affordable
+                    ? `linear-gradient(135deg, ${color} 0%, ${darkenColor(color, 40)} 100%)`
+                    : '#9ca3af';
+            });
+        }
+
+        let currentGameCost = 5;
+        let bossMaxHealth = 180;
+        let bossHealth = 180;
+        let bossDefeated = false;
+        let bossX = 200;
+        let bossY = 95;
+        let bossBaseY = 95;
+        let bossHitRadius = 46;
+        let battleFrame = 0;
+        let pillowShots = [];
+        let comboCount = 0;
+        let powerMeter = 0;
+        let shakeFrames = 0;
+        let shakeMag = 0;
+        let comicPopups = [];
+        let duelHoles = [];
+        let p1Score = 0;
+        let p2Score = 0;
+        let dividerX = 200;
+        let dividerTargetX = 200;
+
+        function startGame(gameId) {
+            const game = GAMES.find(g => g.id === gameId) || GAMES[0];
+            
+            if (data.totalStars < game.cost) return;
+            
+            currentGame = game.id;
+            currentGameCost = game.cost;
+            
+            document.getElementById('gameModalTitle').textContent = `${game.emoji} ${game.name}! ${game.emoji}`;
+            document.getElementById('gameModalInstruction').textContent = game.instruction;
+            
+            document.getElementById('gameModal').classList.add('active');
+            gameScore = 0;
+            bubbles = [];
+            lasers = [];
+            explosions = [];
+            gameActive = true;
+            timeRemaining = 30;
+            
+            // Set up fixed hole positions for Whack-a-Mole
+            if (currentGame === 'mole') {
+                moleHoles = [
+                    { x: 80, y: 180, occupied: false },
+                    { x: 200, y: 180, occupied: false },
+                    { x: 320, y: 180, occupied: false },
+                    { x: 80, y: 360, occupied: false },
+                    { x: 200, y: 360, occupied: false },
+                    { x: 320, y: 360, occupied: false }
+                ];
+            }
+            
+            // Set up the boss for Pillow Fort Battle
+            if (currentGame === 'battle') {
+                bossMaxHealth = 180;
+                bossHealth = 180;
+                bossDefeated = false;
+                bossX = 200;
+                bossY = 95;
+                battleFrame = 0;
+                pillowShots = [];
+                comboCount = 0;
+                powerMeter = 0;
+                shakeFrames = 0;
+                shakeMag = 0;
+                comicPopups = [];
+            }
+            
+            // Set up Pillow Duel (two-player, split screen)
+            if (currentGame === 'duel') {
+                p1Score = 0;
+                p2Score = 0;
+                dividerX = 200;
+                dividerTargetX = 200;
+                duelHoles = [
+                    { fracX: 0.4, y: 150, side: 'left', occupied: false },
+                    { fracX: 0.6, y: 280, side: 'left', occupied: false },
+                    { fracX: 0.4, y: 410, side: 'left', occupied: false },
+                    { fracX: 0.4, y: 150, side: 'right', occupied: false },
+                    { fracX: 0.6, y: 280, side: 'right', occupied: false },
+                    { fracX: 0.4, y: 410, side: 'right', occupied: false }
+                ];
+            }
+            
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            resizeCanvas();
+            
+            const balloonWrap = document.getElementById('balloonLetterWrap');
+            const balloonInput = document.getElementById('balloonLetterInput');
+            if (currentGame === 'balloon') {
+                balloonWrap.style.display = 'block';
+                balloonInput.value = '';
+                setTimeout(() => balloonInput.focus(), 300);
+            } else {
+                balloonWrap.style.display = 'none';
+            }
+            
+            document.getElementById('gameScoreLine').style.display = currentGame === 'duel' ? 'none' : 'block';
+            
+            document.getElementById('gameScore').textContent = gameScore;
+            document.getElementById('gameTimer').textContent = timeRemaining;
+            document.getElementById('gameOverScreen').classList.remove('show');
+            
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                document.getElementById('gameTimer').textContent = timeRemaining;
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+            
+            const spawnRate = currentGame === 'mole' ? 550 : (currentGame === 'battle' ? 700 : (currentGame === 'duel' ? 450 : 1000));
+            gameInterval = setInterval(spawnBubble, spawnRate);
+            
+            setTimeout(() => {
+                endGame();
+            }, 30000);
+            
+            gameLoop();
+        }
+
+        function spawnBubble() {
+            if (!gameActive) return;
+            
+            if (currentGame === 'mole') {
+                spawnMole();
+                return;
+            }
+            
+            // Pillow Fort Battle is now aim-and-shoot (see click handler) - no falling spawns
+            if (currentGame === 'battle') return;
+            
+            if (currentGame === 'duel') {
+                spawnDuelTargets();
+                return;
+            }
+            
+            if (currentGame === 'balloon') {
+                // Only one balloon floats at a time, slowly, with a letter to type
+                if (bubbles.some(b => !b.popped)) return;
+                
+                const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                const balloonSprites = ['balloonRed', 'balloonOrange', 'balloonYellow', 'balloonTeal', 'balloonBlue', 'balloonPurple'];
+                bubbles.push({
+                    x: Math.random() * (canvas.width - 100) + 50,
+                    y: canvas.height + 50,
+                    radius: 48,
+                    spriteKey: balloonSprites[Math.floor(Math.random() * balloonSprites.length)],
+                    color: '#ec4899',
+                    speed: 0.5 + Math.random() * 0.3,
+                    dy: -1,
+                    popped: false,
+                    points: 10,
+                    letter: letters[Math.floor(Math.random() * letters.length)]
+                });
+                return;
+            }
+            
+            const sizeTypes = [
+                { size: 'large', points: 10 },
+                { size: 'medium', points: 5 },
+                { size: 'small', points: 3 }
+            ];
+            
+            const type = sizeTypes[Math.floor(Math.random() * sizeTypes.length)];
+            const baseRadius = type.size === 'large' ? 35 : type.size === 'medium' ? 25 : 18;
+            const radius = baseRadius + Math.random() * 8;
+            
+            // Space asteroid (default) - flat single-color icon style
+            bubbles.push({
+                x: Math.random() * (canvas.width - 60) + 30,
+                y: -40,
+                radius: radius,
+                color: '#64748b',
+                speed: 2 + Math.random() * 3,
+                dy: 1,
+                popped: false,
+                points: type.points,
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() - 0.5) * 0.1
+            });
+        }
+
+        function spawnMole() {
+            const freeHoles = moleHoles.filter(h => !h.occupied);
+            if (freeHoles.length === 0) return;
+            
+            const hole = freeHoles[Math.floor(Math.random() * freeHoles.length)];
+            hole.occupied = true;
+            
+            const pointOptions = [10, 5, 3];
+            
+            bubbles.push({
+                x: hole.x,
+                y: hole.y,
+                radius: 42,
+                hitRadius: 54,
+                color: '#8b5e3c',
+                speed: 0,
+                dy: 0,
+                popped: false,
+                points: pointOptions[Math.floor(Math.random() * pointOptions.length)],
+                life: 48,
+                isMole: true,
+                holeRef: hole
+            });
+        }
+
+        function spawnDuelTargets() {
+            const pointTiers = [5, 8, 12];
+            
+            ['left', 'right'].forEach(side => {
+                const freeHoles = duelHoles.filter(h => h.side === side && !h.occupied);
+                if (freeHoles.length === 0) return;
+                
+                const hole = freeHoles[Math.floor(Math.random() * freeHoles.length)];
+                hole.occupied = true;
+                
+                const targetX = side === 'left'
+                    ? dividerX * hole.fracX
+                    : dividerX + (canvas.width - dividerX) * hole.fracX;
+                
+                bubbles.push({
+                    x: targetX,
+                    y: hole.y,
+                    radius: 30,
+                    hitRadius: 40,
+                    color: side === 'left' ? '#3b82f6' : '#ef4444',
+                    side: side,
+                    speed: 0,
+                    dy: 0,
+                    popped: false,
+                    points: pointTiers[Math.floor(Math.random() * pointTiers.length)],
+                    life: 38,
+                    isDuelTarget: true,
+                    holeRef: hole
+                });
+            });
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+            
+            // Screen shake (used by Pillow Fort Battle hits)
+            let shakeX = 0, shakeY = 0;
+            if (shakeFrames > 0) {
+                shakeX = (Math.random() - 0.5) * shakeMag;
+                shakeY = (Math.random() - 0.5) * shakeMag;
+                shakeFrames--;
+            }
+            ctx.save();
+            ctx.translate(shakeX, shakeY);
+            
+            // Background per game theme
+            if (currentGame === 'balloon') {
+                ctx.fillStyle = '#87ceeb';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                for (let i = 0; i < 4; i++) {
+                    const cx = (i * 110 + 40) % canvas.width;
+                    const cy = 50 + (i * 70) % 150;
+                    ctx.beginPath();
+                    ctx.ellipse(cx, cy, 30, 14, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (currentGame === 'mole') {
+                ctx.fillStyle = '#4d7c0f';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                moleHoles.forEach(hole => {
+                    ctx.beginPath();
+                    ctx.ellipse(hole.x, hole.y + 10, 46, 20, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = '#3f2d1d';
+                    ctx.fill();
+                });
+            } else if (currentGame === 'duel') {
+                // Divider slides toward whoever's ahead - tug of war style
+                dividerTargetX = Math.max(110, Math.min(290, 200 + (p1Score - p2Score) * 3));
+                dividerX += (dividerTargetX - dividerX) * 0.1;
+                
+                ctx.fillStyle = '#dbeafe';
+                ctx.fillRect(0, 0, dividerX, canvas.height);
+                ctx.fillStyle = '#fee2e2';
+                ctx.fillRect(dividerX, 0, canvas.width - dividerX, canvas.height);
+                
+                ctx.strokeStyle = '#1f2937';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(dividerX, 0);
+                ctx.lineTo(dividerX, canvas.height);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#1e40af';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`P1: ${p1Score}`, dividerX / 2, 40);
+                
+                ctx.fillStyle = '#b91c1c';
+                ctx.fillText(`P2: ${p2Score}`, dividerX + (canvas.width - dividerX) / 2, 40);
+            } else if (currentGame === 'battle') {
+                ctx.fillStyle = '#ddd6fe';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Boss gets faster and twitchier as its health drops - real challenge
+                const healthFrac = bossHealth / bossMaxHealth;
+                const enraged = healthFrac < 0.4;
+                const freqX = enraged ? 16 : 26;
+                const ampX = enraged ? 78 : 55;
+                const freqY = enraged ? 11 : 19;
+                const ampY = enraged ? 20 : 12;
+                
+                if (!bossDefeated) {
+                    battleFrame++;
+                }
+                bossX = 200 + Math.sin(battleFrame / freqX) * ampX;
+                bossY = bossBaseY + Math.sin(battleFrame / freqY) * ampY;
+                
+                const cx = bossX;
+                const cy = bossY;
+                const sockColor = bossDefeated ? '#facc15' : (enraged ? '#f87171' : '#f9a8d4');
+                
+                let sockSpriteKey = 'sockNeutral';
+                if (bossDefeated) sockSpriteKey = 'sockDefeated';
+                else if (enraged) sockSpriteKey = 'sockMad';
+                
+                const sockDrawn = drawSprite(sockSpriteKey, cx, cy + 20, 175, 0);
+                
+                if (!sockDrawn) {
+                    // Sock silhouette: leg + bent foot with heel and rounded toe
+                    ctx.beginPath();
+                    ctx.moveTo(cx - 30, cy - 40);
+                    ctx.lineTo(cx + 30, cy - 40);
+                    ctx.lineTo(cx + 30, cy + 25);
+                    ctx.quadraticCurveTo(cx + 30, cy + 55, cx + 70, cy + 55);
+                    ctx.quadraticCurveTo(cx + 100, cy + 55, cx + 100, cy + 75);
+                    ctx.quadraticCurveTo(cx + 100, cy + 90, cx + 78, cy + 90);
+                    ctx.lineTo(cx - 30, cy + 90);
+                    ctx.quadraticCurveTo(cx - 42, cy + 55, cx - 30, cy + 25);
+                    ctx.closePath();
+                    ctx.fillStyle = sockColor;
+                    ctx.fill();
+                    ctx.strokeStyle = '#be185d';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    
+                    // Boxer fists (little battle-ready arms)
+                    ctx.fillStyle = sockColor;
+                    ctx.beginPath();
+                    ctx.arc(cx - 44, cy + 5, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(cx + 44, cy - 10, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Cuff stripes near the top opening
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(cx - 30, cy - 34, 60, 7);
+                    ctx.fillRect(cx - 30, cy - 20, 60, 7);
+                    
+                    // Face on the leg part
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(cx - 13, cy - 2, 11, 0, Math.PI * 2);
+                    ctx.arc(cx + 13, cy - 2, 11, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#1f2937';
+                    ctx.beginPath();
+                    ctx.arc(cx - 13, cy - 2, 5, 0, Math.PI * 2);
+                    ctx.arc(cx + 13, cy - 2, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Angry eyebrows once enraged, for extra drama
+                    if (enraged && !bossDefeated) {
+                        ctx.strokeStyle = '#7f1d1d';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.moveTo(cx - 22, cy - 16);
+                        ctx.lineTo(cx - 6, cy - 10);
+                        ctx.moveTo(cx + 22, cy - 16);
+                        ctx.lineTo(cx + 6, cy - 10);
+                        ctx.stroke();
+                    }
+                    
+                    ctx.strokeStyle = '#1f2937';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    if (bossDefeated) {
+                        ctx.arc(cx, cy + 12, 14, 0, Math.PI, false);
+                    } else if (enraged) {
+                        ctx.moveTo(cx - 12, cy + 20);
+                        ctx.lineTo(cx + 12, cy + 20);
+                    } else {
+                        ctx.arc(cx, cy + 16, 10, 0, Math.PI, false);
+                    }
+                    ctx.stroke();
+                }
+                
+                // Dizzy stars when almost defeated
+                if (bossHealth > 0 && bossHealth < bossMaxHealth * 0.15 && !bossDefeated) {
+                    const starAngle = battleFrame / 8;
+                    for (let s = 0; s < 3; s++) {
+                        const a = starAngle + (s * Math.PI * 2) / 3;
+                        const sx = cx + Math.cos(a) * 36;
+                        const sy = cy - 45 + Math.sin(a) * 10;
+                        ctx.fillStyle = '#fbbf24';
+                        ctx.font = 'bold 16px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('✦', sx, sy);
+                    }
+                }
+                
+                // Boss health bar
+                const barWidth = 260;
+                const barX = (canvas.width - barWidth) / 2;
+                const barY = 220;
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.fillRect(barX, barY, barWidth, 16);
+                ctx.fillStyle = healthFrac > 0.3 ? '#22c55e' : '#ef4444';
+                ctx.fillRect(barX, barY, barWidth * Math.max(0, healthFrac), 16);
+                ctx.strokeStyle = '#1f2937';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(barX, barY, barWidth, 16);
+                ctx.fillStyle = '#4c1d95';
+                ctx.font = 'bold 11px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('SOCK MONSTER', canvas.width / 2, barY - 6);
+                
+                // Power meter (fills as you land hits, unleashes a Mega Smash when full)
+                const pmY = barY + 26;
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.fillRect(barX, pmY, barWidth, 12);
+                ctx.fillStyle = powerMeter >= 100 ? '#fbbf24' : '#38bdf8';
+                ctx.fillRect(barX, pmY, barWidth * (powerMeter / 100), 12);
+                ctx.strokeStyle = '#1f2937';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(barX, pmY, barWidth, 12);
+                ctx.fillStyle = '#1f2937';
+                ctx.font = 'bold 10px Arial';
+                ctx.fillText(powerMeter >= 100 ? 'MEGA SMASH READY!' : 'POWER', canvas.width / 2, pmY + 10);
+                
+                // Combo counter
+                if (comboCount >= 2 && !bossDefeated) {
+                    ctx.fillStyle = '#ea580c';
+                    ctx.font = 'bold 22px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`COMBO x${comboCount}!`, canvas.width / 2, 40);
+                }
+                
+                // Pillow shots flying from the player toward the tapped spot
+                pillowShots = pillowShots.filter(shot => {
+                    shot.life--;
+                    if (shot.life <= 0) return false;
+                    
+                    const progress = 1 - (shot.life / shot.maxLife);
+                    const px = shot.x1 + (shot.x2 - shot.x1) * progress;
+                    const py = shot.y1 + (shot.y2 - shot.y1) * progress;
+                    
+                    ctx.save();
+                    ctx.translate(px, py);
+                    ctx.beginPath();
+                    ctx.roundRect(-16, -11, 32, 22, 8);
+                    ctx.fillStyle = '#fef3c7';
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.restore();
+                    
+                    return true;
+                });
+                
+                // Comic-book style impact text ("POW!", "KAPOW!", etc.)
+                comicPopups = comicPopups.filter(popup => {
+                    popup.life--;
+                    if (popup.life <= 0) return false;
+                    
+                    const scale = popup.life > popup.maxLife - 4 ? 1 + (popup.maxLife - popup.life) * 0.08 : 1;
+                    const alpha = Math.min(1, popup.life / (popup.maxLife * 0.4));
+                    
+                    ctx.save();
+                    ctx.translate(popup.x, popup.y - (popup.maxLife - popup.life) * 1.5);
+                    ctx.scale(scale, scale);
+                    ctx.font = 'bold 26px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.lineWidth = 4;
+                    ctx.strokeStyle = `rgba(31,41,55,${alpha})`;
+                    ctx.strokeText(popup.text, 0, 0);
+                    ctx.fillStyle = `rgba(${popup.color},${alpha})`;
+                    ctx.fillText(popup.text, 0, 0);
+                    ctx.restore();
+                    
+                    return true;
+                });
+            } else {
+                ctx.fillStyle = '#000033';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ffffff';
+                for (let i = 0; i < 50; i++) {
+                    const x = (i * 73) % canvas.width;
+                    const y = (i * 97) % canvas.height;
+                    const size = (i % 3) + 1;
+                    ctx.fillRect(x, y, size, size);
+                }
+            }
+            
+            // Lasers only make sense for the space game
+            if (currentGame === 'space') {
+                lasers = lasers.filter(laser => {
+                    laser.life--;
+                    if (laser.life <= 0) return false;
+                    
+                    const alpha = laser.life / 10;
+                    ctx.strokeStyle = `rgba(0, 255, 0, ${alpha})`;
+                    ctx.lineWidth = 4;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#00ff00';
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width / 2, canvas.height);
+                    ctx.lineTo(laser.x, laser.y);
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                    
+                    return true;
+                });
+            } else {
+                lasers = [];
+            }
+            
+            explosions = explosions.filter(explosion => {
+                explosion.life--;
+                if (explosion.life <= 0) return false;
+                
+                const alpha = explosion.life / 15;
+                ctx.fillStyle = `rgba(255, 150, 0, ${alpha})`;
+                
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2;
+                    const dist = (15 - explosion.life) * 3;
+                    const expX = explosion.x + Math.cos(angle) * dist;
+                    const expY = explosion.y + Math.sin(angle) * dist;
+                    ctx.beginPath();
+                    ctx.arc(expX, expY, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                return true;
+            });
+            
+            bubbles = bubbles.filter(obj => {
+                if (obj.popped) {
+                    if ((obj.isMole || obj.isDuelTarget) && obj.holeRef) obj.holeRef.occupied = false;
+                    return false;
+                }
+                
+                // Whack-a-Mole: fixed position, disappears after its lifespan
+                if (obj.isMole) {
+                    obj.life--;
+                    if (obj.life <= 0) {
+                        if (obj.holeRef) obj.holeRef.occupied = false;
+                        return false;
+                    }
+                    
+                    const moleDrawn = drawSprite('mole', obj.x, obj.y, obj.radius * 2.3, 0);
+                    
+                    if (!moleDrawn) {
+                        ctx.beginPath();
+                        ctx.ellipse(obj.x, obj.y, obj.radius, obj.radius * 0.9, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = obj.color;
+                        ctx.fill();
+                        
+                        ctx.fillStyle = '#000000';
+                        ctx.beginPath();
+                        ctx.arc(obj.x - 8, obj.y - 5, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(obj.x + 8, obj.y - 5, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.fillStyle = '#ec4899';
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y + 5, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    return true;
+                }
+                
+                // Duel: fixed position targets on each half, disappear after their lifespan
+                if (obj.isDuelTarget) {
+                    obj.life--;
+                    if (obj.life <= 0) {
+                        if (obj.holeRef) obj.holeRef.occupied = false;
+                        return false;
+                    }
+                    
+                    const spriteKey = obj.side === 'left' ? 'targetBlue' : 'targetRed';
+                    const targetDrawn = drawSprite(spriteKey, obj.x, obj.y, obj.radius * 2.3, 0);
+                    
+                    if (!targetDrawn) {
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = obj.color;
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y, obj.radius * 0.66, 0, Math.PI * 2);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y, obj.radius * 0.33, 0, Math.PI * 2);
+                        ctx.fillStyle = obj.color;
+                        ctx.fill();
+                    }
+                    
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 13px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+                    ctx.strokeText(obj.side === 'left' ? 'P1' : 'P2', obj.x, obj.y);
+                    ctx.fillText(obj.side === 'left' ? 'P1' : 'P2', obj.x, obj.y);
+                    
+                    return true;
+                }
+                
+                obj.y += obj.speed * obj.dy;
+                if (obj.rotation !== undefined) obj.rotation += obj.rotationSpeed;
+                
+                if (currentGame === 'balloon') {
+                    if (obj.y + obj.radius < 0) return false;
+                } else {
+                    if (obj.y - obj.radius > canvas.height) return false;
+                }
+                
+                if (currentGame === 'balloon') {
+                    const balloonDrawn = drawSprite(obj.spriteKey, obj.x, obj.y - 8, obj.radius * 2.3, 0);
+                    
+                    if (!balloonDrawn) {
+                        ctx.beginPath();
+                        ctx.ellipse(obj.x, obj.y, obj.radius * 0.85, obj.radius, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = obj.color;
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(obj.x - 4, obj.y + obj.radius);
+                        ctx.lineTo(obj.x + 4, obj.y + obj.radius);
+                        ctx.lineTo(obj.x, obj.y + obj.radius + 8);
+                        ctx.closePath();
+                        ctx.fillStyle = obj.color;
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(obj.x, obj.y + obj.radius + 8);
+                        ctx.lineTo(obj.x, obj.y + obj.radius + 30);
+                        ctx.strokeStyle = '#888888';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                    
+                    // Big letter to type, with dark outline for legibility over any balloon color
+                    ctx.font = 'bold 40px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.lineWidth = 4;
+                    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+                    ctx.strokeText(obj.letter, obj.x, obj.y);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(obj.letter, obj.x, obj.y);
+                    
+                    return true;
+                }
+                
+                // Space asteroid - illustrated sprite with hexagon fallback
+                const asteroidDrawn = drawSprite('asteroid', obj.x, obj.y, obj.radius * 2.2, obj.rotation);
+                
+                if (!asteroidDrawn) {
+                    ctx.save();
+                    ctx.translate(obj.x, obj.y);
+                    ctx.rotate(obj.rotation);
+                    
+                    ctx.beginPath();
+                    const sides = 6;
+                    for (let i = 0; i < sides; i++) {
+                        const angle = (i / sides) * Math.PI * 2;
+                        const x = Math.cos(angle) * obj.radius;
+                        const y = Math.sin(angle) * obj.radius;
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                    ctx.closePath();
+                    ctx.fillStyle = obj.color;
+                    ctx.fill();
+                    
+                    ctx.restore();
+                }
+                
+                return true;
+            });
+            
+            ctx.restore();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            if (!gameActive) return;
+            gameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            
+            if (currentGame === 'balloon') {
+                document.getElementById('balloonLetterInput').blur();
+            }
+            
+            const finalScore = gameScore;
+            
+            if (data.totalGamePoints === undefined || isNaN(data.totalGamePoints)) {
+                data.totalGamePoints = 0;
+            }
+            
+            data.totalGamePoints += finalScore;
+            data.totalStars -= currentGameCost;
+            
+            // Save to localStorage immediately
+            localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+            
+            // Update only stars and points to sheets (not full data)
+            if (sheetUrl) {
+                updateGameStatsToSheets();
+            }
+            
+            updateUI();
+            
+            document.getElementById('finalScore').textContent = finalScore;
+            document.getElementById('gameOverScreen').classList.add('show');
+            
+            const gameOverTitle = document.querySelector('#gameOverScreen .game-over-title');
+            const gameOverSubtext = document.getElementById('gameOverSubtext');
+            
+            if (currentGame === 'duel') {
+                if (gameOverTitle) gameOverTitle.textContent = '⚡ DUEL COMPLETE! ⚡';
+                if (gameOverSubtext) {
+                    if (p1Score > p2Score) {
+                        gameOverSubtext.textContent = `🏆 Player 1 wins! ${p1Score} - ${p2Score}`;
+                    } else if (p2Score > p1Score) {
+                        gameOverSubtext.textContent = `🏆 Player 2 wins! ${p2Score} - ${p1Score}`;
+                    } else {
+                        gameOverSubtext.textContent = `🤝 It's a tie! ${p1Score} - ${p2Score}`;
+                    }
+                }
+            } else if (currentGame === 'battle') {
+                if (gameOverTitle) {
+                    gameOverTitle.textContent = bossDefeated
+                        ? '🥊 K.O.! SOCK MONSTER DEFEATED! 🥊'
+                        : "⏰ TIME'S UP! 🧦";
+                }
+                if (gameOverSubtext) {
+                    gameOverSubtext.textContent = bossDefeated
+                        ? 'Champion!'
+                        : 'The Sock Monster survives... barely!';
+                }
+            } else if (currentGame === 'space') {
+                if (gameOverTitle) gameOverTitle.textContent = '🚀 ASTEROIDS CLEARED! 🚀';
+                if (gameOverSubtext) gameOverSubtext.textContent = 'Great flying!';
+            } else if (currentGame === 'balloon') {
+                if (gameOverTitle) gameOverTitle.textContent = '🎈 GREAT POPPING! 🎈';
+                if (gameOverSubtext) gameOverSubtext.textContent = 'Nice letter skills!';
+            } else if (currentGame === 'mole') {
+                if (gameOverTitle) gameOverTitle.textContent = '🔨 MOLES WHACKED! 🔨';
+                if (gameOverSubtext) gameOverSubtext.textContent = 'Speedy hands!';
+            } else {
+                if (gameOverTitle) gameOverTitle.textContent = '🎉 MISSION COMPLETE! 🎉';
+                if (gameOverSubtext) gameOverSubtext.textContent = 'Great job!';
+            }
+            
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = `🎉 +${finalScore} Points! 🎉`;
+            celebration.classList.add('show');
+            
+            setTimeout(() => {
+                celebration.classList.remove('show');
+            }, 2000);
+        }
+
+        function closeGame() {
+            gameActive = false;
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            document.getElementById('gameModal').classList.remove('active');
+            document.getElementById('gameOverScreen').classList.remove('show');
+            
+            const balloonWrap = document.getElementById('balloonLetterWrap');
+            const balloonInput = document.getElementById('balloonLetterInput');
+            balloonWrap.style.display = 'none';
+            balloonInput.value = '';
+            balloonInput.blur();
+        }
+
+        const gameCanvas = document.getElementById('gameCanvas');
+        
+        const balloonLetterInput = document.getElementById('balloonLetterInput');
+        balloonLetterInput.addEventListener('input', (e) => {
+            if (currentGame !== 'balloon' || !gameActive) return;
+            
+            const typed = e.target.value.slice(-1).toUpperCase();
+            e.target.value = '';
+            if (!typed) return;
+            
+            const balloon = bubbles.find(b => !b.popped);
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            if (balloon && typed === balloon.letter) {
+                balloon.popped = true;
+                gameScore += balloon.points;
+                document.getElementById('gameScore').textContent = gameScore;
+                explosions.push({ x: balloon.x, y: balloon.y, life: 15 });
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } else {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = 400;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.12, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            }
+        });
+        
+        function resizeCanvas() {
+            const container = document.querySelector('.game-container');
+            const maxWidth = Math.min(400, container.clientWidth - 40);
+            gameCanvas.style.width = maxWidth + 'px';
+            gameCanvas.style.height = (maxWidth * 1.25) + 'px';
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        
+        gameCanvas.addEventListener('click', (e) => {
+            if (!gameActive) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            
+            // Balloon Pop is now typing-only - taps do nothing
+            if (currentGame === 'balloon') return;
+            
+            if (currentGame === 'battle') {
+                if (bossDefeated) return;
+                
+                pillowShots.push({
+                    x1: canvas.width / 2,
+                    y1: canvas.height,
+                    x2: x,
+                    y2: y,
+                    life: 12,
+                    maxLife: 12
+                });
+                
+                const targetX = bossX + 25;
+                const targetY = bossY + 20;
+                const distance = Math.sqrt((x - targetX) ** 2 + (y - targetY) ** 2);
+                const isHit = distance < bossHitRadius;
+                
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                if (isHit) {
+                    const megaSmash = powerMeter >= 100;
+                    let damage = distance < bossHitRadius * 0.4 ? 20 : distance < bossHitRadius * 0.7 ? 12 : 6;
+                    let popupText = damage >= 20 ? 'KAPOW!' : damage >= 12 ? 'POW!' : 'TAP!';
+                    let popupColor = '234,88,12';
+                    
+                    if (megaSmash) {
+                        damage = 45;
+                        popupText = 'MEGA SMASH!!';
+                        popupColor = '217,119,6';
+                        powerMeter = 0;
+                        shakeFrames = 14;
+                        shakeMag = 18;
+                    } else {
+                        powerMeter = Math.min(100, powerMeter + 16);
+                        shakeFrames = 7;
+                        shakeMag = damage >= 20 ? 9 : 5;
+                    }
+                    
+                    comboCount++;
+                    if (comboCount > 0 && comboCount % 3 === 0) {
+                        damage += 8;
+                        comicPopups.push({ x: x, y: y - 30, text: `COMBO x${comboCount}!`, color: '234,179,8', life: 26, maxLife: 26 });
+                    }
+                    
+                    gameScore += damage;
+                    document.getElementById('gameScore').textContent = gameScore;
+                    bossHealth = Math.max(0, bossHealth - damage);
+                    explosions.push({ x: x, y: y, life: 15 });
+                    comicPopups.push({ x: x, y: y, text: popupText, color: popupColor, life: 22, maxLife: 22 });
+                    
+                    if (bossHealth <= 0 && !bossDefeated) {
+                        bossDefeated = true;
+                        gameScore += 50;
+                        document.getElementById('gameScore').textContent = gameScore;
+                        shakeFrames = 20;
+                        shakeMag = 16;
+                        comicPopups.push({ x: bossX + 20, y: bossY, text: 'K.O.!!', color: '220,38,38', life: 40, maxLife: 40 });
+                        setTimeout(() => endGame(), 900);
+                    }
+                    
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    oscillator.frequency.value = megaSmash ? 100 : 150;
+                    oscillator.type = 'square';
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + (megaSmash ? 0.3 : 0.15));
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + (megaSmash ? 0.3 : 0.15));
+                } else {
+                    comboCount = 0;
+                    comicPopups.push({ x: x, y: y, text: 'WHIFF!', color: '107,114,128', life: 18, maxLife: 18 });
+                    
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    oscillator.frequency.value = 500;
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.12, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                }
+                
+                return;
+            }
+            
+            if (currentGame === 'space') {
+                lasers.push({ x: x, y: y, life: 10 });
+            }
+            
+            let hit = false;
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const obj = bubbles[i];
+                const distance = Math.sqrt((x - obj.x) ** 2 + (y - obj.y) ** 2);
+                
+                if (distance < (obj.hitRadius || obj.radius)) {
+                    obj.popped = true;
+                    gameScore += obj.points;
+                    hit = true;
+                    document.getElementById('gameScore').textContent = gameScore;
+                    
+                    if (obj.isDuelTarget) {
+                        if (obj.side === 'left') {
+                            p1Score += obj.points;
+                        } else {
+                            p2Score += obj.points;
+                        }
+                    }
+                    
+                    explosions.push({ x: obj.x, y: obj.y, life: 15 });
+                    
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 150;
+                    oscillator.type = 'square';
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                    
+                    break;
+                }
+            }
+            
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = hit ? 800 : 600;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.08);
+        });
+
+        // Initialize
+        renderTodayDate();
+        loadKidMode();
+        renderCategoryTabs();
+        renderPottyButtons();
+        renderGameButtons();
+        checkSheetUrl();
+        loadData();
+        loadTaskConfig();
+        loadRedemptionLog();
+        
+        // Auto-refresh data every 1 hour
+        setInterval(() => {
+            if (sheetUrl && !gameActive) {
+                loadDataFromSheets();
+            }
+        }, 3600000); // 1 hour = 3600000 milliseconds
+        
+        // Refresh the Reward Tracker every 5 minutes so fulfilled status shows up promptly
+        setInterval(() => {
+            if (sheetUrl && !gameActive) {
+                loadRedemptionLog();
+            }
+        }, 300000);
+        
+        // Keep task button cooldown dimming up to date
+        setInterval(() => {
+            if (kidModeEnabled) {
+                updateTaskCooldownStates();
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
