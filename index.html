@@ -392,6 +392,16 @@
             100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
         }
 
+        @keyframes crayonPop {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.25); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .crayon-x svg {
+            animation: crayonPop 0.35s ease-out;
+        }
+
         /* Game Earned Modal */
         .game-earned-modal {
             display: none;
@@ -767,7 +777,10 @@
             <div id="rewardTrackerList"></div>
         </div>
 
-        <div id="todayDateBanner" style="text-align: center; background: rgba(255,255,255,0.85); border-radius: 16px; padding: 12px; margin-bottom: 15px; color: #1e3a8a; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></div>
+        <div style="margin-bottom: 6px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;" id="todayDateBanner"></div>
+        </div>
+        <div id="todayBoardSummary" onclick="openCalendar()" style="display: none; text-align: center; background: rgba(255,255,255,0.7); border-radius: 14px; padding: 8px; margin-bottom: 15px; color: #4c1d95; font-weight: bold; font-size: 0.95em; cursor: pointer;"></div>
 
         <div class="history">
             <h2>📅 Today's Adventures</h2>
@@ -854,6 +867,75 @@
                 <button class="play-game-button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="saveParentChanges()">💾 Save Changes</button>
                 <button class="close-game-button" onclick="closeParentArea()">Close</button>
             </div>
+        </div>
+    </div>
+
+    <!-- My Calendar Modal -->
+    <div class="game-modal" id="calendarModal">
+        <div class="game-container" style="max-width: 500px; text-align: left; max-height: 85vh; overflow-y: auto;">
+            <h2 class="game-title" style="text-align: center;">📅 My Calendar</h2>
+            
+            <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                <button id="calTabBoardBtn" onclick="showCalendarTab('board')" style="flex: 1; padding: 10px; border-radius: 10px; border: none; font-family: inherit; font-weight: bold; cursor: pointer;">🧸 Today's Board</button>
+                <button id="calTabGridBtn" onclick="showCalendarTab('grid')" style="flex: 1; padding: 10px; border-radius: 10px; border: none; font-family: inherit; font-weight: bold; cursor: pointer;">🗓️ Full Calendar</button>
+            </div>
+            
+            <!-- TODAY'S BOARD VIEW -->
+            <div id="calendarBoardView">
+                <div id="fillableTopRow" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px;"></div>
+                <div id="yesterdayDateRecap" style="font-size: 0.8em; color: #6b7280; font-style: italic; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">🗓️ Pick the day</h3>
+                <div id="calendarDayGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">🌙 Pick the month</h3>
+                <div id="calendarMonthGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">🔢 Pick the date</h3>
+                <div id="calendarDateGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">🎉 Pick the year</h3>
+                <div id="calendarYearGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 4px;">🌤️ What's the weather like?</h3>
+                <div id="yesterdayWeatherRecap" style="font-size: 0.8em; color: #6b7280; font-style: italic; margin-bottom: 8px;"></div>
+                <div data-drop-slot="weather" id="weatherSlot" style="background: #e0f2fe; border-radius: 12px; padding: 10px; text-align: center; min-height: 50px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; border: 2px dashed transparent;">
+                    <span style="font-size: 1.5em; color: #0c4a6e; font-weight: bold;" id="weatherSlotText">Drag your weather here!</span>
+                </div>
+                <div id="weatherGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 4px;">👕 Dress for the weather!</h3>
+                <div id="yesterdayOutfitRecap" style="font-size: 0.8em; color: #6b7280; font-style: italic; margin-bottom: 8px;"></div>
+                <div id="outfitGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 4px;">💗 How do I feel today?</h3>
+                <div id="yesterdayMoodRecap" style="font-size: 0.8em; color: #6b7280; font-style: italic; margin-bottom: 8px;"></div>
+                <div id="moodTrackerGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+            </div>
+            
+            <!-- FULL GRID CALENDAR VIEW -->
+            <div id="calendarGridView" style="display: none;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <button onclick="shiftCalendarMonth(-1)" style="background: #e0e7ff; border: none; border-radius: 10px; padding: 10px 14px; font-size: 1.1em; cursor: pointer;">◀</button>
+                    <div id="calendarGridMonthLabel" style="font-weight: bold; color: #1e40af; font-size: 1.1em;"></div>
+                    <button onclick="shiftCalendarMonth(1)" style="background: #e0e7ff; border: none; border-radius: 10px; padding: 10px 14px; font-size: 1.1em; cursor: pointer;">▶</button>
+                </div>
+                
+                <div id="calendarWeekdayHeader" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 4px; text-align: center; font-size: 0.7em; font-weight: bold; color: #6b7280;"></div>
+                <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 18px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">✨ Add a special day</h3>
+                <div style="display: grid; grid-template-columns: 70px 60px 1fr; gap: 6px; margin-bottom: 8px;">
+                    <input type="number" id="newEventDate" placeholder="Day #" min="1" max="31" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc; text-align: center;">
+                    <input type="text" id="newEventEmoji" placeholder="🎂" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc; text-align: center; font-size: 1.1em;">
+                    <input type="text" id="newEventLabel" placeholder="Mom's Birthday" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc;">
+                </div>
+                <button class="play-game-button" style="margin-bottom: 15px;" onclick="addCalendarEvent()">Add Special Day</button>
+                
+                <div id="calendarEventsList"></div>
+            </div>
+            
+            <button class="close-game-button" style="width: 100%; margin-top: 10px;" onclick="closeCalendar()">Close</button>
         </div>
     </div>
 
@@ -1149,6 +1231,9 @@
         // customTasks: brand-new tasks the parent added from scratch
         let taskOverrides = {};
         let redemptionLog = [];
+        let todayBoard = {};
+        let crossedOffDays = {};
+        let calendarEvents = {};
         let customTasks = [];
         let starActions = [];
 
@@ -1244,7 +1329,7 @@
             { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', cost: 5, color: '#3b82f6', instruction: 'Tap the balloons before they float away!' },
             { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', cost: 5, color: '#3b82f6', instruction: 'Tap the moles as they pop up from their holes!' },
             { id: 'battle', name: 'Sock Monster SHOWDOWN', emoji: '🥊', cost: 5, color: '#ea580c', instruction: 'Aim and fire pillows at the Sock Monster! Land combos to charge your MEGA SMASH!', isBattle: true },
-            { id: 'duel', name: 'Duel', emoji: '⚡', cost: 10, color: '#6d28d9', instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true, fullWidth: true }
+            { id: 'duel', name: 'Pillow Duel', emoji: '⚡', cost: 10, color: '#6d28d9', instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true, fullWidth: true }
         ];
 
         let gameOverrides = {};
@@ -1279,6 +1364,40 @@
                 this.closePath();
                 return this;
             };
+        }
+
+        // Illustrated game sprites - loaded once, cached, drawn via ctx.drawImage()
+        const ASSET_BASE = '/potty-tracker/assets/games/';
+        const spriteCache = {};
+        function loadSprite(key, filename) {
+            const img = new Image();
+            img.src = ASSET_BASE + filename;
+            spriteCache[key] = img;
+        }
+        loadSprite('asteroid', 'asteroid.png');
+        loadSprite('mole', 'mole.png');
+        loadSprite('sockNeutral', 'sock-neutral.png');
+        loadSprite('sockMad', 'sock-mad.png');
+        loadSprite('sockDefeated', 'sock-defeated.png');
+        loadSprite('targetBlue', 'target-blue.png');
+        loadSprite('targetRed', 'target-red.png');
+        loadSprite('duelBed', 'duel-bed.png');
+        loadSprite('balloonRed', 'balloon-red.png');
+        loadSprite('balloonOrange', 'balloon-orange.png');
+        loadSprite('balloonYellow', 'balloon-yellow.png');
+        loadSprite('balloonTeal', 'balloon-teal.png');
+        loadSprite('balloonBlue', 'balloon-blue.png');
+        loadSprite('balloonPurple', 'balloon-purple.png');
+        
+        function drawSprite(key, x, y, size, rotation) {
+            const img = spriteCache[key];
+            if (!img || !img.complete || img.naturalWidth === 0) return false;
+            ctx.save();
+            ctx.translate(x, y);
+            if (rotation) ctx.rotate(rotation);
+            ctx.drawImage(img, -size / 2, -size / 2, size, size);
+            ctx.restore();
+            return true;
         }
 
         let currentGame = 'space';
@@ -1557,11 +1676,573 @@
         function renderTodayDate() {
             const el = document.getElementById('todayDateBanner');
             if (!el) return;
+            
+            const board = todayBoard[todayKey()] || {};
+            const slots = [
+                { label: 'Day', value: board.day, color: 'rgba(219,234,254,0.9)', textColor: '#1e40af' },
+                { label: 'Month', value: board.month ? (MONTH_EMOJIS[MONTHS.indexOf(board.month)] + ' ' + board.month) : null, color: 'rgba(252,231,243,0.9)', textColor: '#9d174d' },
+                { label: 'Date', value: board.date ? (board.date + ordinalSuffix(board.date)) : null, color: 'rgba(254,243,199,0.9)', textColor: '#92400e' },
+                { label: 'Year', value: board.year, color: 'rgba(237,233,254,0.9)', textColor: '#5b21b6' }
+            ];
+            
+            el.innerHTML = slots.map(slot => `
+                <button onclick="openCalendar()" style="background:${slot.color};border:none;border-radius:12px;padding:8px 2px;text-align:center;cursor:pointer;font-family:inherit;box-shadow:0 3px 6px rgba(0,0,0,0.12);min-height:54px;display:flex;flex-direction:column;justify-content:center;">
+                    <div style="font-size:0.6em;font-weight:bold;color:${slot.textColor};opacity:0.7;">${slot.label}</div>
+                    <div style="font-size:${slot.value ? '0.85em' : '1.2em'};font-weight:bold;color:${slot.textColor};">${slot.value || '?'}</div>
+                </button>
+            `).join('');
+        }
+
+        const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const MONTH_EMOJIS = ['❄️', '💘', '🌱', '🌧️', '🌷', '☀️', '🎆', '🏖️', '🍎', '🎃', '🍂', '🎄'];
+        const MOODS = [
+            { emoji: '😊', label: 'Happy' },
+            { emoji: '😢', label: 'Sad' },
+            { emoji: '😠', label: 'Mad' },
+            { emoji: '😴', label: 'Tired' },
+            { emoji: '🤩', label: 'Excited' },
+            { emoji: '😰', label: 'Worried' }
+        ];
+        const WEATHER_OPTIONS = [
+            { emoji: '☀️', label: 'Sunny' },
+            { emoji: '⛅', label: 'Partly Cloudy' },
+            { emoji: '☁️', label: 'Cloudy' },
+            { emoji: '🌧️', label: 'Rainy' },
+            { emoji: '⛈️', label: 'Stormy' },
+            { emoji: '❄️', label: 'Snowy' },
+            { emoji: '🌬️', label: 'Windy' },
+            { emoji: '🌫️', label: 'Foggy' },
+            { emoji: '🥵', label: 'Hot' }
+        ];
+        const OUTFIT_OPTIONS = [
+            { emoji: '👕', label: 'T-Shirt' },
+            { emoji: '🩳', label: 'Shorts' },
+            { emoji: '👖', label: 'Pants' },
+            { emoji: '👗', label: 'Dress' },
+            { emoji: '🧥', label: 'Jacket' },
+            { emoji: '🧣', label: 'Scarf' },
+            { emoji: '🧤', label: 'Mittens' },
+            { emoji: '🥾', label: 'Boots' },
+            { emoji: '🩱', label: 'Swimsuit' },
+            { emoji: '🕶️', label: 'Sunglasses' },
+            { emoji: '☂️', label: 'Umbrella' },
+            { emoji: '🧦', label: 'Warm Socks' }
+        ];
+        
+        let calendarViewDate = new Date();
+
+        function todayKey() {
+            return new Date().toDateString();
+        }
+
+        function getTodayBoard() {
+            const key = todayKey();
+            if (!todayBoard[key]) todayBoard[key] = {};
+            return todayBoard[key];
+        }
+
+        function celebrateCalendarTap(text) {
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = text;
+            celebration.classList.add('show');
+            setTimeout(() => celebration.classList.remove('show'), 1200);
+        }
+
+        // ===== Tab switching =====
+        function showCalendarTab(tab) {
+            document.getElementById('calendarBoardView').style.display = tab === 'board' ? 'block' : 'none';
+            document.getElementById('calendarGridView').style.display = tab === 'grid' ? 'block' : 'none';
+            document.getElementById('calTabBoardBtn').style.background = tab === 'board' ? '#7c3aed' : '#e5e7eb';
+            document.getElementById('calTabBoardBtn').style.color = tab === 'board' ? 'white' : '#374151';
+            document.getElementById('calTabGridBtn').style.background = tab === 'grid' ? '#7c3aed' : '#e5e7eb';
+            document.getElementById('calTabGridBtn').style.color = tab === 'grid' ? 'white' : '#374151';
+            
+            if (tab === 'grid') renderCalendarGrid();
+        }
+
+        function renderWeatherSlot() {
+            const board = getTodayBoard();
+            const el = document.getElementById('weatherSlotText');
+            if (!el) return;
+            if (board.weather) {
+                el.style.fontSize = '1.3em';
+                el.textContent = `${board.weatherEmoji} ${board.weather}`;
+            } else {
+                el.style.fontSize = '0.85em';
+                el.textContent = 'Drag your weather here!';
+            }
+        }
+
+        function openCalendar() {
+            renderFillableTopRow();
+            renderCalendarDayGrid();
+            renderCalendarMonthGrid();
+            renderCalendarDateGrid();
+            renderCalendarYearGrid();
+            renderWeatherGrid();
+            renderWeatherSlot();
+            renderOutfitGrid();
+            renderMoodTracker();
+            renderYesterdayRecaps();
+            showCalendarTab('board');
+            document.getElementById('calendarModal').classList.add('active');
+        }
+
+        function renderYesterdayRecaps() {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yBoard = todayBoard[yesterday.toDateString()] || {};
+            
+            const dateEl = document.getElementById('yesterdayDateRecap');
+            if (yBoard.day && yBoard.date && yBoard.month && yBoard.year) {
+                dateEl.textContent = `Yesterday was ${yBoard.day}, ${yBoard.month} ${yBoard.date}, ${yBoard.year}.`;
+            } else {
+                dateEl.textContent = "We didn't fill this in yesterday!";
+            }
+            
+            const weatherEl = document.getElementById('yesterdayWeatherRecap');
+            weatherEl.textContent = yBoard.weather ? `Yesterday it was ${yBoard.weatherEmoji} ${yBoard.weather}.` : "We didn't record yesterday's weather!";
+            
+            const outfitEl = document.getElementById('yesterdayOutfitRecap');
+            if (yBoard.outfit && yBoard.outfit.length > 0) {
+                const outfitEmojis = yBoard.outfit.map(label => {
+                    const found = OUTFIT_OPTIONS.find(o => o.label === label);
+                    return found ? found.emoji : '';
+                }).join('');
+                outfitEl.textContent = `Yesterday I wore ${outfitEmojis}`;
+            } else {
+                outfitEl.textContent = "We didn't pick an outfit yesterday!";
+            }
+            
+            const moodEl = document.getElementById('yesterdayMoodRecap');
+            moodEl.textContent = yBoard.mood ? `Yesterday I felt ${yBoard.moodEmoji} ${yBoard.mood}.` : "We didn't record yesterday's mood!";
+        }
+
+        function closeCalendar() {
+            document.getElementById('calendarModal').classList.remove('active');
+        }
+
+        // ===== Fillable top row: Day / Date / Month / Year =====
+        function renderFillableTopRow() {
+            const board = getTodayBoard();
+            const container = document.getElementById('fillableTopRow');
+            const slots = [
+                { key: 'day', label: 'Day', value: board.day, color: '#dbeafe', textColor: '#1e40af' },
+                { key: 'month', label: 'Month', value: board.month ? (MONTH_EMOJIS[MONTHS.indexOf(board.month)] + ' ' + board.month) : null, color: '#fce7f3', textColor: '#9d174d' },
+                { key: 'date', label: 'Date', value: board.date ? (board.date + ordinalSuffix(board.date)) : null, color: '#fef3c7', textColor: '#92400e' },
+                { key: 'year', label: 'Year', value: board.year, color: '#ede9fe', textColor: '#5b21b6' }
+            ];
+            
+            container.innerHTML = slots.map(slot => `
+                <div data-drop-slot="${slot.key}" style="background:${slot.color};border-radius:12px;padding:10px 4px;text-align:center;min-height:64px;display:flex;flex-direction:column;justify-content:center;border:2px dashed transparent;">
+                    <div style="font-size:0.65em;font-weight:bold;color:${slot.textColor};opacity:0.75;">${slot.label}</div>
+                    <div style="font-size:${slot.value ? '0.95em' : '1.4em'};font-weight:bold;color:${slot.textColor};">${slot.value || '?'}</div>
+                </div>
+            `).join('');
+            
+            renderTodayDate();
+        }
+
+        // ===== Drag-and-drop engine (Pointer Events, works for mouse and touch) =====
+        function startTileDrag(e, slotType, value) {
+            e.preventDefault();
+            const tileEl = e.currentTarget;
+            const rect = tileEl.getBoundingClientRect();
+            
+            const ghost = tileEl.cloneNode(true);
+            ghost.style.position = 'fixed';
+            ghost.style.left = rect.left + 'px';
+            ghost.style.top = rect.top + 'px';
+            ghost.style.width = rect.width + 'px';
+            ghost.style.height = rect.height + 'px';
+            ghost.style.margin = '0';
+            ghost.style.zIndex = '9999';
+            ghost.style.pointerEvents = 'none';
+            ghost.style.opacity = '0.95';
+            ghost.style.transform = 'scale(1.15)';
+            ghost.style.boxShadow = '0 10px 24px rgba(0,0,0,0.35)';
+            document.body.appendChild(ghost);
+            
+            const offsetX = e.clientX - rect.left;
+            const offsetY = e.clientY - rect.top;
+            
+            tileEl.style.opacity = '0.25';
+            
+            function onMove(ev) {
+                ghost.style.left = (ev.clientX - offsetX) + 'px';
+                ghost.style.top = (ev.clientY - offsetY) + 'px';
+                
+                document.querySelectorAll('[data-drop-slot]').forEach(z => { z.style.borderColor = 'transparent'; });
+                const under = document.elementFromPoint(ev.clientX, ev.clientY);
+                const zone = under ? under.closest('[data-drop-slot]') : null;
+                if (zone) zone.style.borderColor = '#7c3aed';
+            }
+            
+            function onUp(ev) {
+                document.removeEventListener('pointermove', onMove);
+                document.removeEventListener('pointerup', onUp);
+                
+                document.querySelectorAll('[data-drop-slot]').forEach(z => { z.style.borderColor = 'transparent'; });
+                
+                const under = document.elementFromPoint(ev.clientX, ev.clientY);
+                const zone = under ? under.closest('[data-drop-slot]') : null;
+                
+                ghost.remove();
+                tileEl.style.opacity = '1';
+                
+                if (zone && zone.dataset.dropSlot === slotType) {
+                    handleTileDrop(slotType, value, tileEl);
+                }
+            }
+            
+            document.addEventListener('pointermove', onMove);
+            document.addEventListener('pointerup', onUp, { once: true });
+        }
+
+        function flashTileMiss(tileEl) {
+            if (!tileEl) return;
+            const original = tileEl.style.background;
+            tileEl.style.background = '#fecaca';
+            setTimeout(() => { tileEl.style.background = original; }, 400);
+        }
+
+        function handleTileDrop(slotType, value, tileEl) {
             const today = new Date();
-            const weekday = today.toLocaleDateString('en-US', { weekday: 'long' });
-            const month = today.toLocaleDateString('en-US', { month: 'long' });
-            const day = today.getDate();
-            el.textContent = `🌞 Today is ${weekday}, ${month} ${day}${ordinalSuffix(day)}!`;
+            
+            if (slotType === 'day') {
+                if (value === WEEKDAYS[today.getDay()]) {
+                    getTodayBoard().day = value;
+                    saveTaskConfig();
+                    renderCalendarDayGrid();
+                    renderFillableTopRow();
+                    renderTodayBoardSummary();
+                    celebrateCalendarTap('🌟 That\'s right!');
+                } else {
+                    flashTileMiss(tileEl);
+                }
+            } else if (slotType === 'month') {
+                if (value === MONTHS[today.getMonth()]) {
+                    getTodayBoard().month = value;
+                    saveTaskConfig();
+                    renderCalendarMonthGrid();
+                    renderFillableTopRow();
+                    renderTodayBoardSummary();
+                    celebrateCalendarTap('🌟 That\'s right!');
+                } else {
+                    flashTileMiss(tileEl);
+                }
+            } else if (slotType === 'date') {
+                if (Number(value) === today.getDate()) {
+                    getTodayBoard().date = Number(value);
+                    saveTaskConfig();
+                    renderCalendarDateGrid();
+                    renderFillableTopRow();
+                    renderTodayBoardSummary();
+                    celebrateCalendarTap('🌟 That\'s right!');
+                } else {
+                    flashTileMiss(tileEl);
+                }
+            } else if (slotType === 'year') {
+                if (Number(value) === today.getFullYear()) {
+                    getTodayBoard().year = Number(value);
+                    saveTaskConfig();
+                    renderCalendarYearGrid();
+                    renderFillableTopRow();
+                    renderTodayBoardSummary();
+                    celebrateCalendarTap('🌟 That\'s right!');
+                } else {
+                    flashTileMiss(tileEl);
+                }
+            } else if (slotType === 'weather') {
+                const [emoji, label] = value.split('|');
+                const board = getTodayBoard();
+                board.weather = label;
+                board.weatherEmoji = emoji;
+                saveTaskConfig();
+                renderWeatherGrid();
+                renderWeatherSlot();
+                renderTodayBoardSummary();
+                celebrateCalendarTap(emoji + ' Got it!');
+            }
+        }
+
+        function renderCalendarDayGrid() {
+            const board = getTodayBoard();
+            const container = document.getElementById('calendarDayGrid');
+            container.innerHTML = WEEKDAYS.map(day => {
+                const isFilled = board.day === day;
+                return `<button onpointerdown="startTileDrag(event, 'day', '${day}')" id="calday-${day}" style="padding:10px 4px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.8em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : '#e0e7ff'};color:${isFilled ? 'white' : '#3730a3'};">${day.slice(0, 3)}${isFilled ? ' ✓' : ''}</button>`;
+            }).join('');
+        }
+
+        function renderCalendarMonthGrid() {
+            const board = getTodayBoard();
+            const container = document.getElementById('calendarMonthGrid');
+            container.innerHTML = MONTHS.map((month, i) => {
+                const isFilled = board.month === month;
+                return `<button onpointerdown="startTileDrag(event, 'month', '${month}')" id="calmonth-${month}" style="padding:10px 2px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.72em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : '#fce7f3'};color:${isFilled ? 'white' : '#9d174d'};">${MONTH_EMOJIS[i]} ${month.slice(0, 3)}${isFilled ? ' ✓' : ''}</button>`;
+            }).join('');
+        }
+
+        function renderCalendarDateGrid() {
+            const today = new Date();
+            const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            const board = getTodayBoard();
+            
+            const container = document.getElementById('calendarDateGrid');
+            let html = '';
+            for (let d = 1; d <= daysInMonth; d++) {
+                const isFilled = board.date === d;
+                html += `<button onpointerdown="startTileDrag(event, 'date', '${d}')" id="caldate-${d}" style="padding:6px 0;border-radius:8px;border:none;font-family:inherit;font-weight:bold;font-size:0.72em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : '#fef3c7'};color:${isFilled ? 'white' : '#92400e'};">${d}</button>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function renderCalendarYearGrid() {
+            const today = new Date();
+            const actualYear = today.getFullYear();
+            const board = getTodayBoard();
+            const years = [actualYear - 1, actualYear, actualYear + 1];
+            
+            const container = document.getElementById('calendarYearGrid');
+            container.innerHTML = years.map(year => {
+                const isFilled = board.year === year;
+                return `<button onpointerdown="startTileDrag(event, 'year', '${year}')" id="calyear-${year}" style="padding:10px 4px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.85em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : '#ede9fe'};color:${isFilled ? 'white' : '#5b21b6'};">${year}</button>`;
+            }).join('');
+        }
+
+        // ===== Weather (drag-and-drop, single-select) =====
+        function renderWeatherGrid() {
+            const board = getTodayBoard();
+            const container = document.getElementById('weatherGrid');
+            container.innerHTML = WEATHER_OPTIONS.map(w => {
+                const isSelected = board.weather === w.label;
+                return `
+                    <button onpointerdown="startTileDrag(event, 'weather', '${w.emoji}|${w.label}')" style="padding:10px 4px;border-radius:12px;border:${isSelected ? '3px solid #0ea5e9' : '2px solid #e5e7eb'};font-family:inherit;cursor:grab;touch-action:none;background:${isSelected ? '#e0f2fe' : 'white'};display:flex;flex-direction:column;align-items:center;gap:2px;">
+                        <div style="font-size:1.5em;">${w.emoji}</div>
+                        <div style="font-size:0.65em;font-weight:bold;color:#0c4a6e;">${w.label}</div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // ===== Outfit (multi-select) =====
+        function renderOutfitGrid() {
+            const board = getTodayBoard();
+            const outfit = board.outfit || [];
+            const container = document.getElementById('outfitGrid');
+            container.innerHTML = OUTFIT_OPTIONS.map(o => {
+                const isSelected = outfit.includes(o.label);
+                return `
+                    <button onclick="toggleOutfitItem('${o.emoji}', '${o.label}')" style="padding:8px 2px;border-radius:12px;border:${isSelected ? '3px solid #16a34a' : '2px solid #e5e7eb'};font-family:inherit;cursor:pointer;background:${isSelected ? '#dcfce7' : 'white'};display:flex;flex-direction:column;align-items:center;gap:2px;">
+                        <div style="font-size:1.4em;">${o.emoji}</div>
+                        <div style="font-size:0.6em;font-weight:bold;color:#14532d;">${o.label}</div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function toggleOutfitItem(emoji, label) {
+            const board = getTodayBoard();
+            if (!board.outfit) board.outfit = [];
+            const idx = board.outfit.indexOf(label);
+            if (idx >= 0) {
+                board.outfit.splice(idx, 1);
+            } else {
+                board.outfit.push(label);
+            }
+            saveTaskConfig();
+            renderOutfitGrid();
+            renderTodayBoardSummary();
+        }
+
+        // ===== Mood (single-select) =====
+        function renderMoodTracker() {
+            const board = getTodayBoard();
+            const container = document.getElementById('moodTrackerGrid');
+            
+            container.innerHTML = MOODS.map(mood => {
+                const isSelected = board.mood === mood.label;
+                return `
+                    <button onclick="setMood('${mood.emoji}', '${mood.label}')" style="padding:12px 4px;border-radius:12px;border:${isSelected ? '3px solid #7c3aed' : '2px solid #e5e7eb'};font-family:inherit;cursor:pointer;background:${isSelected ? '#ede9fe' : 'white'};display:flex;flex-direction:column;align-items:center;gap:4px;">
+                        <div style="font-size:1.8em;">${mood.emoji}</div>
+                        <div style="font-size:0.7em;font-weight:bold;color:#4c1d95;">${mood.label}</div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setMood(emoji, label) {
+            const board = getTodayBoard();
+            board.mood = label;
+            board.moodEmoji = emoji;
+            saveTaskConfig();
+            renderMoodTracker();
+            renderTodayBoardSummary();
+            celebrateCalendarTap(emoji + ' Got it!');
+        }
+
+        // ===== Main page summary strip =====
+        function renderTodayBoardSummary() {
+            const el = document.getElementById('todayBoardSummary');
+            if (!el) return;
+            const board = todayBoard[todayKey()] || {};
+            
+            const parts = [];
+            if (board.weatherEmoji) parts.push(board.weatherEmoji + ' ' + board.weather);
+            if (board.outfit && board.outfit.length > 0) {
+                const outfitEmojis = board.outfit.map(label => {
+                    const found = OUTFIT_OPTIONS.find(o => o.label === label);
+                    return found ? found.emoji : '';
+                }).join('');
+                if (outfitEmojis) parts.push(outfitEmojis);
+            }
+            if (board.moodEmoji) parts.push(board.moodEmoji + ' ' + board.mood);
+            
+            if (parts.length === 0) {
+                el.style.display = 'none';
+                return;
+            }
+            
+            el.style.display = 'block';
+            el.textContent = parts.join('   •   ');
+        }
+
+        // ===== Full grid calendar =====
+        function shiftCalendarMonth(delta) {
+            calendarViewDate.setMonth(calendarViewDate.getMonth() + delta);
+            renderCalendarGrid();
+        }
+
+        function calDayKey(year, month, day) {
+            return year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        }
+
+        function renderCalendarGrid() {
+            const year = calendarViewDate.getFullYear();
+            const month = calendarViewDate.getMonth();
+            
+            document.getElementById('calendarGridMonthLabel').textContent = MONTH_EMOJIS[month] + ' ' + MONTHS[month] + ' ' + year;
+            
+            const weekdayHeader = document.getElementById('calendarWeekdayHeader');
+            weekdayHeader.innerHTML = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => `<div>${d}</div>`).join('');
+            
+            const firstDayOfWeek = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const todayStr = new Date().toDateString();
+            
+            let html = '';
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                html += '<div></div>';
+            }
+            
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateObj = new Date(year, month, d);
+                const isToday = dateObj.toDateString() === todayStr;
+                const dayKey = calDayKey(year, month, d);
+                const isCrossedOff = !!crossedOffDays[dayKey];
+                const events = calendarEvents[dayKey] || [];
+                
+                html += `
+                    <button onclick="toggleCrossOff('${dayKey}')" style="position:relative;aspect-ratio:2/3;border-radius:8px;border:${isToday ? '2px solid #7c3aed' : '1px solid #e5e7eb'};background:${isCrossedOff ? '#f3f4f6' : 'white'};font-family:inherit;cursor:pointer;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow:hidden;">
+                        <span style="font-size:0.75em;font-weight:${isToday ? 'bold' : 'normal'};color:${isCrossedOff ? '#9ca3af' : (isToday ? '#7c3aed' : '#374151')};text-decoration:${isCrossedOff ? 'line-through' : 'none'};margin-top:2px;">${d}</span>
+                        ${events.slice(0, 2).map(ev => `
+                            <span style="font-size:1.3em;line-height:1;margin-top:2px;">${ev.emoji}</span>
+                            <span style="font-size:0.65em;font-weight:bold;color:#7c2d12;line-height:1.15;max-width:96%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.label}</span>
+                        `).join('')}
+                        ${isCrossedOff ? `<span class="${dayKey === lastToggledDayKey ? 'crayon-x' : 'crayon-x-static'}" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 60 60" style="width:82%;height:82%;"><line x1="10" y1="10" x2="50" y2="50" stroke="#dc2626" stroke-width="11" stroke-linecap="round"/><line x1="50" y1="10" x2="10" y2="50" stroke="#dc2626" stroke-width="11" stroke-linecap="round"/></svg></span>` : ''}
+                    </button>
+                `;
+            }
+            
+            document.getElementById('calendarGrid').innerHTML = html;
+            renderCalendarEventsList();
+        }
+
+        let lastToggledDayKey = null;
+
+        function toggleCrossOff(dayKey) {
+            if (crossedOffDays[dayKey]) {
+                delete crossedOffDays[dayKey];
+                lastToggledDayKey = null;
+            } else {
+                crossedOffDays[dayKey] = true;
+                lastToggledDayKey = dayKey;
+            }
+            saveTaskConfig();
+            renderCalendarGrid();
+        }
+
+        function addCalendarEvent() {
+            const dateInput = document.getElementById('newEventDate');
+            const emojiInput = document.getElementById('newEventEmoji');
+            const labelInput = document.getElementById('newEventLabel');
+            
+            const day = parseInt(dateInput.value, 10);
+            const emoji = emojiInput.value.trim() || '⭐';
+            const label = labelInput.value.trim();
+            
+            const year = calendarViewDate.getFullYear();
+            const month = calendarViewDate.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            if (!day || day < 1 || day > daysInMonth || !label) {
+                return;
+            }
+            
+            const dayKey = calDayKey(year, month, day);
+            if (!calendarEvents[dayKey]) calendarEvents[dayKey] = [];
+            calendarEvents[dayKey].push({ emoji, label });
+            
+            saveTaskConfig();
+            
+            dateInput.value = '';
+            emojiInput.value = '';
+            labelInput.value = '';
+            
+            renderCalendarGrid();
+        }
+
+        function removeCalendarEvent(dayKey, index) {
+            if (!calendarEvents[dayKey]) return;
+            calendarEvents[dayKey].splice(index, 1);
+            if (calendarEvents[dayKey].length === 0) delete calendarEvents[dayKey];
+            saveTaskConfig();
+            renderCalendarGrid();
+        }
+
+        function renderCalendarEventsList() {
+            const year = calendarViewDate.getFullYear();
+            const month = calendarViewDate.getMonth();
+            const monthPrefix = year + '-' + String(month + 1).padStart(2, '0');
+            
+            const container = document.getElementById('calendarEventsList');
+            const entries = [];
+            
+            Object.keys(calendarEvents).forEach(dayKey => {
+                if (!dayKey.startsWith(monthPrefix)) return;
+                const day = parseInt(dayKey.split('-')[2], 10);
+                calendarEvents[dayKey].forEach((event, index) => {
+                    entries.push({ dayKey, day, index, event });
+                });
+            });
+            
+            entries.sort((a, b) => a.day - b.day);
+            
+            if (entries.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            container.innerHTML = '<h3 style="color:#1e40af;margin-bottom:8px;">This month\'s special days</h3>' +
+                entries.map(e => `
+                    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f9fafb;border-radius:10px;margin-bottom:6px;">
+                        <div style="font-size:1.3em;">${e.event.emoji}</div>
+                        <div style="flex:1;font-weight:bold;color:#374151;">${MONTHS[month].slice(0, 3)} ${e.day} - ${e.event.label}</div>
+                        <button onclick="removeCalendarEvent('${e.dayKey}', ${e.index})" style="background:#dc2626;color:white;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;">✕</button>
+                    </div>
+                `).join('');
         }
 
         function checkForNewDay() {
@@ -1620,6 +2301,9 @@
                         kidModeCooldownMinutes = result.config.kidModeCooldownMinutes || 3;
                         gameOverrides = result.config.gameOverrides || {};
                         rewardOverrides = result.config.rewardOverrides || {};
+                        todayBoard = result.config.todayBoard || {};
+                        crossedOffDays = result.config.crossedOffDays || {};
+                        calendarEvents = result.config.calendarEvents || {};
                     }
                 } catch (error) {
                     console.error('Error loading task config from sheets:', error);
@@ -1635,6 +2319,7 @@
             renderCategoryTabs();
             renderPottyButtons();
             renderGameButtons();
+            renderTodayBoardSummary();
         }
 
         function loadTaskConfigLocal() {
@@ -1648,6 +2333,9 @@
                     kidModeCooldownMinutes = cfg.kidModeCooldownMinutes || 3;
                     gameOverrides = cfg.gameOverrides || {};
                     rewardOverrides = cfg.rewardOverrides || {};
+                    todayBoard = cfg.todayBoard || {};
+                    crossedOffDays = cfg.crossedOffDays || {};
+                    calendarEvents = cfg.calendarEvents || {};
                 } catch (error) {
                     console.error('Error parsing local task config:', error);
                 }
@@ -1655,7 +2343,7 @@
         }
 
         function saveTaskConfig() {
-            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes, gameOverrides, rewardOverrides };
+            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes, gameOverrides, rewardOverrides, todayBoard, crossedOffDays, calendarEvents };
             localStorage.setItem('pottyTrackerTaskConfig', JSON.stringify(payload));
             
             if (sheetUrl) {
@@ -2403,6 +3091,8 @@
         let p2Score = 0;
         let dividerX = 200;
         let dividerTargetX = 200;
+        let duelPillowShots = [];
+        let feathers = [];
 
         function startGame(gameId) {
             const game = GAMES.find(g => g.id === gameId) || GAMES[0];
@@ -2457,6 +3147,8 @@
                 p2Score = 0;
                 dividerX = 200;
                 dividerTargetX = 200;
+                duelPillowShots = [];
+                feathers = [];
                 duelHoles = [
                     { fracX: 0.4, y: 150, side: 'left', occupied: false },
                     { fracX: 0.6, y: 280, side: 'left', occupied: false },
@@ -2528,12 +3220,13 @@
                 if (bubbles.some(b => !b.popped)) return;
                 
                 const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                const balloonColors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#a855f7', '#ec4899'];
+                const balloonSprites = ['balloonRed', 'balloonOrange', 'balloonYellow', 'balloonTeal', 'balloonBlue', 'balloonPurple'];
                 bubbles.push({
                     x: Math.random() * (canvas.width - 100) + 50,
                     y: canvas.height + 50,
                     radius: 48,
-                    color: balloonColors[Math.floor(Math.random() * balloonColors.length)],
+                    spriteKey: balloonSprites[Math.floor(Math.random() * balloonSprites.length)],
+                    color: '#ec4899',
                     speed: 0.5 + Math.random() * 0.3,
                     dy: -1,
                     popped: false,
@@ -2664,25 +3357,119 @@
                 dividerTargetX = Math.max(110, Math.min(290, 200 + (p1Score - p2Score) * 3));
                 dividerX += (dividerTargetX - dividerX) * 0.1;
                 
-                ctx.fillStyle = '#dbeafe';
-                ctx.fillRect(0, 0, dividerX, canvas.height);
-                ctx.fillStyle = '#fee2e2';
-                ctx.fillRect(dividerX, 0, canvas.width - dividerX, canvas.height);
-                
-                ctx.strokeStyle = '#1f2937';
-                ctx.lineWidth = 4;
-                ctx.beginPath();
-                ctx.moveTo(dividerX, 0);
-                ctx.lineTo(dividerX, canvas.height);
-                ctx.stroke();
+                // Bed background pans across a wider image so the seam between
+                // the two beds moves with the tug-of-war instead of a drawn line
+                const bedImg = spriteCache.duelBed;
+                if (bedImg && bedImg.complete && bedImg.naturalWidth > 0) {
+                    const srcX = Math.max(0, Math.min(400, 400 - dividerX));
+                    ctx.drawImage(bedImg, srcX, 0, 400, 500, 0, 0, canvas.width, canvas.height);
+                } else {
+                    // Fallback bed drawing if the image hasn't loaded yet
+                    ctx.fillStyle = '#fdf6ec';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    ctx.fillStyle = '#92400e';
+                    ctx.beginPath();
+                    ctx.roundRect(10, 0, canvas.width - 20, 55, [0, 0, 16, 16]);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#bfdbfe';
+                    ctx.fillRect(0, 55, dividerX, canvas.height - 55);
+                    ctx.fillStyle = '#fecaca';
+                    ctx.fillRect(dividerX, 55, canvas.width - dividerX, canvas.height - 55);
+                    
+                    ctx.strokeStyle = '#1f2937';
+                    ctx.lineWidth = 4;
+                    ctx.setLineDash([10, 6]);
+                    ctx.beginPath();
+                    ctx.moveTo(dividerX, 55);
+                    ctx.lineTo(dividerX, canvas.height);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
                 
                 ctx.fillStyle = '#1e40af';
                 ctx.font = 'bold 24px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(`P1: ${p1Score}`, dividerX / 2, 40);
+                ctx.fillText(`P1: ${p1Score}`, dividerX / 2, 38);
                 
                 ctx.fillStyle = '#b91c1c';
-                ctx.fillText(`P2: ${p2Score}`, dividerX + (canvas.width - dividerX) / 2, 40);
+                ctx.fillText(`P2: ${p2Score}`, dividerX + (canvas.width - dividerX) / 2, 38);
+                
+                // Pillows flying toward the tug-of-war line when a target is hit
+                duelPillowShots = duelPillowShots.filter(shot => {
+                    shot.life--;
+                    const arrived = shot.life <= 0;
+                    
+                    if (arrived) {
+                        // Occasionally burst into feathers on arrival
+                        if (Math.random() < 0.35) {
+                            const featherCount = 7 + Math.floor(Math.random() * 5);
+                            for (let f = 0; f < featherCount; f++) {
+                                const angle = Math.random() * Math.PI * 2;
+                                const speed = 1 + Math.random() * 2.5;
+                                feathers.push({
+                                    x: shot.x2,
+                                    y: shot.y2,
+                                    vx: Math.cos(angle) * speed,
+                                    vy: Math.sin(angle) * speed - 1,
+                                    rotation: Math.random() * Math.PI * 2,
+                                    rotationSpeed: (Math.random() - 0.5) * 0.2,
+                                    life: 35 + Math.floor(Math.random() * 15),
+                                    maxLife: 50
+                                });
+                            }
+                        }
+                        return false;
+                    }
+                    
+                    const progress = 1 - (shot.life / shot.maxLife);
+                    const px = shot.x1 + (shot.x2 - shot.x1) * progress;
+                    const py = shot.y1 + (shot.y2 - shot.y1) * progress - Math.sin(progress * Math.PI) * 20;
+                    
+                    ctx.save();
+                    ctx.translate(px, py);
+                    ctx.rotate(progress * Math.PI * 2 * (shot.side === 'left' ? 1 : -1));
+                    ctx.beginPath();
+                    ctx.roundRect(-16, -11, 32, 22, 8);
+                    ctx.fillStyle = shot.side === 'left' ? '#93c5fd' : '#fca5a5';
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.restore();
+                    
+                    return true;
+                });
+                
+                // Drifting feathers from a burst
+                feathers = feathers.filter(feather => {
+                    feather.life--;
+                    if (feather.life <= 0) return false;
+                    
+                    feather.x += feather.vx;
+                    feather.y += feather.vy;
+                    feather.vy += 0.03;
+                    feather.rotation += feather.rotationSpeed;
+                    
+                    const alpha = Math.min(1, feather.life / (feather.maxLife * 0.4));
+                    
+                    ctx.save();
+                    ctx.translate(feather.x, feather.y);
+                    ctx.rotate(feather.rotation);
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, 6, 2.5, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fffbeb';
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                    ctx.restore();
+                    
+                    return true;
+                });
             } else if (currentGame === 'battle') {
                 ctx.fillStyle = '#ddd6fe';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -2705,75 +3492,83 @@
                 const cy = bossY;
                 const sockColor = bossDefeated ? '#facc15' : (enraged ? '#f87171' : '#f9a8d4');
                 
-                // Sock silhouette: leg + bent foot with heel and rounded toe
-                ctx.beginPath();
-                ctx.moveTo(cx - 30, cy - 40);
-                ctx.lineTo(cx + 30, cy - 40);
-                ctx.lineTo(cx + 30, cy + 25);
-                ctx.quadraticCurveTo(cx + 30, cy + 55, cx + 70, cy + 55);
-                ctx.quadraticCurveTo(cx + 100, cy + 55, cx + 100, cy + 75);
-                ctx.quadraticCurveTo(cx + 100, cy + 90, cx + 78, cy + 90);
-                ctx.lineTo(cx - 30, cy + 90);
-                ctx.quadraticCurveTo(cx - 42, cy + 55, cx - 30, cy + 25);
-                ctx.closePath();
-                ctx.fillStyle = sockColor;
-                ctx.fill();
-                ctx.strokeStyle = '#be185d';
-                ctx.lineWidth = 3;
-                ctx.stroke();
+                let sockSpriteKey = 'sockNeutral';
+                if (bossDefeated) sockSpriteKey = 'sockDefeated';
+                else if (enraged) sockSpriteKey = 'sockMad';
                 
-                // Boxer fists (little battle-ready arms)
-                ctx.fillStyle = sockColor;
-                ctx.beginPath();
-                ctx.arc(cx - 44, cy + 5, 12, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.arc(cx + 44, cy - 10, 12, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
+                const sockDrawn = drawSprite(sockSpriteKey, cx, cy + 20, 175, 0);
                 
-                // Cuff stripes near the top opening
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(cx - 30, cy - 34, 60, 7);
-                ctx.fillRect(cx - 30, cy - 20, 60, 7);
-                
-                // Face on the leg part
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(cx - 13, cy - 2, 11, 0, Math.PI * 2);
-                ctx.arc(cx + 13, cy - 2, 11, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#1f2937';
-                ctx.beginPath();
-                ctx.arc(cx - 13, cy - 2, 5, 0, Math.PI * 2);
-                ctx.arc(cx + 13, cy - 2, 5, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Angry eyebrows once enraged, for extra drama
-                if (enraged && !bossDefeated) {
-                    ctx.strokeStyle = '#7f1d1d';
+                if (!sockDrawn) {
+                    // Sock silhouette: leg + bent foot with heel and rounded toe
+                    ctx.beginPath();
+                    ctx.moveTo(cx - 30, cy - 40);
+                    ctx.lineTo(cx + 30, cy - 40);
+                    ctx.lineTo(cx + 30, cy + 25);
+                    ctx.quadraticCurveTo(cx + 30, cy + 55, cx + 70, cy + 55);
+                    ctx.quadraticCurveTo(cx + 100, cy + 55, cx + 100, cy + 75);
+                    ctx.quadraticCurveTo(cx + 100, cy + 90, cx + 78, cy + 90);
+                    ctx.lineTo(cx - 30, cy + 90);
+                    ctx.quadraticCurveTo(cx - 42, cy + 55, cx - 30, cy + 25);
+                    ctx.closePath();
+                    ctx.fillStyle = sockColor;
+                    ctx.fill();
+                    ctx.strokeStyle = '#be185d';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    
+                    // Boxer fists (little battle-ready arms)
+                    ctx.fillStyle = sockColor;
+                    ctx.beginPath();
+                    ctx.arc(cx - 44, cy + 5, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(cx + 44, cy - 10, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Cuff stripes near the top opening
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(cx - 30, cy - 34, 60, 7);
+                    ctx.fillRect(cx - 30, cy - 20, 60, 7);
+                    
+                    // Face on the leg part
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(cx - 13, cy - 2, 11, 0, Math.PI * 2);
+                    ctx.arc(cx + 13, cy - 2, 11, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#1f2937';
+                    ctx.beginPath();
+                    ctx.arc(cx - 13, cy - 2, 5, 0, Math.PI * 2);
+                    ctx.arc(cx + 13, cy - 2, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Angry eyebrows once enraged, for extra drama
+                    if (enraged && !bossDefeated) {
+                        ctx.strokeStyle = '#7f1d1d';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.moveTo(cx - 22, cy - 16);
+                        ctx.lineTo(cx - 6, cy - 10);
+                        ctx.moveTo(cx + 22, cy - 16);
+                        ctx.lineTo(cx + 6, cy - 10);
+                        ctx.stroke();
+                    }
+                    
+                    ctx.strokeStyle = '#1f2937';
                     ctx.lineWidth = 3;
                     ctx.beginPath();
-                    ctx.moveTo(cx - 22, cy - 16);
-                    ctx.lineTo(cx - 6, cy - 10);
-                    ctx.moveTo(cx + 22, cy - 16);
-                    ctx.lineTo(cx + 6, cy - 10);
+                    if (bossDefeated) {
+                        ctx.arc(cx, cy + 12, 14, 0, Math.PI, false);
+                    } else if (enraged) {
+                        ctx.moveTo(cx - 12, cy + 20);
+                        ctx.lineTo(cx + 12, cy + 20);
+                    } else {
+                        ctx.arc(cx, cy + 16, 10, 0, Math.PI, false);
+                    }
                     ctx.stroke();
                 }
-                
-                ctx.strokeStyle = '#1f2937';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                if (bossDefeated) {
-                    ctx.arc(cx, cy + 12, 14, 0, Math.PI, false);
-                } else if (enraged) {
-                    ctx.moveTo(cx - 12, cy + 20);
-                    ctx.lineTo(cx + 12, cy + 20);
-                } else {
-                    ctx.arc(cx, cy + 16, 10, 0, Math.PI, false);
-                }
-                ctx.stroke();
                 
                 // Dizzy stars when almost defeated
                 if (bossHealth > 0 && bossHealth < bossMaxHealth * 0.15 && !bossDefeated) {
@@ -2940,28 +3735,32 @@
                         return false;
                     }
                     
-                    ctx.beginPath();
-                    ctx.ellipse(obj.x, obj.y, obj.radius, obj.radius * 0.9, 0, 0, Math.PI * 2);
-                    ctx.fillStyle = obj.color;
-                    ctx.fill();
+                    const moleDrawn = drawSprite('mole', obj.x, obj.y, obj.radius * 2.3, 0);
                     
-                    ctx.fillStyle = '#000000';
-                    ctx.beginPath();
-                    ctx.arc(obj.x - 8, obj.y - 5, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(obj.x + 8, obj.y - 5, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.fillStyle = '#ec4899';
-                    ctx.beginPath();
-                    ctx.arc(obj.x, obj.y + 5, 3, 0, Math.PI * 2);
-                    ctx.fill();
+                    if (!moleDrawn) {
+                        ctx.beginPath();
+                        ctx.ellipse(obj.x, obj.y, obj.radius, obj.radius * 0.9, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = obj.color;
+                        ctx.fill();
+                        
+                        ctx.fillStyle = '#000000';
+                        ctx.beginPath();
+                        ctx.arc(obj.x - 8, obj.y - 5, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(obj.x + 8, obj.y - 5, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.fillStyle = '#ec4899';
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y + 5, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                     
                     return true;
                 }
                 
-                // Pillow Duel: fixed position targets on each half, disappear after their lifespan
+                // Duel: fixed position targets on each half, disappear after their lifespan
                 if (obj.isDuelTarget) {
                     obj.life--;
                     if (obj.life <= 0) {
@@ -2969,26 +3768,33 @@
                         return false;
                     }
                     
-                    // Flat bullseye/target icon
-                    ctx.beginPath();
-                    ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = obj.color;
-                    ctx.fill();
+                    const spriteKey = obj.side === 'left' ? 'targetBlue' : 'targetRed';
+                    const targetDrawn = drawSprite(spriteKey, obj.x, obj.y, obj.radius * 2.3, 0);
                     
-                    ctx.beginPath();
-                    ctx.arc(obj.x, obj.y, obj.radius * 0.66, 0, Math.PI * 2);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fill();
-                    
-                    ctx.beginPath();
-                    ctx.arc(obj.x, obj.y, obj.radius * 0.33, 0, Math.PI * 2);
-                    ctx.fillStyle = obj.color;
-                    ctx.fill();
+                    if (!targetDrawn) {
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = obj.color;
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y, obj.radius * 0.66, 0, Math.PI * 2);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y, obj.radius * 0.33, 0, Math.PI * 2);
+                        ctx.fillStyle = obj.color;
+                        ctx.fill();
+                    }
                     
                     ctx.fillStyle = '#ffffff';
                     ctx.font = 'bold 13px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+                    ctx.strokeText(obj.side === 'left' ? 'P1' : 'P2', obj.x, obj.y);
                     ctx.fillText(obj.side === 'left' ? 'P1' : 'P2', obj.x, obj.y);
                     
                     return true;
@@ -3004,25 +3810,29 @@
                 }
                 
                 if (currentGame === 'balloon') {
-                    ctx.beginPath();
-                    ctx.ellipse(obj.x, obj.y, obj.radius * 0.85, obj.radius, 0, 0, Math.PI * 2);
-                    ctx.fillStyle = obj.color;
-                    ctx.fill();
+                    const balloonDrawn = drawSprite(obj.spriteKey, obj.x, obj.y - 8, obj.radius * 2.3, 0);
                     
-                    ctx.beginPath();
-                    ctx.moveTo(obj.x - 4, obj.y + obj.radius);
-                    ctx.lineTo(obj.x + 4, obj.y + obj.radius);
-                    ctx.lineTo(obj.x, obj.y + obj.radius + 8);
-                    ctx.closePath();
-                    ctx.fillStyle = obj.color;
-                    ctx.fill();
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(obj.x, obj.y + obj.radius + 8);
-                    ctx.lineTo(obj.x, obj.y + obj.radius + 30);
-                    ctx.strokeStyle = '#888888';
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
+                    if (!balloonDrawn) {
+                        ctx.beginPath();
+                        ctx.ellipse(obj.x, obj.y, obj.radius * 0.85, obj.radius, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = obj.color;
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(obj.x - 4, obj.y + obj.radius);
+                        ctx.lineTo(obj.x + 4, obj.y + obj.radius);
+                        ctx.lineTo(obj.x, obj.y + obj.radius + 8);
+                        ctx.closePath();
+                        ctx.fillStyle = obj.color;
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(obj.x, obj.y + obj.radius + 8);
+                        ctx.lineTo(obj.x, obj.y + obj.radius + 30);
+                        ctx.strokeStyle = '#888888';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
                     
                     // Big letter to type, with dark outline for legibility over any balloon color
                     ctx.font = 'bold 40px Arial';
@@ -3037,28 +3847,32 @@
                     return true;
                 }
                 
-                // Space asteroid (default) - flat single-color hexagon icon
-                ctx.save();
-                ctx.translate(obj.x, obj.y);
-                ctx.rotate(obj.rotation);
+                // Space asteroid - illustrated sprite with hexagon fallback
+                const asteroidDrawn = drawSprite('asteroid', obj.x, obj.y, obj.radius * 2.2, obj.rotation);
                 
-                ctx.beginPath();
-                const sides = 6;
-                for (let i = 0; i < sides; i++) {
-                    const angle = (i / sides) * Math.PI * 2;
-                    const x = Math.cos(angle) * obj.radius;
-                    const y = Math.sin(angle) * obj.radius;
-                    if (i === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
+                if (!asteroidDrawn) {
+                    ctx.save();
+                    ctx.translate(obj.x, obj.y);
+                    ctx.rotate(obj.rotation);
+                    
+                    ctx.beginPath();
+                    const sides = 6;
+                    for (let i = 0; i < sides; i++) {
+                        const angle = (i / sides) * Math.PI * 2;
+                        const x = Math.cos(angle) * obj.radius;
+                        const y = Math.sin(angle) * obj.radius;
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
                     }
+                    ctx.closePath();
+                    ctx.fillStyle = obj.color;
+                    ctx.fill();
+                    
+                    ctx.restore();
                 }
-                ctx.closePath();
-                ctx.fillStyle = obj.color;
-                ctx.fill();
-                
-                ctx.restore();
                 
                 return true;
             });
@@ -3104,7 +3918,7 @@
             const gameOverSubtext = document.getElementById('gameOverSubtext');
             
             if (currentGame === 'duel') {
-                if (gameOverTitle) gameOverTitle.textContent = '⚡ DUEL COMPLETE! ⚡';
+                if (gameOverTitle) gameOverTitle.textContent = '⚡ PILLOW DUEL COMPLETE! ⚡';
                 if (gameOverSubtext) {
                     if (p1Score > p2Score) {
                         gameOverSubtext.textContent = `🏆 Player 1 wins! ${p1Score} - ${p2Score}`;
@@ -3336,6 +4150,16 @@
                         } else {
                             p2Score += obj.points;
                         }
+                        
+                        duelPillowShots.push({
+                            x1: obj.x,
+                            y1: obj.y,
+                            x2: dividerX,
+                            y2: obj.y,
+                            life: 16,
+                            maxLife: 16,
+                            side: obj.side
+                        });
                     }
                     
                     explosions.push({ x: obj.x, y: obj.y, life: 15 });
