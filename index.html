@@ -1733,7 +1733,12 @@
         let calendarViewDate = new Date();
 
         function todayKey() {
-            return new Date().toDateString();
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+
+        function dateKeyFor(d) {
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         }
 
         function getTodayBoard() {
@@ -1792,7 +1797,7 @@
         function renderYesterdayRecaps() {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            const yBoard = todayBoard[yesterday.toDateString()] || {};
+            const yBoard = todayBoard[dateKeyFor(yesterday)] || {};
             
             const dateEl = document.getElementById('yesterdayDateRecap');
             if (yBoard.day && yBoard.date && yBoard.month && yBoard.year) {
@@ -1913,7 +1918,7 @@
             if (slotType === 'day') {
                 if (value === WEEKDAYS[today.getDay()]) {
                     getTodayBoard().day = value;
-                    saveTaskConfig();
+                    syncBoardEntryToSheets(todayKey(), getTodayBoard());
                     renderCalendarDayGrid();
                     renderFillableTopRow();
                     renderTodayBoardSummary();
@@ -1924,7 +1929,7 @@
             } else if (slotType === 'month') {
                 if (value === MONTHS[today.getMonth()]) {
                     getTodayBoard().month = value;
-                    saveTaskConfig();
+                    syncBoardEntryToSheets(todayKey(), getTodayBoard());
                     renderCalendarMonthGrid();
                     renderFillableTopRow();
                     renderTodayBoardSummary();
@@ -1935,7 +1940,7 @@
             } else if (slotType === 'date') {
                 if (Number(value) === today.getDate()) {
                     getTodayBoard().date = Number(value);
-                    saveTaskConfig();
+                    syncBoardEntryToSheets(todayKey(), getTodayBoard());
                     renderCalendarDateGrid();
                     renderFillableTopRow();
                     renderTodayBoardSummary();
@@ -1946,7 +1951,7 @@
             } else if (slotType === 'year') {
                 if (Number(value) === today.getFullYear()) {
                     getTodayBoard().year = Number(value);
-                    saveTaskConfig();
+                    syncBoardEntryToSheets(todayKey(), getTodayBoard());
                     renderCalendarYearGrid();
                     renderFillableTopRow();
                     renderTodayBoardSummary();
@@ -1959,7 +1964,7 @@
                 const board = getTodayBoard();
                 board.weather = label;
                 board.weatherEmoji = emoji;
-                saveTaskConfig();
+                syncBoardEntryToSheets(todayKey(), board);
                 renderWeatherGrid();
                 renderWeatherSlot();
                 renderTodayBoardSummary();
@@ -2052,7 +2057,7 @@
             } else {
                 board.outfit.push(label);
             }
-            saveTaskConfig();
+            syncBoardEntryToSheets(todayKey(), board);
             renderOutfitGrid();
             renderTodayBoardSummary();
         }
@@ -2077,7 +2082,7 @@
             const board = getTodayBoard();
             board.mood = label;
             board.moodEmoji = emoji;
-            saveTaskConfig();
+            syncBoardEntryToSheets(todayKey(), board);
             renderMoodTracker();
             renderTodayBoardSummary();
             celebrateCalendarTap(emoji + ' Got it!');
@@ -2163,14 +2168,17 @@
         let lastToggledDayKey = null;
 
         function toggleCrossOff(dayKey) {
+            let crossedOff;
             if (crossedOffDays[dayKey]) {
                 delete crossedOffDays[dayKey];
                 lastToggledDayKey = null;
+                crossedOff = false;
             } else {
                 crossedOffDays[dayKey] = true;
                 lastToggledDayKey = dayKey;
+                crossedOff = true;
             }
-            saveTaskConfig();
+            syncCrossedOffToSheets(dayKey, crossedOff);
             renderCalendarGrid();
         }
 
@@ -2192,10 +2200,11 @@
             }
             
             const dayKey = calDayKey(year, month, day);
+            const newEvent = { id: 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8), emoji, label };
             if (!calendarEvents[dayKey]) calendarEvents[dayKey] = [];
-            calendarEvents[dayKey].push({ emoji, label });
+            calendarEvents[dayKey].push(newEvent);
             
-            saveTaskConfig();
+            syncEventAddToSheets(dayKey, newEvent);
             
             dateInput.value = '';
             emojiInput.value = '';
@@ -2206,9 +2215,9 @@
 
         function removeCalendarEvent(dayKey, index) {
             if (!calendarEvents[dayKey]) return;
-            calendarEvents[dayKey].splice(index, 1);
+            const [removed] = calendarEvents[dayKey].splice(index, 1);
             if (calendarEvents[dayKey].length === 0) delete calendarEvents[dayKey];
-            saveTaskConfig();
+            if (removed && removed.id) syncEventRemoveToSheets(removed.id);
             renderCalendarGrid();
         }
 
@@ -2301,9 +2310,6 @@
                         kidModeCooldownMinutes = result.config.kidModeCooldownMinutes || 3;
                         gameOverrides = result.config.gameOverrides || {};
                         rewardOverrides = result.config.rewardOverrides || {};
-                        todayBoard = result.config.todayBoard || {};
-                        crossedOffDays = result.config.crossedOffDays || {};
-                        calendarEvents = result.config.calendarEvents || {};
                     }
                 } catch (error) {
                     console.error('Error loading task config from sheets:', error);
@@ -2319,7 +2325,6 @@
             renderCategoryTabs();
             renderPottyButtons();
             renderGameButtons();
-            renderTodayBoardSummary();
         }
 
         function loadTaskConfigLocal() {
@@ -2333,9 +2338,6 @@
                     kidModeCooldownMinutes = cfg.kidModeCooldownMinutes || 3;
                     gameOverrides = cfg.gameOverrides || {};
                     rewardOverrides = cfg.rewardOverrides || {};
-                    todayBoard = cfg.todayBoard || {};
-                    crossedOffDays = cfg.crossedOffDays || {};
-                    calendarEvents = cfg.calendarEvents || {};
                 } catch (error) {
                     console.error('Error parsing local task config:', error);
                 }
@@ -2343,7 +2345,7 @@
         }
 
         function saveTaskConfig() {
-            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes, gameOverrides, rewardOverrides, todayBoard, crossedOffDays, calendarEvents };
+            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes, gameOverrides, rewardOverrides };
             localStorage.setItem('pottyTrackerTaskConfig', JSON.stringify(payload));
             
             if (sheetUrl) {
@@ -2357,6 +2359,115 @@
                 } catch (error) {
                     console.error('Error saving task config to sheets:', error);
                 }
+            }
+        }
+
+        // ===== Calendar data: synced via its own dedicated sheets (CalendarBoard, CrossedOffDays, CalendarEvents) =====
+        function saveCalendarLocal() {
+            localStorage.setItem('pottyTrackerCalendarData', JSON.stringify({ todayBoard, crossedOffDays, calendarEvents }));
+        }
+
+        function loadCalendarLocal() {
+            const saved = localStorage.getItem('pottyTrackerCalendarData');
+            if (saved) {
+                try {
+                    const cfg = JSON.parse(saved);
+                    todayBoard = cfg.todayBoard || {};
+                    crossedOffDays = cfg.crossedOffDays || {};
+                    calendarEvents = cfg.calendarEvents || {};
+                } catch (error) {
+                    console.error('Error parsing local calendar data:', error);
+                }
+            }
+        }
+
+        async function loadCalendarData() {
+            if (sheetUrl) {
+                try {
+                    const response = await fetch(sheetUrl + '?action=getCalendarData');
+                    const result = await response.json();
+                    if (result.success) {
+                        todayBoard = result.board || {};
+                        crossedOffDays = {};
+                        (result.crossedOff || []).forEach(d => { crossedOffDays[d] = true; });
+                        calendarEvents = {};
+                        (result.events || []).forEach(ev => {
+                            if (!calendarEvents[ev.date]) calendarEvents[ev.date] = [];
+                            calendarEvents[ev.date].push({ id: ev.id, emoji: ev.emoji, label: ev.label });
+                        });
+                        saveCalendarLocal();
+                    } else {
+                        loadCalendarLocal();
+                    }
+                } catch (error) {
+                    console.error('Error loading calendar data from sheets:', error);
+                    loadCalendarLocal();
+                }
+            } else {
+                loadCalendarLocal();
+            }
+            
+            renderTodayDate();
+            renderTodayBoardSummary();
+        }
+
+        function syncBoardEntryToSheets(dateKey, entry) {
+            saveCalendarLocal();
+            if (!sheetUrl) return;
+            try {
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'saveCalendarBoardEntry', date: dateKey, entry })
+                });
+            } catch (error) {
+                console.error('Error syncing calendar board entry:', error);
+            }
+        }
+
+        function syncCrossedOffToSheets(dateKey, crossedOff) {
+            saveCalendarLocal();
+            if (!sheetUrl) return;
+            try {
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'toggleCrossedOffDay', date: dateKey, crossedOff })
+                });
+            } catch (error) {
+                console.error('Error syncing crossed-off day:', error);
+            }
+        }
+
+        function syncEventAddToSheets(dateKey, event) {
+            saveCalendarLocal();
+            if (!sheetUrl) return;
+            try {
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'addCalendarEventRow', event: { date: dateKey, emoji: event.emoji, label: event.label, id: event.id } })
+                });
+            } catch (error) {
+                console.error('Error syncing new calendar event:', error);
+            }
+        }
+
+        function syncEventRemoveToSheets(id) {
+            saveCalendarLocal();
+            if (!sheetUrl) return;
+            try {
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'removeCalendarEventRow', id })
+                });
+            } catch (error) {
+                console.error('Error syncing removed calendar event:', error);
             }
         }
 
@@ -4210,6 +4321,7 @@
         checkSheetUrl();
         loadData();
         loadTaskConfig();
+        loadCalendarData();
         loadRedemptionLog();
         
         // Auto-refresh data every 1 hour
