@@ -1244,7 +1244,7 @@
             { id: 'balloon', name: 'Balloon Pop', emoji: '🎈', cost: 5, color: '#3b82f6', instruction: 'Tap the balloons before they float away!' },
             { id: 'mole', name: 'Whack-a-Mole', emoji: '🐹', cost: 5, color: '#3b82f6', instruction: 'Tap the moles as they pop up from their holes!' },
             { id: 'battle', name: 'Sock Monster SHOWDOWN', emoji: '🥊', cost: 5, color: '#ea580c', instruction: 'Aim and fire pillows at the Sock Monster! Land combos to charge your MEGA SMASH!', isBattle: true },
-            { id: 'duel', name: 'Duel', emoji: '⚡', cost: 10, color: '#6d28d9', instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true, fullWidth: true }
+            { id: 'duel', name: 'Pillow Duel', emoji: '⚡', cost: 10, color: '#6d28d9', instruction: 'Two players! Player 1 taps blue targets on the left, Player 2 taps red targets on the right. Most pops wins!', isDuel: true, twoPlayer: true, fullWidth: true }
         ];
 
         let gameOverrides = {};
@@ -2436,6 +2436,8 @@
         let p2Score = 0;
         let dividerX = 200;
         let dividerTargetX = 200;
+        let duelPillowShots = [];
+        let feathers = [];
 
         function startGame(gameId) {
             const game = GAMES.find(g => g.id === gameId) || GAMES[0];
@@ -2490,6 +2492,8 @@
                 p2Score = 0;
                 dividerX = 200;
                 dividerTargetX = 200;
+                duelPillowShots = [];
+                feathers = [];
                 duelHoles = [
                     { fracX: 0.4, y: 150, side: 'left', occupied: false },
                     { fracX: 0.6, y: 280, side: 'left', occupied: false },
@@ -2698,25 +2702,145 @@
                 dividerTargetX = Math.max(110, Math.min(290, 200 + (p1Score - p2Score) * 3));
                 dividerX += (dividerTargetX - dividerX) * 0.1;
                 
-                ctx.fillStyle = '#dbeafe';
-                ctx.fillRect(0, 0, dividerX, canvas.height);
-                ctx.fillStyle = '#fee2e2';
-                ctx.fillRect(dividerX, 0, canvas.width - dividerX, canvas.height);
+                // Bed background
+                ctx.fillStyle = '#fdf6ec';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
+                // Wooden headboard
+                ctx.fillStyle = '#92400e';
+                ctx.beginPath();
+                ctx.roundRect(10, 0, canvas.width - 20, 55, [0, 0, 16, 16]);
+                ctx.fill();
+                ctx.strokeStyle = '#78350f';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 4; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(30 + i * 90, 8);
+                    ctx.quadraticCurveTo(30 + i * 90 + 45, 30, 30 + i * 90 + 90, 8);
+                    ctx.stroke();
+                }
+                
+                // Quilted blanket halves
+                ctx.fillStyle = '#bfdbfe';
+                ctx.fillRect(0, 55, dividerX, canvas.height - 55);
+                ctx.fillStyle = '#fecaca';
+                ctx.fillRect(dividerX, 55, canvas.width - dividerX, canvas.height - 55);
+                
+                ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+                ctx.lineWidth = 1;
+                for (let x = -80; x < canvas.width + 80; x += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 55);
+                    ctx.lineTo(x + 220, canvas.height);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(x, canvas.height);
+                    ctx.lineTo(x + 220, 55);
+                    ctx.stroke();
+                }
+                
+                // Decorative corner pillows tucked at the head of the bed
+                ctx.fillStyle = '#3b82f6';
+                ctx.beginPath();
+                ctx.roundRect(15, 62, 50, 34, 10);
+                ctx.fill();
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.roundRect(canvas.width - 65, 62, 50, 34, 10);
+                ctx.fill();
+                
+                // Tug-of-war seam line down the middle
                 ctx.strokeStyle = '#1f2937';
                 ctx.lineWidth = 4;
+                ctx.setLineDash([10, 6]);
                 ctx.beginPath();
-                ctx.moveTo(dividerX, 0);
+                ctx.moveTo(dividerX, 55);
                 ctx.lineTo(dividerX, canvas.height);
                 ctx.stroke();
+                ctx.setLineDash([]);
                 
                 ctx.fillStyle = '#1e40af';
                 ctx.font = 'bold 24px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(`P1: ${p1Score}`, dividerX / 2, 40);
+                ctx.fillText(`P1: ${p1Score}`, dividerX / 2, 38);
                 
                 ctx.fillStyle = '#b91c1c';
-                ctx.fillText(`P2: ${p2Score}`, dividerX + (canvas.width - dividerX) / 2, 40);
+                ctx.fillText(`P2: ${p2Score}`, dividerX + (canvas.width - dividerX) / 2, 38);
+                
+                // Pillows flying toward the tug-of-war line when a target is hit
+                duelPillowShots = duelPillowShots.filter(shot => {
+                    shot.life--;
+                    const arrived = shot.life <= 0;
+                    
+                    if (arrived) {
+                        // Occasionally burst into feathers on arrival
+                        if (Math.random() < 0.35) {
+                            const featherCount = 7 + Math.floor(Math.random() * 5);
+                            for (let f = 0; f < featherCount; f++) {
+                                const angle = Math.random() * Math.PI * 2;
+                                const speed = 1 + Math.random() * 2.5;
+                                feathers.push({
+                                    x: shot.x2,
+                                    y: shot.y2,
+                                    vx: Math.cos(angle) * speed,
+                                    vy: Math.sin(angle) * speed - 1,
+                                    rotation: Math.random() * Math.PI * 2,
+                                    rotationSpeed: (Math.random() - 0.5) * 0.2,
+                                    life: 35 + Math.floor(Math.random() * 15),
+                                    maxLife: 50
+                                });
+                            }
+                        }
+                        return false;
+                    }
+                    
+                    const progress = 1 - (shot.life / shot.maxLife);
+                    const px = shot.x1 + (shot.x2 - shot.x1) * progress;
+                    const py = shot.y1 + (shot.y2 - shot.y1) * progress - Math.sin(progress * Math.PI) * 20;
+                    
+                    ctx.save();
+                    ctx.translate(px, py);
+                    ctx.rotate(progress * Math.PI * 2 * (shot.side === 'left' ? 1 : -1));
+                    ctx.beginPath();
+                    ctx.roundRect(-16, -11, 32, 22, 8);
+                    ctx.fillStyle = shot.side === 'left' ? '#93c5fd' : '#fca5a5';
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.restore();
+                    
+                    return true;
+                });
+                
+                // Drifting feathers from a burst
+                feathers = feathers.filter(feather => {
+                    feather.life--;
+                    if (feather.life <= 0) return false;
+                    
+                    feather.x += feather.vx;
+                    feather.y += feather.vy;
+                    feather.vy += 0.03;
+                    feather.rotation += feather.rotationSpeed;
+                    
+                    const alpha = Math.min(1, feather.life / (feather.maxLife * 0.4));
+                    
+                    ctx.save();
+                    ctx.translate(feather.x, feather.y);
+                    ctx.rotate(feather.rotation);
+                    ctx.globalAlpha = alpha;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, 6, 2.5, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fffbeb';
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                    ctx.restore();
+                    
+                    return true;
+                });
             } else if (currentGame === 'battle') {
                 ctx.fillStyle = '#ddd6fe';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -3165,7 +3289,7 @@
             const gameOverSubtext = document.getElementById('gameOverSubtext');
             
             if (currentGame === 'duel') {
-                if (gameOverTitle) gameOverTitle.textContent = '⚡ DUEL COMPLETE! ⚡';
+                if (gameOverTitle) gameOverTitle.textContent = '⚡ PILLOW DUEL COMPLETE! ⚡';
                 if (gameOverSubtext) {
                     if (p1Score > p2Score) {
                         gameOverSubtext.textContent = `🏆 Player 1 wins! ${p1Score} - ${p2Score}`;
@@ -3397,6 +3521,16 @@
                         } else {
                             p2Score += obj.points;
                         }
+                        
+                        duelPillowShots.push({
+                            x1: obj.x,
+                            y1: obj.y,
+                            x2: dividerX,
+                            y2: obj.y,
+                            life: 16,
+                            maxLife: 16,
+                            side: obj.side
+                        });
                     }
                     
                     explosions.push({ x: obj.x, y: obj.y, life: 15 });
