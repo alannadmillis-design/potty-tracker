@@ -768,6 +768,7 @@
         </div>
 
         <button onclick="openCalendar()" id="todayDateBanner" style="width: 100%; text-align: center; background: rgba(255,255,255,0.85); border: none; border-radius: 16px; padding: 12px; margin-bottom: 15px; color: #1e3a8a; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 10px rgba(0,0,0,0.15); cursor: pointer; font-family: inherit;"></button>
+        <div id="todayBoardSummary" onclick="openCalendar()" style="display: none; text-align: center; background: rgba(255,255,255,0.7); border-radius: 14px; padding: 8px; margin-top: -8px; margin-bottom: 15px; color: #4c1d95; font-weight: bold; font-size: 0.95em; cursor: pointer;"></div>
 
         <div class="history">
             <h2>📅 Today's Adventures</h2>
@@ -859,30 +860,63 @@
 
     <!-- My Calendar Modal -->
     <div class="game-modal" id="calendarModal">
-        <div class="game-container" style="max-width: 480px; text-align: left;">
+        <div class="game-container" style="max-width: 500px; text-align: left; max-height: 85vh; overflow-y: auto;">
             <h2 class="game-title" style="text-align: center;">📅 My Calendar</h2>
             
-            <h3 style="color: #1e40af; margin-bottom: 8px;">🗓️ What day is it?</h3>
-            <div id="calendarDayGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
-            
-            <h3 style="color: #1e40af; margin-bottom: 8px;">🌙 What month is it?</h3>
-            <div id="calendarMonthGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
-            
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <div style="flex: 1; background: #fef3c7; border-radius: 12px; padding: 12px; text-align: center;">
-                    <div style="font-size: 0.75em; color: #92400e;">Today's date</div>
-                    <div id="calendarDateNum" style="font-size: 1.8em; font-weight: bold; color: #92400e;"></div>
-                </div>
-                <div style="flex: 1; background: #ede9fe; border-radius: 12px; padding: 12px; text-align: center;">
-                    <div style="font-size: 0.75em; color: #5b21b6;">Year</div>
-                    <div id="calendarYearNum" style="font-size: 1.8em; font-weight: bold; color: #5b21b6;"></div>
-                </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                <button id="calTabBoardBtn" onclick="showCalendarTab('board')" style="flex: 1; padding: 10px; border-radius: 10px; border: none; font-family: inherit; font-weight: bold; cursor: pointer;">🧸 Today's Board</button>
+                <button id="calTabGridBtn" onclick="showCalendarTab('grid')" style="flex: 1; padding: 10px; border-radius: 10px; border: none; font-family: inherit; font-weight: bold; cursor: pointer;">🗓️ Full Calendar</button>
             </div>
             
-            <h3 style="color: #1e40af; margin-bottom: 8px;">💗 How do I feel today?</h3>
-            <div id="moodTrackerGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+            <!-- TODAY'S BOARD VIEW -->
+            <div id="calendarBoardView">
+                <div id="fillableTopRow" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 18px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">🗓️ Pick the day</h3>
+                <div id="calendarDayGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">🌙 Pick the month</h3>
+                <div id="calendarMonthGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">🔢 Pick the date</h3>
+                <div id="calendarDateGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">🎉 Pick the year</h3>
+                <div id="calendarYearGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">🌤️ What's the weather like?</h3>
+                <div id="weatherGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">👕 Dress for the weather!</h3>
+                <div id="outfitGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">💗 How do I feel today?</h3>
+                <div id="moodTrackerGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+            </div>
             
-            <button class="close-game-button" style="width: 100%;" onclick="closeCalendar()">Close</button>
+            <!-- FULL GRID CALENDAR VIEW -->
+            <div id="calendarGridView" style="display: none;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <button onclick="shiftCalendarMonth(-1)" style="background: #e0e7ff; border: none; border-radius: 10px; padding: 10px 14px; font-size: 1.1em; cursor: pointer;">◀</button>
+                    <div id="calendarGridMonthLabel" style="font-weight: bold; color: #1e40af; font-size: 1.1em;"></div>
+                    <button onclick="shiftCalendarMonth(1)" style="background: #e0e7ff; border: none; border-radius: 10px; padding: 10px 14px; font-size: 1.1em; cursor: pointer;">▶</button>
+                </div>
+                
+                <div id="calendarWeekdayHeader" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 4px; text-align: center; font-size: 0.7em; font-weight: bold; color: #6b7280;"></div>
+                <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 18px;"></div>
+                
+                <h3 style="color: #1e40af; margin-bottom: 8px;">✨ Add a special day</h3>
+                <div style="display: grid; grid-template-columns: 70px 60px 1fr; gap: 6px; margin-bottom: 8px;">
+                    <input type="number" id="newEventDate" placeholder="Day #" min="1" max="31" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc; text-align: center;">
+                    <input type="text" id="newEventEmoji" placeholder="🎂" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc; text-align: center; font-size: 1.1em;">
+                    <input type="text" id="newEventLabel" placeholder="Mom's Birthday" style="padding: 8px; border-radius: 8px; border: 2px solid #ccc;">
+                </div>
+                <button class="play-game-button" style="margin-bottom: 15px;" onclick="addCalendarEvent()">Add Special Day</button>
+                
+                <div id="calendarEventsList"></div>
+            </div>
+            
+            <button class="close-game-button" style="width: 100%; margin-top: 10px;" onclick="closeCalendar()">Close</button>
         </div>
     </div>
 
@@ -1178,8 +1212,9 @@
         // customTasks: brand-new tasks the parent added from scratch
         let taskOverrides = {};
         let redemptionLog = [];
-        let todayMood = null;
-        let calendarSolved = {};
+        let todayBoard = {};
+        let crossedOffDays = {};
+        let calendarEvents = {};
         let customTasks = [];
         let starActions = [];
 
@@ -1639,51 +1674,42 @@
             { emoji: '🤩', label: 'Excited' },
             { emoji: '😰', label: 'Worried' }
         ];
-
-        function openCalendar() {
-            renderCalendarDayGrid();
-            renderCalendarMonthGrid();
-            renderCalendarInfoCards();
-            renderMoodTracker();
-            document.getElementById('calendarModal').classList.add('active');
-        }
-
-        function closeCalendar() {
-            document.getElementById('calendarModal').classList.remove('active');
-        }
+        const WEATHER_OPTIONS = [
+            { emoji: '☀️', label: 'Sunny' },
+            { emoji: '⛅', label: 'Partly Cloudy' },
+            { emoji: '☁️', label: 'Cloudy' },
+            { emoji: '🌧️', label: 'Rainy' },
+            { emoji: '⛈️', label: 'Stormy' },
+            { emoji: '❄️', label: 'Snowy' },
+            { emoji: '🌬️', label: 'Windy' },
+            { emoji: '🌫️', label: 'Foggy' },
+            { emoji: '🥵', label: 'Hot' }
+        ];
+        const OUTFIT_OPTIONS = [
+            { emoji: '👕', label: 'T-Shirt' },
+            { emoji: '🩳', label: 'Shorts' },
+            { emoji: '👖', label: 'Pants' },
+            { emoji: '👗', label: 'Dress' },
+            { emoji: '🧥', label: 'Jacket' },
+            { emoji: '🧣', label: 'Scarf' },
+            { emoji: '🧤', label: 'Mittens' },
+            { emoji: '🥾', label: 'Boots' },
+            { emoji: '🩱', label: 'Swimsuit' },
+            { emoji: '🕶️', label: 'Sunglasses' },
+            { emoji: '☂️', label: 'Umbrella' },
+            { emoji: '🧦', label: 'Warm Socks' }
+        ];
+        
+        let calendarViewDate = new Date();
 
         function todayKey() {
             return new Date().toDateString();
         }
 
-        function renderCalendarInfoCards() {
-            const today = new Date();
-            document.getElementById('calendarDateNum').textContent = today.getDate() + ordinalSuffix(today.getDate());
-            document.getElementById('calendarYearNum').textContent = today.getFullYear();
-        }
-
-        function renderCalendarDayGrid() {
-            const today = new Date();
-            const correctDay = WEEKDAYS[today.getDay()];
-            const solved = calendarSolved[todayKey()] && calendarSolved[todayKey()].day;
-            
-            const container = document.getElementById('calendarDayGrid');
-            container.innerHTML = WEEKDAYS.map(day => {
-                const isCorrectAndSolved = solved && day === correctDay;
-                return `<button onclick="tapCalendarDay('${day}')" id="calday-${day}" style="padding:10px 4px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.8em;cursor:pointer;background:${isCorrectAndSolved ? '#10b981' : '#e0e7ff'};color:${isCorrectAndSolved ? 'white' : '#3730a3'};">${day.slice(0, 3)}${isCorrectAndSolved ? ' ✓' : ''}</button>`;
-            }).join('');
-        }
-
-        function renderCalendarMonthGrid() {
-            const today = new Date();
-            const correctMonth = MONTHS[today.getMonth()];
-            const solved = calendarSolved[todayKey()] && calendarSolved[todayKey()].month;
-            
-            const container = document.getElementById('calendarMonthGrid');
-            container.innerHTML = MONTHS.map(month => {
-                const isCorrectAndSolved = solved && month === correctMonth;
-                return `<button onclick="tapCalendarMonth('${month}')" id="calmonth-${month}" style="padding:10px 2px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.72em;cursor:pointer;background:${isCorrectAndSolved ? '#10b981' : '#fce7f3'};color:${isCorrectAndSolved ? 'white' : '#9d174d'};">${month.slice(0, 3)}${isCorrectAndSolved ? ' ✓' : ''}</button>`;
-            }).join('');
+        function getTodayBoard() {
+            const key = todayKey();
+            if (!todayBoard[key]) todayBoard[key] = {};
+            return todayBoard[key];
         }
 
         function celebrateCalendarTap(text) {
@@ -1693,15 +1719,109 @@
             setTimeout(() => celebration.classList.remove('show'), 1200);
         }
 
+        // ===== Tab switching =====
+        function showCalendarTab(tab) {
+            document.getElementById('calendarBoardView').style.display = tab === 'board' ? 'block' : 'none';
+            document.getElementById('calendarGridView').style.display = tab === 'grid' ? 'block' : 'none';
+            document.getElementById('calTabBoardBtn').style.background = tab === 'board' ? '#7c3aed' : '#e5e7eb';
+            document.getElementById('calTabBoardBtn').style.color = tab === 'board' ? 'white' : '#374151';
+            document.getElementById('calTabGridBtn').style.background = tab === 'grid' ? '#7c3aed' : '#e5e7eb';
+            document.getElementById('calTabGridBtn').style.color = tab === 'grid' ? 'white' : '#374151';
+            
+            if (tab === 'grid') renderCalendarGrid();
+        }
+
+        function openCalendar() {
+            renderFillableTopRow();
+            renderCalendarDayGrid();
+            renderCalendarMonthGrid();
+            renderCalendarDateGrid();
+            renderCalendarYearGrid();
+            renderWeatherGrid();
+            renderOutfitGrid();
+            renderMoodTracker();
+            showCalendarTab('board');
+            document.getElementById('calendarModal').classList.add('active');
+        }
+
+        function closeCalendar() {
+            document.getElementById('calendarModal').classList.remove('active');
+        }
+
+        // ===== Fillable top row: Day / Date / Month / Year =====
+        function renderFillableTopRow() {
+            const board = getTodayBoard();
+            const container = document.getElementById('fillableTopRow');
+            const slots = [
+                { label: 'Day', value: board.day, color: '#dbeafe', textColor: '#1e40af' },
+                { label: 'Date', value: board.date ? (board.date + ordinalSuffix(board.date)) : null, color: '#fef3c7', textColor: '#92400e' },
+                { label: 'Month', value: board.month, color: '#fce7f3', textColor: '#9d174d' },
+                { label: 'Year', value: board.year, color: '#ede9fe', textColor: '#5b21b6' }
+            ];
+            
+            container.innerHTML = slots.map(slot => `
+                <div style="background:${slot.color};border-radius:12px;padding:10px 4px;text-align:center;min-height:64px;display:flex;flex-direction:column;justify-content:center;">
+                    <div style="font-size:0.65em;font-weight:bold;color:${slot.textColor};opacity:0.75;">${slot.label}</div>
+                    <div style="font-size:${slot.value ? '0.95em' : '1.4em'};font-weight:bold;color:${slot.textColor};">${slot.value || '?'}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderCalendarDayGrid() {
+            const board = getTodayBoard();
+            const container = document.getElementById('calendarDayGrid');
+            container.innerHTML = WEEKDAYS.map(day => {
+                const isFilled = board.day === day;
+                return `<button onclick="tapCalendarDay('${day}')" id="calday-${day}" style="padding:10px 4px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.8em;cursor:pointer;background:${isFilled ? '#10b981' : '#e0e7ff'};color:${isFilled ? 'white' : '#3730a3'};">${day.slice(0, 3)}${isFilled ? ' ✓' : ''}</button>`;
+            }).join('');
+        }
+
+        function renderCalendarMonthGrid() {
+            const board = getTodayBoard();
+            const container = document.getElementById('calendarMonthGrid');
+            container.innerHTML = MONTHS.map(month => {
+                const isFilled = board.month === month;
+                return `<button onclick="tapCalendarMonth('${month}')" id="calmonth-${month}" style="padding:10px 2px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.72em;cursor:pointer;background:${isFilled ? '#10b981' : '#fce7f3'};color:${isFilled ? 'white' : '#9d174d'};">${month.slice(0, 3)}${isFilled ? ' ✓' : ''}</button>`;
+            }).join('');
+        }
+
+        function renderCalendarDateGrid() {
+            const today = new Date();
+            const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            const board = getTodayBoard();
+            
+            const container = document.getElementById('calendarDateGrid');
+            let html = '';
+            for (let d = 1; d <= daysInMonth; d++) {
+                const isFilled = board.date === d;
+                html += `<button onclick="tapCalendarDate(${d})" id="caldate-${d}" style="padding:6px 0;border-radius:8px;border:none;font-family:inherit;font-weight:bold;font-size:0.72em;cursor:pointer;background:${isFilled ? '#10b981' : '#fef3c7'};color:${isFilled ? 'white' : '#92400e'};">${d}</button>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function renderCalendarYearGrid() {
+            const today = new Date();
+            const actualYear = today.getFullYear();
+            const board = getTodayBoard();
+            const years = [actualYear - 1, actualYear, actualYear + 1];
+            
+            const container = document.getElementById('calendarYearGrid');
+            container.innerHTML = years.map(year => {
+                const isFilled = board.year === year;
+                return `<button onclick="tapCalendarYear(${year})" id="calyear-${year}" style="padding:10px 4px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.85em;cursor:pointer;background:${isFilled ? '#10b981' : '#ede9fe'};color:${isFilled ? 'white' : '#5b21b6'};">${year}</button>`;
+            }).join('');
+        }
+
         function tapCalendarDay(day) {
             const today = new Date();
             const correctDay = WEEKDAYS[today.getDay()];
             
             if (day === correctDay) {
-                const key = todayKey();
-                calendarSolved[key] = { ...(calendarSolved[key] || {}), day: true };
+                getTodayBoard().day = day;
                 saveTaskConfig();
                 renderCalendarDayGrid();
+                renderFillableTopRow();
+                renderTodayBoardSummary();
                 celebrateCalendarTap('🌟 That\'s right!');
             } else {
                 const btn = document.getElementById('calday-' + day);
@@ -1717,10 +1837,11 @@
             const correctMonth = MONTHS[today.getMonth()];
             
             if (month === correctMonth) {
-                const key = todayKey();
-                calendarSolved[key] = { ...(calendarSolved[key] || {}), month: true };
+                getTodayBoard().month = month;
                 saveTaskConfig();
                 renderCalendarMonthGrid();
+                renderFillableTopRow();
+                renderTodayBoardSummary();
                 celebrateCalendarTap('🌟 That\'s right!');
             } else {
                 const btn = document.getElementById('calmonth-' + month);
@@ -1731,12 +1852,104 @@
             }
         }
 
+        function tapCalendarDate(d) {
+            const today = new Date();
+            if (d === today.getDate()) {
+                getTodayBoard().date = d;
+                saveTaskConfig();
+                renderCalendarDateGrid();
+                renderFillableTopRow();
+                renderTodayBoardSummary();
+                celebrateCalendarTap('🌟 That\'s right!');
+            } else {
+                const btn = document.getElementById('caldate-' + d);
+                if (btn) {
+                    btn.style.background = '#fecaca';
+                    setTimeout(() => renderCalendarDateGrid(), 500);
+                }
+            }
+        }
+
+        function tapCalendarYear(year) {
+            const today = new Date();
+            if (year === today.getFullYear()) {
+                getTodayBoard().year = year;
+                saveTaskConfig();
+                renderCalendarYearGrid();
+                renderFillableTopRow();
+                renderTodayBoardSummary();
+                celebrateCalendarTap('🌟 That\'s right!');
+            } else {
+                const btn = document.getElementById('calyear-' + year);
+                if (btn) {
+                    btn.style.background = '#fecaca';
+                    setTimeout(() => renderCalendarYearGrid(), 500);
+                }
+            }
+        }
+
+        // ===== Weather (single-select) =====
+        function renderWeatherGrid() {
+            const board = getTodayBoard();
+            const container = document.getElementById('weatherGrid');
+            container.innerHTML = WEATHER_OPTIONS.map(w => {
+                const isSelected = board.weather === w.label;
+                return `
+                    <button onclick="setWeather('${w.emoji}', '${w.label}')" style="padding:10px 4px;border-radius:12px;border:${isSelected ? '3px solid #0ea5e9' : '2px solid #e5e7eb'};font-family:inherit;cursor:pointer;background:${isSelected ? '#e0f2fe' : 'white'};display:flex;flex-direction:column;align-items:center;gap:2px;">
+                        <div style="font-size:1.5em;">${w.emoji}</div>
+                        <div style="font-size:0.65em;font-weight:bold;color:#0c4a6e;">${w.label}</div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setWeather(emoji, label) {
+            const board = getTodayBoard();
+            board.weather = label;
+            board.weatherEmoji = emoji;
+            saveTaskConfig();
+            renderWeatherGrid();
+            renderTodayBoardSummary();
+            celebrateCalendarTap(emoji + ' Got it!');
+        }
+
+        // ===== Outfit (multi-select) =====
+        function renderOutfitGrid() {
+            const board = getTodayBoard();
+            const outfit = board.outfit || [];
+            const container = document.getElementById('outfitGrid');
+            container.innerHTML = OUTFIT_OPTIONS.map(o => {
+                const isSelected = outfit.includes(o.label);
+                return `
+                    <button onclick="toggleOutfitItem('${o.emoji}', '${o.label}')" style="padding:8px 2px;border-radius:12px;border:${isSelected ? '3px solid #16a34a' : '2px solid #e5e7eb'};font-family:inherit;cursor:pointer;background:${isSelected ? '#dcfce7' : 'white'};display:flex;flex-direction:column;align-items:center;gap:2px;">
+                        <div style="font-size:1.4em;">${o.emoji}</div>
+                        <div style="font-size:0.6em;font-weight:bold;color:#14532d;">${o.label}</div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function toggleOutfitItem(emoji, label) {
+            const board = getTodayBoard();
+            if (!board.outfit) board.outfit = [];
+            const idx = board.outfit.indexOf(label);
+            if (idx >= 0) {
+                board.outfit.splice(idx, 1);
+            } else {
+                board.outfit.push(label);
+            }
+            saveTaskConfig();
+            renderOutfitGrid();
+            renderTodayBoardSummary();
+        }
+
+        // ===== Mood (single-select) =====
         function renderMoodTracker() {
+            const board = getTodayBoard();
             const container = document.getElementById('moodTrackerGrid');
-            const selected = todayMood && todayMood.date === todayKey() ? todayMood.label : null;
             
             container.innerHTML = MOODS.map(mood => {
-                const isSelected = mood.label === selected;
+                const isSelected = board.mood === mood.label;
                 return `
                     <button onclick="setMood('${mood.emoji}', '${mood.label}')" style="padding:12px 4px;border-radius:12px;border:${isSelected ? '3px solid #7c3aed' : '2px solid #e5e7eb'};font-family:inherit;cursor:pointer;background:${isSelected ? '#ede9fe' : 'white'};display:flex;flex-direction:column;align-items:center;gap:4px;">
                         <div style="font-size:1.8em;">${mood.emoji}</div>
@@ -1747,10 +1960,168 @@
         }
 
         function setMood(emoji, label) {
-            todayMood = { date: todayKey(), emoji, label };
+            const board = getTodayBoard();
+            board.mood = label;
+            board.moodEmoji = emoji;
             saveTaskConfig();
             renderMoodTracker();
+            renderTodayBoardSummary();
             celebrateCalendarTap(emoji + ' Got it!');
+        }
+
+        // ===== Main page summary strip =====
+        function renderTodayBoardSummary() {
+            const el = document.getElementById('todayBoardSummary');
+            if (!el) return;
+            const board = todayBoard[todayKey()] || {};
+            
+            const parts = [];
+            if (board.weatherEmoji) parts.push(board.weatherEmoji + ' ' + board.weather);
+            if (board.outfit && board.outfit.length > 0) {
+                const outfitEmojis = board.outfit.map(label => {
+                    const found = OUTFIT_OPTIONS.find(o => o.label === label);
+                    return found ? found.emoji : '';
+                }).join('');
+                if (outfitEmojis) parts.push(outfitEmojis);
+            }
+            if (board.moodEmoji) parts.push(board.moodEmoji + ' ' + board.mood);
+            
+            if (parts.length === 0) {
+                el.style.display = 'none';
+                return;
+            }
+            
+            el.style.display = 'block';
+            el.textContent = parts.join('   •   ');
+        }
+
+        // ===== Full grid calendar =====
+        function shiftCalendarMonth(delta) {
+            calendarViewDate.setMonth(calendarViewDate.getMonth() + delta);
+            renderCalendarGrid();
+        }
+
+        function calDayKey(year, month, day) {
+            return year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        }
+
+        function renderCalendarGrid() {
+            const year = calendarViewDate.getFullYear();
+            const month = calendarViewDate.getMonth();
+            
+            document.getElementById('calendarGridMonthLabel').textContent = MONTHS[month] + ' ' + year;
+            
+            const weekdayHeader = document.getElementById('calendarWeekdayHeader');
+            weekdayHeader.innerHTML = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => `<div>${d}</div>`).join('');
+            
+            const firstDayOfWeek = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const todayStr = new Date().toDateString();
+            
+            let html = '';
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                html += '<div></div>';
+            }
+            
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateObj = new Date(year, month, d);
+                const isToday = dateObj.toDateString() === todayStr;
+                const dayKey = calDayKey(year, month, d);
+                const isCrossedOff = !!crossedOffDays[dayKey];
+                const events = calendarEvents[dayKey] || [];
+                
+                html += `
+                    <button onclick="toggleCrossOff('${dayKey}')" style="position:relative;aspect-ratio:1;border-radius:8px;border:${isToday ? '2px solid #7c3aed' : '1px solid #e5e7eb'};background:${isCrossedOff ? '#f3f4f6' : 'white'};font-family:inherit;cursor:pointer;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;">
+                        <span style="font-size:0.75em;font-weight:${isToday ? 'bold' : 'normal'};color:${isCrossedOff ? '#9ca3af' : (isToday ? '#7c3aed' : '#374151')};text-decoration:${isCrossedOff ? 'line-through' : 'none'};">${d}</span>
+                        ${events.length > 0 ? `<span style="font-size:0.7em;">${events.slice(0, 2).map(e => e.emoji).join('')}</span>` : ''}
+                        ${isCrossedOff ? '<span style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.6em;color:rgba(220,38,38,0.4);">✕</span>' : ''}
+                    </button>
+                `;
+            }
+            
+            document.getElementById('calendarGrid').innerHTML = html;
+            renderCalendarEventsList();
+        }
+
+        function toggleCrossOff(dayKey) {
+            if (crossedOffDays[dayKey]) {
+                delete crossedOffDays[dayKey];
+            } else {
+                crossedOffDays[dayKey] = true;
+            }
+            saveTaskConfig();
+            renderCalendarGrid();
+        }
+
+        function addCalendarEvent() {
+            const dateInput = document.getElementById('newEventDate');
+            const emojiInput = document.getElementById('newEventEmoji');
+            const labelInput = document.getElementById('newEventLabel');
+            
+            const day = parseInt(dateInput.value, 10);
+            const emoji = emojiInput.value.trim() || '⭐';
+            const label = labelInput.value.trim();
+            
+            const year = calendarViewDate.getFullYear();
+            const month = calendarViewDate.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            if (!day || day < 1 || day > daysInMonth || !label) {
+                return;
+            }
+            
+            const dayKey = calDayKey(year, month, day);
+            if (!calendarEvents[dayKey]) calendarEvents[dayKey] = [];
+            calendarEvents[dayKey].push({ emoji, label });
+            
+            saveTaskConfig();
+            
+            dateInput.value = '';
+            emojiInput.value = '';
+            labelInput.value = '';
+            
+            renderCalendarGrid();
+        }
+
+        function removeCalendarEvent(dayKey, index) {
+            if (!calendarEvents[dayKey]) return;
+            calendarEvents[dayKey].splice(index, 1);
+            if (calendarEvents[dayKey].length === 0) delete calendarEvents[dayKey];
+            saveTaskConfig();
+            renderCalendarGrid();
+        }
+
+        function renderCalendarEventsList() {
+            const year = calendarViewDate.getFullYear();
+            const month = calendarViewDate.getMonth();
+            const monthPrefix = year + '-' + String(month + 1).padStart(2, '0');
+            
+            const container = document.getElementById('calendarEventsList');
+            const entries = [];
+            
+            Object.keys(calendarEvents).forEach(dayKey => {
+                if (!dayKey.startsWith(monthPrefix)) return;
+                const day = parseInt(dayKey.split('-')[2], 10);
+                calendarEvents[dayKey].forEach((event, index) => {
+                    entries.push({ dayKey, day, index, event });
+                });
+            });
+            
+            entries.sort((a, b) => a.day - b.day);
+            
+            if (entries.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            container.innerHTML = '<h3 style="color:#1e40af;margin-bottom:8px;">This month\'s special days</h3>' +
+                entries.map(e => `
+                    <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f9fafb;border-radius:10px;margin-bottom:6px;">
+                        <div style="font-size:1.3em;">${e.event.emoji}</div>
+                        <div style="flex:1;font-weight:bold;color:#374151;">${MONTHS[month].slice(0, 3)} ${e.day} - ${e.event.label}</div>
+                        <button onclick="removeCalendarEvent('${e.dayKey}', ${e.index})" style="background:#dc2626;color:white;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;">✕</button>
+                    </div>
+                `).join('');
         }
 
         function checkForNewDay() {
@@ -1809,8 +2180,9 @@
                         kidModeCooldownMinutes = result.config.kidModeCooldownMinutes || 3;
                         gameOverrides = result.config.gameOverrides || {};
                         rewardOverrides = result.config.rewardOverrides || {};
-                        todayMood = result.config.todayMood || null;
-                        calendarSolved = result.config.calendarSolved || {};
+                        todayBoard = result.config.todayBoard || {};
+                        crossedOffDays = result.config.crossedOffDays || {};
+                        calendarEvents = result.config.calendarEvents || {};
                     }
                 } catch (error) {
                     console.error('Error loading task config from sheets:', error);
@@ -1826,6 +2198,7 @@
             renderCategoryTabs();
             renderPottyButtons();
             renderGameButtons();
+            renderTodayBoardSummary();
         }
 
         function loadTaskConfigLocal() {
@@ -1839,8 +2212,9 @@
                     kidModeCooldownMinutes = cfg.kidModeCooldownMinutes || 3;
                     gameOverrides = cfg.gameOverrides || {};
                     rewardOverrides = cfg.rewardOverrides || {};
-                    todayMood = cfg.todayMood || null;
-                    calendarSolved = cfg.calendarSolved || {};
+                    todayBoard = cfg.todayBoard || {};
+                    crossedOffDays = cfg.crossedOffDays || {};
+                    calendarEvents = cfg.calendarEvents || {};
                 } catch (error) {
                     console.error('Error parsing local task config:', error);
                 }
@@ -1848,7 +2222,7 @@
         }
 
         function saveTaskConfig() {
-            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes, gameOverrides, rewardOverrides, todayMood, calendarSolved };
+            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes, gameOverrides, rewardOverrides, todayBoard, crossedOffDays, calendarEvents };
             localStorage.setItem('pottyTrackerTaskConfig', JSON.stringify(payload));
             
             if (sheetUrl) {
