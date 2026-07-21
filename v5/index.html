@@ -1296,6 +1296,7 @@
         loadSprite('sockDefeated', 'sock-defeated.png');
         loadSprite('targetBlue', 'target-blue.png');
         loadSprite('targetRed', 'target-red.png');
+        loadSprite('duelBed', 'duel-bed.png');
         loadSprite('balloonRed', 'balloon-red.png');
         loadSprite('balloonOrange', 'balloon-orange.png');
         loadSprite('balloonYellow', 'balloon-yellow.png');
@@ -2702,62 +2703,36 @@
                 dividerTargetX = Math.max(110, Math.min(290, 200 + (p1Score - p2Score) * 3));
                 dividerX += (dividerTargetX - dividerX) * 0.1;
                 
-                // Bed background
-                ctx.fillStyle = '#fdf6ec';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Wooden headboard
-                ctx.fillStyle = '#92400e';
-                ctx.beginPath();
-                ctx.roundRect(10, 0, canvas.width - 20, 55, [0, 0, 16, 16]);
-                ctx.fill();
-                ctx.strokeStyle = '#78350f';
-                ctx.lineWidth = 2;
-                for (let i = 0; i < 4; i++) {
+                // Bed background pans across a wider image so the seam between
+                // the two beds moves with the tug-of-war instead of a drawn line
+                const bedImg = spriteCache.duelBed;
+                if (bedImg && bedImg.complete && bedImg.naturalWidth > 0) {
+                    const srcX = Math.max(0, Math.min(400, 400 - dividerX));
+                    ctx.drawImage(bedImg, srcX, 0, 400, 500, 0, 0, canvas.width, canvas.height);
+                } else {
+                    // Fallback bed drawing if the image hasn't loaded yet
+                    ctx.fillStyle = '#fdf6ec';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    ctx.fillStyle = '#92400e';
                     ctx.beginPath();
-                    ctx.moveTo(30 + i * 90, 8);
-                    ctx.quadraticCurveTo(30 + i * 90 + 45, 30, 30 + i * 90 + 90, 8);
+                    ctx.roundRect(10, 0, canvas.width - 20, 55, [0, 0, 16, 16]);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#bfdbfe';
+                    ctx.fillRect(0, 55, dividerX, canvas.height - 55);
+                    ctx.fillStyle = '#fecaca';
+                    ctx.fillRect(dividerX, 55, canvas.width - dividerX, canvas.height - 55);
+                    
+                    ctx.strokeStyle = '#1f2937';
+                    ctx.lineWidth = 4;
+                    ctx.setLineDash([10, 6]);
+                    ctx.beginPath();
+                    ctx.moveTo(dividerX, 55);
+                    ctx.lineTo(dividerX, canvas.height);
                     ctx.stroke();
+                    ctx.setLineDash([]);
                 }
-                
-                // Quilted blanket halves
-                ctx.fillStyle = '#bfdbfe';
-                ctx.fillRect(0, 55, dividerX, canvas.height - 55);
-                ctx.fillStyle = '#fecaca';
-                ctx.fillRect(dividerX, 55, canvas.width - dividerX, canvas.height - 55);
-                
-                ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-                ctx.lineWidth = 1;
-                for (let x = -80; x < canvas.width + 80; x += 40) {
-                    ctx.beginPath();
-                    ctx.moveTo(x, 55);
-                    ctx.lineTo(x + 220, canvas.height);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(x, canvas.height);
-                    ctx.lineTo(x + 220, 55);
-                    ctx.stroke();
-                }
-                
-                // Decorative corner pillows tucked at the head of the bed
-                ctx.fillStyle = '#3b82f6';
-                ctx.beginPath();
-                ctx.roundRect(15, 62, 50, 34, 10);
-                ctx.fill();
-                ctx.fillStyle = '#ef4444';
-                ctx.beginPath();
-                ctx.roundRect(canvas.width - 65, 62, 50, 34, 10);
-                ctx.fill();
-                
-                // Tug-of-war seam line down the middle
-                ctx.strokeStyle = '#1f2937';
-                ctx.lineWidth = 4;
-                ctx.setLineDash([10, 6]);
-                ctx.beginPath();
-                ctx.moveTo(dividerX, 55);
-                ctx.lineTo(dividerX, canvas.height);
-                ctx.stroke();
-                ctx.setLineDash([]);
                 
                 ctx.fillStyle = '#1e40af';
                 ctx.font = 'bold 24px Arial';
