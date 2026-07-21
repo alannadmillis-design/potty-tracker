@@ -767,7 +767,7 @@
             <div id="rewardTrackerList"></div>
         </div>
 
-        <div id="todayDateBanner" style="text-align: center; background: rgba(255,255,255,0.85); border-radius: 16px; padding: 12px; margin-bottom: 15px; color: #1e3a8a; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"></div>
+        <button onclick="openCalendar()" id="todayDateBanner" style="width: 100%; text-align: center; background: rgba(255,255,255,0.85); border: none; border-radius: 16px; padding: 12px; margin-bottom: 15px; color: #1e3a8a; font-weight: bold; font-size: 1.1em; box-shadow: 0 4px 10px rgba(0,0,0,0.15); cursor: pointer; font-family: inherit;"></button>
 
         <div class="history">
             <h2>📅 Today's Adventures</h2>
@@ -854,6 +854,35 @@
                 <button class="play-game-button" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="saveParentChanges()">💾 Save Changes</button>
                 <button class="close-game-button" onclick="closeParentArea()">Close</button>
             </div>
+        </div>
+    </div>
+
+    <!-- My Calendar Modal -->
+    <div class="game-modal" id="calendarModal">
+        <div class="game-container" style="max-width: 480px; text-align: left;">
+            <h2 class="game-title" style="text-align: center;">📅 My Calendar</h2>
+            
+            <h3 style="color: #1e40af; margin-bottom: 8px;">🗓️ What day is it?</h3>
+            <div id="calendarDayGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+            
+            <h3 style="color: #1e40af; margin-bottom: 8px;">🌙 What month is it?</h3>
+            <div id="calendarMonthGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="flex: 1; background: #fef3c7; border-radius: 12px; padding: 12px; text-align: center;">
+                    <div style="font-size: 0.75em; color: #92400e;">Today's date</div>
+                    <div id="calendarDateNum" style="font-size: 1.8em; font-weight: bold; color: #92400e;"></div>
+                </div>
+                <div style="flex: 1; background: #ede9fe; border-radius: 12px; padding: 12px; text-align: center;">
+                    <div style="font-size: 0.75em; color: #5b21b6;">Year</div>
+                    <div id="calendarYearNum" style="font-size: 1.8em; font-weight: bold; color: #5b21b6;"></div>
+                </div>
+            </div>
+            
+            <h3 style="color: #1e40af; margin-bottom: 8px;">💗 How do I feel today?</h3>
+            <div id="moodTrackerGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+            
+            <button class="close-game-button" style="width: 100%;" onclick="closeCalendar()">Close</button>
         </div>
     </div>
 
@@ -1149,6 +1178,8 @@
         // customTasks: brand-new tasks the parent added from scratch
         let taskOverrides = {};
         let redemptionLog = [];
+        let todayMood = null;
+        let calendarSolved = {};
         let customTasks = [];
         let starActions = [];
 
@@ -1595,7 +1626,131 @@
             const weekday = today.toLocaleDateString('en-US', { weekday: 'long' });
             const month = today.toLocaleDateString('en-US', { month: 'long' });
             const day = today.getDate();
-            el.textContent = `🌞 Today is ${weekday}, ${month} ${day}${ordinalSuffix(day)}!`;
+            el.innerHTML = `🌞 Today is ${weekday}, ${month} ${day}${ordinalSuffix(day)}!<div style="font-size:0.7em;font-weight:normal;color:#3b82f6;margin-top:2px;">Tap to open My Calendar 📅</div>`;
+        }
+
+        const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const MOODS = [
+            { emoji: '😊', label: 'Happy' },
+            { emoji: '😢', label: 'Sad' },
+            { emoji: '😠', label: 'Mad' },
+            { emoji: '😴', label: 'Tired' },
+            { emoji: '🤩', label: 'Excited' },
+            { emoji: '😰', label: 'Worried' }
+        ];
+
+        function openCalendar() {
+            renderCalendarDayGrid();
+            renderCalendarMonthGrid();
+            renderCalendarInfoCards();
+            renderMoodTracker();
+            document.getElementById('calendarModal').classList.add('active');
+        }
+
+        function closeCalendar() {
+            document.getElementById('calendarModal').classList.remove('active');
+        }
+
+        function todayKey() {
+            return new Date().toDateString();
+        }
+
+        function renderCalendarInfoCards() {
+            const today = new Date();
+            document.getElementById('calendarDateNum').textContent = today.getDate() + ordinalSuffix(today.getDate());
+            document.getElementById('calendarYearNum').textContent = today.getFullYear();
+        }
+
+        function renderCalendarDayGrid() {
+            const today = new Date();
+            const correctDay = WEEKDAYS[today.getDay()];
+            const solved = calendarSolved[todayKey()] && calendarSolved[todayKey()].day;
+            
+            const container = document.getElementById('calendarDayGrid');
+            container.innerHTML = WEEKDAYS.map(day => {
+                const isCorrectAndSolved = solved && day === correctDay;
+                return `<button onclick="tapCalendarDay('${day}')" id="calday-${day}" style="padding:10px 4px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.8em;cursor:pointer;background:${isCorrectAndSolved ? '#10b981' : '#e0e7ff'};color:${isCorrectAndSolved ? 'white' : '#3730a3'};">${day.slice(0, 3)}${isCorrectAndSolved ? ' ✓' : ''}</button>`;
+            }).join('');
+        }
+
+        function renderCalendarMonthGrid() {
+            const today = new Date();
+            const correctMonth = MONTHS[today.getMonth()];
+            const solved = calendarSolved[todayKey()] && calendarSolved[todayKey()].month;
+            
+            const container = document.getElementById('calendarMonthGrid');
+            container.innerHTML = MONTHS.map(month => {
+                const isCorrectAndSolved = solved && month === correctMonth;
+                return `<button onclick="tapCalendarMonth('${month}')" id="calmonth-${month}" style="padding:10px 2px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.72em;cursor:pointer;background:${isCorrectAndSolved ? '#10b981' : '#fce7f3'};color:${isCorrectAndSolved ? 'white' : '#9d174d'};">${month.slice(0, 3)}${isCorrectAndSolved ? ' ✓' : ''}</button>`;
+            }).join('');
+        }
+
+        function celebrateCalendarTap(text) {
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = text;
+            celebration.classList.add('show');
+            setTimeout(() => celebration.classList.remove('show'), 1200);
+        }
+
+        function tapCalendarDay(day) {
+            const today = new Date();
+            const correctDay = WEEKDAYS[today.getDay()];
+            
+            if (day === correctDay) {
+                const key = todayKey();
+                calendarSolved[key] = { ...(calendarSolved[key] || {}), day: true };
+                saveTaskConfig();
+                renderCalendarDayGrid();
+                celebrateCalendarTap('🌟 That\'s right!');
+            } else {
+                const btn = document.getElementById('calday-' + day);
+                if (btn) {
+                    btn.style.background = '#fecaca';
+                    setTimeout(() => renderCalendarDayGrid(), 500);
+                }
+            }
+        }
+
+        function tapCalendarMonth(month) {
+            const today = new Date();
+            const correctMonth = MONTHS[today.getMonth()];
+            
+            if (month === correctMonth) {
+                const key = todayKey();
+                calendarSolved[key] = { ...(calendarSolved[key] || {}), month: true };
+                saveTaskConfig();
+                renderCalendarMonthGrid();
+                celebrateCalendarTap('🌟 That\'s right!');
+            } else {
+                const btn = document.getElementById('calmonth-' + month);
+                if (btn) {
+                    btn.style.background = '#fecaca';
+                    setTimeout(() => renderCalendarMonthGrid(), 500);
+                }
+            }
+        }
+
+        function renderMoodTracker() {
+            const container = document.getElementById('moodTrackerGrid');
+            const selected = todayMood && todayMood.date === todayKey() ? todayMood.label : null;
+            
+            container.innerHTML = MOODS.map(mood => {
+                const isSelected = mood.label === selected;
+                return `
+                    <button onclick="setMood('${mood.emoji}', '${mood.label}')" style="padding:12px 4px;border-radius:12px;border:${isSelected ? '3px solid #7c3aed' : '2px solid #e5e7eb'};font-family:inherit;cursor:pointer;background:${isSelected ? '#ede9fe' : 'white'};display:flex;flex-direction:column;align-items:center;gap:4px;">
+                        <div style="font-size:1.8em;">${mood.emoji}</div>
+                        <div style="font-size:0.7em;font-weight:bold;color:#4c1d95;">${mood.label}</div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setMood(emoji, label) {
+            todayMood = { date: todayKey(), emoji, label };
+            saveTaskConfig();
+            renderMoodTracker();
+            celebrateCalendarTap(emoji + ' Got it!');
         }
 
         function checkForNewDay() {
@@ -1654,6 +1809,8 @@
                         kidModeCooldownMinutes = result.config.kidModeCooldownMinutes || 3;
                         gameOverrides = result.config.gameOverrides || {};
                         rewardOverrides = result.config.rewardOverrides || {};
+                        todayMood = result.config.todayMood || null;
+                        calendarSolved = result.config.calendarSolved || {};
                     }
                 } catch (error) {
                     console.error('Error loading task config from sheets:', error);
@@ -1682,6 +1839,8 @@
                     kidModeCooldownMinutes = cfg.kidModeCooldownMinutes || 3;
                     gameOverrides = cfg.gameOverrides || {};
                     rewardOverrides = cfg.rewardOverrides || {};
+                    todayMood = cfg.todayMood || null;
+                    calendarSolved = cfg.calendarSolved || {};
                 } catch (error) {
                     console.error('Error parsing local task config:', error);
                 }
@@ -1689,7 +1848,7 @@
         }
 
         function saveTaskConfig() {
-            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes, gameOverrides, rewardOverrides };
+            const payload = { taskOverrides, customTasks, parentWord, kidModeCooldownMinutes, gameOverrides, rewardOverrides, todayMood, calendarSolved };
             localStorage.setItem('pottyTrackerTaskConfig', JSON.stringify(payload));
             
             if (sheetUrl) {
