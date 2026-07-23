@@ -1690,6 +1690,15 @@
         }
 
         const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const WEEKDAY_COLORS = [
+            { bg: '#93c5fd', text: '#1e3a8a' }, // Sunday - light blue
+            { bg: '#fca5a5', text: '#7f1d1d' }, // Monday - red
+            { bg: '#fdba74', text: '#7c2d12' }, // Tuesday - orange
+            { bg: '#fde047', text: '#713f12' }, // Wednesday - yellow
+            { bg: '#86efac', text: '#14532d' }, // Thursday - green
+            { bg: '#d8b4fe', text: '#581c87' }, // Friday - purple
+            { bg: '#1e3a8a', text: '#ffffff' }  // Saturday - dark blue
+        ];
         const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         const MONTH_EMOJIS = ['❄️', '💘', '🌱', '🌧️', '🌷', '☀️', '🎆', '🏖️', '🍎', '🎃', '🍂', '🎄'];
         const MOODS = [
@@ -1946,9 +1955,10 @@
         function renderCalendarDayGrid() {
             const board = getTodayBoard();
             const container = document.getElementById('calendarDayGrid');
-            container.innerHTML = WEEKDAYS.map(day => {
+            container.innerHTML = WEEKDAYS.map((day, i) => {
                 const isFilled = board.day === day;
-                return `<button onpointerdown="startTileDrag(event, 'day', '${day}')" id="calday-${day}" style="padding:10px 4px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.8em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : '#e0e7ff'};color:${isFilled ? 'white' : '#3730a3'};">${day.slice(0, 3)}${isFilled ? ' ✓' : ''}</button>`;
+                const c = WEEKDAY_COLORS[i];
+                return `<button onpointerdown="startTileDrag(event, 'day', '${day}')" id="calday-${day}" style="padding:10px 4px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.8em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : c.bg};color:${isFilled ? 'white' : c.text};">${day.slice(0, 3)}${isFilled ? ' ✓' : ''}</button>`;
             }).join('');
         }
 
@@ -2920,6 +2930,22 @@
                 grid.appendChild(div);
             });
 
+            function friendlyEventTime(event) {
+                // event.time is normally already a clean "10:30 AM" string, but if
+                // Sheets ever mangled it into a raw date, fall back to the timestamp
+                const looksClean = event.time && /^\d{1,2}:\d{2}\s?(AM|PM)$/i.test(String(event.time).trim());
+                if (looksClean) return event.time;
+                
+                const source = event.timestamp || event.time;
+                if (source) {
+                    const parsed = new Date(source);
+                    if (!isNaN(parsed.getTime())) {
+                        return parsed.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                    }
+                }
+                return event.time || '';
+            }
+            
             const historyList = document.getElementById('historyList');
             historyList.innerHTML = '';
             
@@ -2955,6 +2981,7 @@
                     
                     const stars = event.stars || 1;
                     const starEmoji = '⭐'.repeat(stars);
+                    const displayTime = friendlyEventTime(event);
                     div.innerHTML = `
                         <div class="history-emoji-badge">${emoji}</div>
                         <div class="history-text">
@@ -2963,7 +2990,7 @@
                         </div>
                         <div class="history-meta">
                             <div class="history-stars">${starEmoji}</div>
-                            <div class="history-time">${event.time}</div>
+                            <div class="history-time">${displayTime}</div>
                         </div>
                     `;
                     historyList.appendChild(div);

@@ -137,16 +137,18 @@ function getData(sheet) {
   const totalGamePoints = sheet.getRange('B2').getValue() || 0;
   
   // Get events from rows starting at row 5
-  const eventsData = sheet.getRange('A5:F' + sheet.getLastRow()).getValues();
+  const eventsData = sheet.getRange('A5:H' + sheet.getLastRow()).getValues();
   const events = eventsData
     .filter(row => row[0]) // Filter out empty rows
     .map(row => ({
       label: row[0],
       method: row[1],
-      time: row[2],
+      time: cellToText(row[2]),
       stars: row[3],
-      timestamp: row[4],
-      category: row[5]
+      timestamp: cellToText(row[4]),
+      category: row[5],
+      emoji: row[6] || '',
+      subLabel: row[7] || ''
     }));
   
   return {
@@ -156,6 +158,16 @@ function getData(sheet) {
   };
 }
 
+// Sheets sometimes auto-converts time/date-looking text into a real Date object
+// even when we ask for plain text. This converts it back into a usable string
+// no matter which form the cell ended up in.
+function cellToText(value) {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  return value;
+}
+
 function saveData(sheet, data) {
   // Save summary to row 2
   sheet.getRange('A2').setValue(data.totalStars || 0);
@@ -163,7 +175,7 @@ function saveData(sheet, data) {
   
   // Clear old events (starting from row 5)
   if (sheet.getLastRow() >= 5) {
-    sheet.getRange('A5:F' + sheet.getLastRow()).clearContent();
+    sheet.getRange('A5:H' + sheet.getLastRow()).clearContent();
   }
   
   // Save events
@@ -174,10 +186,17 @@ function saveData(sheet, data) {
       event.time,
       event.stars,
       event.timestamp || new Date().toISOString(),
-      event.category || ''
+      event.category || '',
+      event.emoji || '',
+      event.subLabel || ''
     ]);
     
-    sheet.getRange(5, 1, eventsArray.length, 6).setValues(eventsArray);
+    const targetRange = sheet.getRange(5, 1, eventsArray.length, 8);
+    // Force the time and timestamp columns to stay plain text so Sheets
+    // doesn't silently convert "10:30 AM" or ISO strings into Date values
+    sheet.getRange(5, 3, eventsArray.length, 1).setNumberFormat('@');
+    sheet.getRange(5, 5, eventsArray.length, 1).setNumberFormat('@');
+    targetRange.setValues(eventsArray);
   }
 }
 
@@ -555,6 +574,8 @@ function setupSheet() {
   sheet.getRange('D4').setValue('Stars');
   sheet.getRange('E4').setValue('Timestamp');
   sheet.getRange('F4').setValue('Category');
+  sheet.getRange('G4').setValue('Emoji');
+  sheet.getRange('H4').setValue('SubLabel');
   
   // Initialize values
   sheet.getRange('A2').setValue(0);
@@ -562,7 +583,7 @@ function setupSheet() {
   
   // Format headers
   sheet.getRange('A1:E1').setFontWeight('bold');
-  sheet.getRange('A4:F4').setFontWeight('bold');
+  sheet.getRange('A4:H4').setFontWeight('bold');
   
   // Create Redemptions sheet
   getOrCreateRedemptionsSheet();
