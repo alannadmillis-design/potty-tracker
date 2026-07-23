@@ -950,7 +950,7 @@
         <div class="game-container">
             <h2 class="game-title" id="gameModalTitle">🚀 Space Laser Battle! 🚀</h2>
             <div class="game-instruction" id="gameModalInstruction">Tap the asteroids to blast them with your laser!</div>
-            <div class="game-timer">Time: <span id="gameTimer">30</span>s</div>
+            <div class="game-timer"><span id="gameTimerLabel">Time:</span> <span id="gameTimer">30</span><span id="gameTimerSuffix">s</span></div>
             <div class="game-score" id="gameScoreLine">Score: <span id="gameScore">0</span></div>
             <div style="position: relative;">
                 <canvas id="gameCanvas" class="game-canvas" width="400" height="500"></canvas>
@@ -3165,6 +3165,8 @@
         let dividerTargetX = 200;
         let duelPillowShots = [];
         let feathers = [];
+        let balloonPopCount = 0;
+        const BALLOON_GOAL = 10;
 
         function startGame(gameId) {
             const game = GAMES.find(g => g.id === gameId) || GAMES[0];
@@ -3231,6 +3233,11 @@
                 ];
             }
             
+            // Set up Balloon Pop's "pop 10 letters" goal
+            if (currentGame === 'balloon') {
+                balloonPopCount = 0;
+            }
+            
             canvas = document.getElementById('gameCanvas');
             ctx = canvas.getContext('2d');
             
@@ -3249,10 +3256,25 @@
             document.getElementById('gameScoreLine').style.display = currentGame === 'duel' ? 'none' : 'block';
             
             document.getElementById('gameScore').textContent = gameScore;
-            document.getElementById('gameTimer').textContent = timeRemaining;
+            
+            const timerLabelEl = document.getElementById('gameTimerLabel');
+            const timerSuffixEl = document.getElementById('gameTimerSuffix');
+            const gameEndMs = currentGame === 'balloon' ? 180000 : 30000;
+            
+            if (currentGame === 'balloon') {
+                timerLabelEl.textContent = 'Balloons:';
+                timerSuffixEl.textContent = ` / ${BALLOON_GOAL}`;
+                document.getElementById('gameTimer').textContent = balloonPopCount;
+            } else {
+                timerLabelEl.textContent = 'Time:';
+                timerSuffixEl.textContent = 's';
+                document.getElementById('gameTimer').textContent = timeRemaining;
+            }
+            
             document.getElementById('gameOverScreen').classList.remove('show');
             
             timerInterval = setInterval(() => {
+                if (currentGame === 'balloon') return; // driven by pop count instead of a countdown
                 timeRemaining--;
                 document.getElementById('gameTimer').textContent = timeRemaining;
                 
@@ -3266,7 +3288,7 @@
             
             setTimeout(() => {
                 endGame();
-            }, 30000);
+            }, gameEndMs);
             
             gameLoop();
         }
@@ -4067,6 +4089,9 @@
                 document.getElementById('gameScore').textContent = gameScore;
                 explosions.push({ x: balloon.x, y: balloon.y, life: 15 });
                 
+                balloonPopCount++;
+                document.getElementById('gameTimer').textContent = balloonPopCount;
+                
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
                 oscillator.connect(gainNode);
@@ -4077,6 +4102,10 @@
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + 0.2);
+                
+                if (balloonPopCount >= BALLOON_GOAL) {
+                    setTimeout(() => endGame(), 300);
+                }
             } else {
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
