@@ -895,9 +895,7 @@
                 <h3 style="color: #1e40af; margin-bottom: 8px;">🔢 Pick the date</h3>
                 <div id="calendarDateGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 15px;"></div>
                 
-                <h3 style="color: #1e40af; margin-bottom: 8px;">🎉 Pick the year</h3>
-                <div id="calendarYearGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;"></div>
-                
+
                 <h3 style="color: #1e40af; margin-bottom: 4px;">🌤️ What's the weather like?</h3>
                 <div id="yesterdayWeatherRecap" style="font-size: 0.8em; color: #6b7280; font-style: italic; margin-bottom: 8px;"></div>
                 <div data-drop-slot="weather" id="weatherSlot" style="background: #e0f2fe; border-radius: 12px; padding: 10px; text-align: center; min-height: 50px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; border: 2px dashed transparent;">
@@ -1694,7 +1692,7 @@
                 { label: 'Day', value: board.day, color: 'rgba(219,234,254,0.9)', textColor: '#1e40af' },
                 { label: 'Month', value: board.month ? (MONTH_EMOJIS[MONTHS.indexOf(board.month)] + ' ' + board.month) : null, color: 'rgba(252,231,243,0.9)', textColor: '#9d174d' },
                 { label: 'Date', value: board.date ? (board.date + ordinalSuffix(board.date)) : null, color: 'rgba(254,243,199,0.9)', textColor: '#92400e' },
-                { label: 'Year', value: board.year, color: 'rgba(237,233,254,0.9)', textColor: '#5b21b6' }
+                { label: 'Year', value: new Date().getFullYear(), color: 'rgba(237,233,254,0.9)', textColor: '#5b21b6' }
             ];
             
             el.innerHTML = slots.map(slot => `
@@ -1792,7 +1790,6 @@
             renderCalendarDayGrid();
             renderCalendarMonthGrid();
             renderCalendarDateGrid();
-            renderCalendarYearGrid();
             renderWeatherGrid();
             renderWeatherSlot();
             renderMoodTracker();
@@ -1829,14 +1826,14 @@
             const board = getTodayBoard();
             const container = document.getElementById('fillableTopRow');
             const slots = [
-                { key: 'day', label: 'Day', value: board.day, color: '#dbeafe', textColor: '#1e40af' },
-                { key: 'month', label: 'Month', value: board.month ? (MONTH_EMOJIS[MONTHS.indexOf(board.month)] + ' ' + board.month) : null, color: '#fce7f3', textColor: '#9d174d' },
-                { key: 'date', label: 'Date', value: board.date ? (board.date + ordinalSuffix(board.date)) : null, color: '#fef3c7', textColor: '#92400e' },
-                { key: 'year', label: 'Year', value: board.year, color: '#ede9fe', textColor: '#5b21b6' }
+                { key: 'day', label: 'Day', value: board.day, color: '#dbeafe', textColor: '#1e40af', dropSlot: true },
+                { key: 'month', label: 'Month', value: board.month ? (MONTH_EMOJIS[MONTHS.indexOf(board.month)] + ' ' + board.month) : null, color: '#fce7f3', textColor: '#9d174d', dropSlot: true },
+                { key: 'date', label: 'Date', value: board.date ? (board.date + ordinalSuffix(board.date)) : null, color: '#fef3c7', textColor: '#92400e', dropSlot: true },
+                { key: 'year', label: 'Year', value: new Date().getFullYear(), color: '#ede9fe', textColor: '#5b21b6', dropSlot: false }
             ];
             
             container.innerHTML = slots.map(slot => `
-                <div data-drop-slot="${slot.key}" style="background:${slot.color};border-radius:12px;padding:10px 4px;text-align:center;min-height:64px;display:flex;flex-direction:column;justify-content:center;border:2px dashed transparent;">
+                <div ${slot.dropSlot ? `data-drop-slot="${slot.key}"` : ''} style="background:${slot.color};border-radius:12px;padding:10px 4px;text-align:center;min-height:64px;display:flex;flex-direction:column;justify-content:center;border:2px dashed transparent;">
                     <div style="font-size:0.65em;font-weight:bold;color:${slot.textColor};opacity:0.75;">${slot.label}</div>
                     <div style="font-size:${slot.value ? '0.95em' : '1.4em'};font-weight:bold;color:${slot.textColor};">${slot.value || '?'}</div>
                 </div>
@@ -1854,7 +1851,7 @@
             const day = board.day || '___';
             const month = board.month || '___';
             const date = board.date ? (board.date + ordinalSuffix(board.date)) : '___';
-            const year = board.year || '___';
+            const year = new Date().getFullYear();
             
             el.textContent = `Today is ${day}, ${month} ${date}, ${year}.`;
         }
@@ -1958,17 +1955,6 @@
                 } else {
                     flashTileMiss(tileEl);
                 }
-            } else if (slotType === 'year') {
-                if (Number(value) === today.getFullYear()) {
-                    getTodayBoard().year = Number(value);
-                    syncBoardEntryToSheets(todayKey(), getTodayBoard());
-                    renderCalendarYearGrid();
-                    renderFillableTopRow();
-                    renderTodayBoardSummary();
-                    celebrateCalendarTap('🌟 That\'s right!');
-                } else {
-                    flashTileMiss(tileEl);
-                }
             } else if (slotType === 'weather') {
                 const [emoji, label] = value.split('|');
                 const board = getTodayBoard();
@@ -2013,19 +1999,6 @@
                 html += `<button onpointerdown="startTileDrag(event, 'date', '${d}')" id="caldate-${d}" style="padding:6px 0;border-radius:8px;border:none;font-family:inherit;font-weight:bold;font-size:0.72em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : '#fef3c7'};color:${isFilled ? 'white' : '#92400e'};">${d}</button>`;
             }
             container.innerHTML = html;
-        }
-
-        function renderCalendarYearGrid() {
-            const today = new Date();
-            const actualYear = today.getFullYear();
-            const board = getTodayBoard();
-            const years = [actualYear - 1, actualYear, actualYear + 1];
-            
-            const container = document.getElementById('calendarYearGrid');
-            container.innerHTML = years.map(year => {
-                const isFilled = board.year === year;
-                return `<button onpointerdown="startTileDrag(event, 'year', '${year}')" id="calyear-${year}" style="padding:10px 4px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.85em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : '#ede9fe'};color:${isFilled ? 'white' : '#5b21b6'};">${year}</button>`;
-            }).join('');
         }
 
         // ===== Weather (drag-and-drop, single-select) =====
