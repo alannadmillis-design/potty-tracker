@@ -1634,11 +1634,6 @@
         }
 
         function toggleRedemptionFulfilled(id, fulfilled) {
-            if (kidModeEnabled) {
-                openParentGate('fulfill', null, { id, fulfilled });
-                return;
-            }
-            
             applyRedemptionFulfilled(id, fulfilled);
         }
 
@@ -3056,11 +3051,6 @@
 
         function redeemReward(reward) {
             if (data.totalGamePoints < reward.cost) return;
-            
-            if (kidModeEnabled) {
-                openParentGate('redeem', reward);
-                return;
-            }
             
             if (confirm(`Redeem ${reward.label} for ${reward.cost} points?`)) {
                 completeRedemption(reward);

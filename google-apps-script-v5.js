@@ -328,6 +328,15 @@ function setRedemptionFulfilled(sheet, id, fulfilled) {
       sheet.getRange(row, 6).setValue(!!fulfilled);
       sheet.getRange(row, 7).setNumberFormat('@');
       sheet.getRange(row, 7).setValue(fulfilled ? new Date().toISOString() : '');
+      
+      if (fulfilled) {
+        const rowValues = sheet.getRange(row, 1, 1, 4).getValues()[0];
+        sendFulfillmentEmail({
+          label: rowValues[1],
+          cost: rowValues[2],
+          emoji: rowValues[3]
+        });
+      }
       return;
     }
   }
@@ -540,6 +549,30 @@ function sendRedemptionEmail(redemption) {
                `Cost: ${redemption.cost} points\n` +
                `Time: ${new Date().toLocaleString()}\n\n` +
                `Keep up the great work! 🌟`;
+  
+  try {
+    MailApp.sendEmail(email, subject, body);
+  } catch (error) {
+    console.error('Failed to send email:', error);
+  }
+}
+
+function sendFulfillmentEmail(redemption) {
+  const properties = PropertiesService.getScriptProperties();
+  let email = properties.getProperty('NOTIFICATION_EMAIL');
+  
+  if (!email) {
+    email = Session.getActiveUser().getEmail();
+  }
+  
+  const subject = redemption.emoji + " Arthur's Adventures: Reward Marked as Given!";
+  const body = `Heads up!\n\n` +
+               `Your child just checked off a reward as "given" in the Reward Tracker:\n\n` +
+               `${redemption.emoji} ${redemption.label}\n` +
+               `Cost: ${redemption.cost} points\n` +
+               `Time: ${new Date().toLocaleString()}\n\n` +
+               `If this wasn't actually given yet or was checked off by mistake, you have about ` +
+               `6 minutes to open the app and un-check it before it disappears from the tracker.`;
   
   try {
     MailApp.sendEmail(email, subject, body);
