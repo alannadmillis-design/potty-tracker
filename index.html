@@ -882,8 +882,8 @@
             
             <!-- TODAY'S BOARD VIEW -->
             <div id="calendarBoardView">
-                <div id="fillableTopRow" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px;"></div>
-                <div id="yesterdayDateRecap" style="font-size: 0.8em; color: #6b7280; font-style: italic; margin-bottom: 15px;"></div>
+                <div id="yesterdayDateRecap" style="font-size: 1.15em; font-weight: bold; color: #374151; margin-bottom: 10px; text-align: center;"></div>
+                <div id="fillableTopRow" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 18px;"></div>
                 
                 <h3 style="color: #1e40af; margin-bottom: 8px;">🗓️ Pick the day</h3>
                 <div id="calendarDayGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
@@ -911,10 +911,13 @@
             
             <!-- FULL GRID CALENDAR VIEW -->
             <div id="calendarGridView" style="display: none;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <button onclick="shiftCalendarMonth(-1)" style="background: #e0e7ff; border: none; border-radius: 10px; padding: 10px 14px; font-size: 1.1em; cursor: pointer;">◀</button>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <button id="calPrevBtn" onclick="shiftCalendarMonth(-1)" style="background: #e0e7ff; border: none; border-radius: 10px; padding: 10px 14px; font-size: 1.1em; cursor: pointer;">◀</button>
                     <div id="calendarGridMonthLabel" style="font-weight: bold; color: #1e40af; font-size: 1.1em;"></div>
                     <button onclick="shiftCalendarMonth(1)" style="background: #e0e7ff; border: none; border-radius: 10px; padding: 10px 14px; font-size: 1.1em; cursor: pointer;">▶</button>
+                </div>
+                <div style="text-align: center; margin-bottom: 12px;">
+                    <button onclick="goToCurrentMonth()" style="background: #ede9fe; color: #5b21b6; border: none; border-radius: 10px; padding: 6px 16px; font-size: 0.85em; font-weight: bold; cursor: pointer; font-family: inherit;">📍 Today</button>
                 </div>
                 
                 <div id="calendarWeekdayHeader" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 4px; text-align: center; font-size: 0.7em; font-weight: bold; color: #6b7280;"></div>
@@ -1802,12 +1805,12 @@
             yesterday.setDate(yesterday.getDate() - 1);
             const yBoard = todayBoard[dateKeyFor(yesterday)] || {};
             
+            const yWeekday = WEEKDAYS[yesterday.getDay()];
+            const yMonth = MONTHS[yesterday.getMonth()];
+            const yDate = yesterday.getDate();
+            
             const dateEl = document.getElementById('yesterdayDateRecap');
-            if (yBoard.day && yBoard.date && yBoard.month && yBoard.year) {
-                dateEl.textContent = `Yesterday was ${yBoard.day}, ${yBoard.month} ${yBoard.date}, ${yBoard.year}.`;
-            } else {
-                dateEl.textContent = "We didn't fill this in yesterday!";
-            }
+            dateEl.textContent = `Yesterday was ${yWeekday}, ${yMonth} ${yDate}.`;
             
             const weatherEl = document.getElementById('yesterdayWeatherRecap');
             weatherEl.textContent = yBoard.weather ? `Yesterday it was ${yBoard.weatherEmoji} ${yBoard.weather}.` : "We didn't record yesterday's weather!";
@@ -2071,8 +2074,20 @@
         }
 
         // ===== Full grid calendar =====
+        const CALENDAR_MIN_YEAR = 2020;
+        const CALENDAR_MIN_MONTH = 8; // September (0-indexed)
+
         function shiftCalendarMonth(delta) {
-            calendarViewDate.setMonth(calendarViewDate.getMonth() + delta);
+            const next = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + delta, 1);
+            if (next.getFullYear() < CALENDAR_MIN_YEAR || (next.getFullYear() === CALENDAR_MIN_YEAR && next.getMonth() < CALENDAR_MIN_MONTH)) {
+                return;
+            }
+            calendarViewDate = next;
+            renderCalendarGrid();
+        }
+
+        function goToCurrentMonth() {
+            calendarViewDate = new Date();
             renderCalendarGrid();
         }
 
@@ -2085,6 +2100,14 @@
             const month = calendarViewDate.getMonth();
             
             document.getElementById('calendarGridMonthLabel').textContent = MONTH_EMOJIS[month] + ' ' + MONTHS[month] + ' ' + year;
+            
+            const atFloor = year === CALENDAR_MIN_YEAR && month === CALENDAR_MIN_MONTH;
+            const prevBtn = document.getElementById('calPrevBtn');
+            if (prevBtn) {
+                prevBtn.disabled = atFloor;
+                prevBtn.style.opacity = atFloor ? '0.4' : '1';
+                prevBtn.style.cursor = atFloor ? 'not-allowed' : 'pointer';
+            }
             
             const weekdayHeader = document.getElementById('calendarWeekdayHeader');
             weekdayHeader.innerHTML = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => `<div>${d}</div>`).join('');
