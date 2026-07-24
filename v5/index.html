@@ -1579,14 +1579,23 @@
             renderRewardTracker();
         }
 
+        const FULFILLED_GRACE_MS = 6 * 60 * 1000;
+
         function renderRewardTracker() {
             const container = document.getElementById('rewardTrackerList');
             const hint = document.getElementById('rewardTrackerHint');
             if (!container) return;
             
+            const now = Date.now();
             const pending = redemptionLog.filter(r => !r.fulfilled);
-            const fulfilled = redemptionLog.filter(r => r.fulfilled).slice(0, 5);
-            const sorted = [...pending, ...fulfilled];
+            const recentlyFulfilled = redemptionLog.filter(r => {
+                if (!r.fulfilled) return false;
+                if (!r.fulfilledAt) return false;
+                const fulfilledTime = new Date(r.fulfilledAt).getTime();
+                if (isNaN(fulfilledTime)) return false;
+                return (now - fulfilledTime) < FULFILLED_GRACE_MS;
+            });
+            const sorted = [...pending, ...recentlyFulfilled];
             
             if (sorted.length === 0) {
                 container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:10px;">No rewards redeemed yet!</div>';
@@ -1622,7 +1631,10 @@
 
         function applyRedemptionFulfilled(id, fulfilled) {
             const entry = redemptionLog.find(r => r.id === id);
-            if (entry) entry.fulfilled = fulfilled;
+            if (entry) {
+                entry.fulfilled = fulfilled;
+                entry.fulfilledAt = fulfilled ? new Date().toISOString() : null;
+            }
             renderRewardTracker();
             
             if (sheetUrl) {
@@ -4334,6 +4346,11 @@
                 updateTaskCooldownStates();
             }
         }, 2000);
+        
+        // Let recently-fulfilled rewards quietly disappear once their grace period passes
+        setInterval(() => {
+            renderRewardTracker();
+        }, 20000);
     </script>
 </body>
 </html>

@@ -267,9 +267,10 @@ function getOrCreateRedemptionsSheet() {
     sheet.getRange('D1').setValue('Emoji');
     sheet.getRange('E1').setValue('ID');
     sheet.getRange('F1').setValue('Fulfilled');
+    sheet.getRange('G1').setValue('FulfilledAt');
     
     // Format headers
-    sheet.getRange('A1:F1').setFontWeight('bold');
+    sheet.getRange('A1:G1').setFontWeight('bold');
     sheet.setFrozenRows(1);
     
     // Set column widths
@@ -279,11 +280,17 @@ function getOrCreateRedemptionsSheet() {
     sheet.setColumnWidth(4, 80);
     sheet.setColumnWidth(5, 180);
     sheet.setColumnWidth(6, 80);
+    sheet.setColumnWidth(7, 150);
   } else if (!sheet.getRange('E1').getValue()) {
     // Backfill headers on a sheet created before ID/Fulfilled tracking existed
     sheet.getRange('E1').setValue('ID');
     sheet.getRange('F1').setValue('Fulfilled');
-    sheet.getRange('E1:F1').setFontWeight('bold');
+    sheet.getRange('G1').setValue('FulfilledAt');
+    sheet.getRange('E1:G1').setFontWeight('bold');
+  } else if (!sheet.getRange('G1').getValue()) {
+    // Backfill FulfilledAt column on a sheet created before this existed
+    sheet.getRange('G1').setValue('FulfilledAt');
+    sheet.getRange('G1').setFontWeight('bold');
   }
   
   return sheet;
@@ -294,7 +301,7 @@ function getRedemptions() {
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) return [];
   
-  const rows = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+  const rows = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
   
   return rows
     .filter(row => row[1]) // must have a reward label
@@ -304,7 +311,8 @@ function getRedemptions() {
       cost: row[2],
       emoji: row[3],
       id: row[4] || '',
-      fulfilled: row[5] === true || row[5] === 'TRUE'
+      fulfilled: row[5] === true || row[5] === 'TRUE',
+      fulfilledAt: cellToText(row[6]) || null
     }));
 }
 
@@ -316,7 +324,10 @@ function setRedemptionFulfilled(sheet, id, fulfilled) {
   const ids = sheet.getRange(2, 5, lastRow - 1, 1).getValues();
   for (let i = 0; i < ids.length; i++) {
     if (ids[i][0] === id) {
-      sheet.getRange(i + 2, 6).setValue(!!fulfilled);
+      const row = i + 2;
+      sheet.getRange(row, 6).setValue(!!fulfilled);
+      sheet.getRange(row, 7).setNumberFormat('@');
+      sheet.getRange(row, 7).setValue(fulfilled ? new Date().toISOString() : '');
       return;
     }
   }
