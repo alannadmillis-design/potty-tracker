@@ -882,7 +882,8 @@
             
             <!-- TODAY'S BOARD VIEW -->
             <div id="calendarBoardView">
-                <div id="yesterdayDateRecap" style="font-size: 1.15em; font-weight: bold; color: #374151; margin-bottom: 10px; text-align: center;"></div>
+                <div id="yesterdayDateRecap" style="font-size: 1.15em; font-weight: bold; color: #374151; margin-bottom: 6px; text-align: center;"></div>
+                <div id="todaySentence" style="font-size: 1.15em; font-weight: bold; color: #7c3aed; margin-bottom: 10px; text-align: center;"></div>
                 <div id="fillableTopRow" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 18px;"></div>
                 
                 <h3 style="color: #1e40af; margin-bottom: 8px;">🗓️ Pick the day</h3>
@@ -1810,7 +1811,7 @@
             const yDate = yesterday.getDate();
             
             const dateEl = document.getElementById('yesterdayDateRecap');
-            dateEl.textContent = `Yesterday was ${yWeekday}, ${yMonth} ${yDate}.`;
+            dateEl.textContent = `Yesterday was ${yWeekday}, ${yMonth} ${yDate}, ${yesterday.getFullYear()}.`;
             
             const weatherEl = document.getElementById('yesterdayWeatherRecap');
             weatherEl.textContent = yBoard.weather ? `Yesterday it was ${yBoard.weatherEmoji} ${yBoard.weather}.` : "We didn't record yesterday's weather!";
@@ -1842,6 +1843,20 @@
             `).join('');
             
             renderTodayDate();
+            renderTodaySentence();
+        }
+
+        function renderTodaySentence() {
+            const el = document.getElementById('todaySentence');
+            if (!el) return;
+            const board = getTodayBoard();
+            
+            const day = board.day || '___';
+            const month = board.month || '___';
+            const date = board.date ? (board.date + ordinalSuffix(board.date)) : '___';
+            const year = board.year || '___';
+            
+            el.textContent = `Today is ${day}, ${month} ${date}, ${year}.`;
         }
 
         // ===== Drag-and-drop engine (Pointer Events, works for mouse and touch) =====
