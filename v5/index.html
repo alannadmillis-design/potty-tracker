@@ -386,6 +386,11 @@
             animation: celebrate 1s;
         }
 
+        @keyframes loadStarBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-18px) scale(1.1); }
+        }
+
         @keyframes celebrate {
             0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
             50% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
@@ -719,6 +724,12 @@
     </style>
 </head>
 <body>
+    <div id="appLoadScreen" style="position: fixed; inset: 0; z-index: 99999; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease;">
+        <div style="font-size: 4em; animation: loadStarBounce 1s ease-in-out infinite;">⭐</div>
+        <div style="color: white; font-size: 1.4em; font-weight: bold; margin-top: 10px; text-align: center; padding: 0 20px;">Arthur's Adventures! ⭐</div>
+        <div style="color: rgba(255,255,255,0.85); font-size: 1em; margin-top: 8px;">Loading...</div>
+    </div>
+
     <div class="container">
         <div class="setup-notice" id="setupNotice">
             <h3>⚙️ Setup Required</h3>
@@ -2240,7 +2251,7 @@
 
         function loadData() {
             if (sheetUrl) {
-                loadDataFromSheets();
+                return loadDataFromSheets();
             } else {
                 // Fallback to localStorage if no sheet URL
                 const saved = localStorage.getItem('pottyTrackerData');
@@ -2252,6 +2263,7 @@
                 }
                 checkForNewDay();
                 updateUI();
+                return Promise.resolve();
             }
         }
 
@@ -4332,10 +4344,24 @@
         renderPottyButtons();
         renderGameButtons();
         checkSheetUrl();
-        loadData();
-        loadTaskConfig();
-        loadCalendarData();
-        loadRedemptionLog();
+        
+        function hideAppLoadScreen() {
+            const screen = document.getElementById('appLoadScreen');
+            if (!screen || screen.dataset.hidden) return;
+            screen.dataset.hidden = 'true';
+            screen.style.opacity = '0';
+            setTimeout(() => { screen.style.display = 'none'; }, 400);
+        }
+        
+        Promise.allSettled([
+            loadData(),
+            loadTaskConfig(),
+            loadCalendarData(),
+            loadRedemptionLog()
+        ]).then(hideAppLoadScreen);
+        
+        // Safety net so a slow or failed connection never traps the app behind the load screen
+        setTimeout(hideAppLoadScreen, 6000);
         
         // Auto-refresh data every 1 hour
         setInterval(() => {
