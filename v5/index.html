@@ -515,24 +515,6 @@
             font-weight: bold;
         }
 
-        .reset-stars-button {
-            background: #dc2626;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-top: 15px;
-            font-family: inherit;
-            font-weight: bold;
-            width: 100%;
-            font-size: 1em;
-        }
-
-        .reset-stars-button:hover {
-            background: #b91c1c;
-        }
-
         .loading-indicator {
             text-align: center;
             padding: 10px;
@@ -797,7 +779,6 @@
             <h2>📅 Today's Adventures</h2>
             <div class="history-list" id="historyList"></div>
             <button class="reset-button" onclick="resetData()">Start New Day</button>
-            <button class="reset-stars-button" onclick="resetStars()">⭐ Reset All Stars</button>
             <div style="margin-top: 10px;">
                 <div style="text-align: center; color: rgba(255,255,255,0.7); font-size: 0.8em; margin-bottom: 6px;">Take away stars (for corrections)</div>
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
@@ -3047,14 +3028,6 @@
                     totalGamePoints: data.totalGamePoints,
                     date: new Date().toDateString() 
                 };
-                saveData();
-                updateUI();
-            }
-        }
-
-        function resetStars() {
-            if (confirm('Are you sure you want to reset ALL stars and game points? This will clear everything!')) {
-                data = { events: [], totalStars: 0, totalGamePoints: 0, date: new Date().toDateString() };
                 saveData();
                 updateUI();
             }
