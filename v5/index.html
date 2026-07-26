@@ -798,6 +798,15 @@
             <div class="history-list" id="historyList"></div>
             <button class="reset-button" onclick="resetData()">Start New Day</button>
             <button class="reset-stars-button" onclick="resetStars()">⭐ Reset All Stars</button>
+            <div style="margin-top: 10px;">
+                <div style="text-align: center; color: rgba(255,255,255,0.7); font-size: 0.8em; margin-bottom: 6px;">Take away stars (for corrections)</div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                    <button onclick="deductStars(1)" style="background: #dc2626; color: white; border: none; padding: 10px 4px; border-radius: 10px; font-family: inherit; font-weight: bold; cursor: pointer;">-1 ⭐</button>
+                    <button onclick="deductStars(2)" style="background: #dc2626; color: white; border: none; padding: 10px 4px; border-radius: 10px; font-family: inherit; font-weight: bold; cursor: pointer;">-2 ⭐</button>
+                    <button onclick="deductStars(3)" style="background: #dc2626; color: white; border: none; padding: 10px 4px; border-radius: 10px; font-family: inherit; font-weight: bold; cursor: pointer;">-3 ⭐</button>
+                    <button onclick="deductStars(4)" style="background: #dc2626; color: white; border: none; padding: 10px 4px; border-radius: 10px; font-family: inherit; font-weight: bold; cursor: pointer;">-4 ⭐</button>
+                </div>
+            </div>
         </div>
         
         <div style="text-align: center; margin-top: 20px;">
@@ -2476,7 +2485,7 @@
             gateSuccessAction = purpose || 'settings';
             pendingRedemption = redemptionReward || null;
             pendingFulfillment = fulfillmentPayload || null;
-            document.getElementById('parentGateQuestion').textContent = gateSuccessAction === 'redeem' || gateSuccessAction === 'fulfill'
+            document.getElementById('parentGateQuestion').textContent = gateSuccessAction === 'redeem' || gateSuccessAction === 'fulfill' || gateSuccessAction === 'deductStars'
                 ? 'Ask a parent to enter the secret word'
                 : 'Enter the secret word';
             document.getElementById('parentGateAnswer').value = '';
@@ -2501,6 +2510,8 @@
                     completeRedemption(reward);
                 } else if (action === 'fulfill') {
                     if (fulfillment) applyRedemptionFulfilled(fulfillment.id, fulfillment.fulfilled);
+                } else if (action === 'deductStars') {
+                    if (fulfillment) applyStarDeduction(fulfillment.amount);
                 } else {
                     openParentArea();
                 }
@@ -3047,6 +3058,21 @@
                 saveData();
                 updateUI();
             }
+        }
+
+        function deductStars(amount) {
+            if (kidModeEnabled) {
+                openParentGate('deductStars', null, { amount });
+                return;
+            }
+            applyStarDeduction(amount);
+        }
+
+        function applyStarDeduction(amount) {
+            data.totalStars = Math.max(0, data.totalStars - amount);
+            localStorage.setItem('pottyTrackerData', JSON.stringify(data));
+            if (sheetUrl) updateGameStatsToSheets();
+            updateUI();
         }
 
         function redeemReward(reward) {
