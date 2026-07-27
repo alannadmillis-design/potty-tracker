@@ -366,12 +366,16 @@ function getOrCreateCalendarBoardSheet() {
   
   if (!sheet) {
     sheet = ss.insertSheet('CalendarBoard');
-    sheet.getRange('A1:J1').setValues([[
-      'Date', 'Day', 'DateNum', 'Month', 'Year', 'Weather', 'WeatherEmoji', 'Outfit', 'Mood', 'MoodEmoji'
+    sheet.getRange('A1:K1').setValues([[
+      'Date', 'Day', 'DateNum', 'Month', 'Year', 'Weather', 'WeatherEmoji', 'Outfit', 'Mood', 'MoodEmoji', 'Temperature'
     ]]);
-    sheet.getRange('A1:J1').setFontWeight('bold');
+    sheet.getRange('A1:K1').setFontWeight('bold');
     sheet.setFrozenRows(1);
     sheet.setColumnWidth(1, 100);
+  } else if (!sheet.getRange('K1').getValue()) {
+    // Backfill header on a sheet created before temperature tracking existed
+    sheet.getRange('K1').setValue('Temperature');
+    sheet.getRange('K1').setFontWeight('bold');
   }
   
   return sheet;
@@ -397,7 +401,7 @@ function getCalendarBoard() {
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) return {};
   
-  const rows = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+  const rows = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
   const board = {};
   
   rows.forEach(row => {
@@ -413,6 +417,7 @@ function getCalendarBoard() {
     if (row[7]) entry.outfit = String(row[7]).split(',').filter(Boolean);
     if (row[8]) entry.mood = row[8];
     if (row[9]) entry.moodEmoji = row[9];
+    if (row[10] !== '' && row[10] !== null && row[10] !== undefined) entry.temperature = Number(row[10]);
     board[dateKey] = entry;
   });
   
@@ -425,7 +430,7 @@ function saveCalendarBoardEntry(dateKey, entry) {
   let rowIndex = findRowByDate(sheet, dateKey, lastRow);
   if (rowIndex === -1) rowIndex = lastRow + 1;
   
-  sheet.getRange(rowIndex, 1, 1, 10).setValues([[
+  sheet.getRange(rowIndex, 1, 1, 11).setValues([[
     dateKey,
     entry.day || '',
     entry.date || '',
@@ -435,7 +440,8 @@ function saveCalendarBoardEntry(dateKey, entry) {
     entry.weatherEmoji || '',
     (entry.outfit || []).join(','),
     entry.mood || '',
-    entry.moodEmoji || ''
+    entry.moodEmoji || '',
+    (typeof entry.temperature === 'number') ? entry.temperature : ''
   ]]);
 }
 

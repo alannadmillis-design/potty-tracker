@@ -902,7 +902,31 @@
                 <div data-drop-slot="weather" id="weatherSlot" style="background: #e0f2fe; border-radius: 12px; padding: 10px; text-align: center; min-height: 50px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; border: 2px dashed transparent;">
                     <span style="font-size: 1.5em; color: #0c4a6e; font-weight: bold;" id="weatherSlotText">Drag your weather here!</span>
                 </div>
-                <div id="weatherGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;"></div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; align-items: start; margin-bottom: 15px;">
+                    <div id="weatherGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;"></div>
+                    <div style="text-align: center;">
+                        <div id="thermoReadout" style="font-size: 1.3em; font-weight: bold; color: #dc2626; margin-bottom: 6px;">--°F</div>
+                        <div style="position: relative; height: 220px; display: flex; justify-content: center;">
+                            <div style="position: relative; width: 34px; height: 100%;">
+                                <div style="position: absolute; left: 50%; transform: translateX(-50%); top: 0; bottom: 16px; width: 14px; border-radius: 8px; background: #e5e7eb; border: 2px solid #9ca3af; overflow: hidden; display: flex; align-items: flex-end;">
+                                    <div id="thermoFill" style="width: 100%; height: 0%; background: linear-gradient(180deg, #f87171 0%, #dc2626 100%); transition: height 0.1s;"></div>
+                                </div>
+                                <div style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 0; width: 28px; height: 28px; border-radius: 50%; background: #dc2626; border: 2px solid #9ca3af;"></div>
+                                <input type="range" id="thermoSlider" min="0" max="110" step="1" value="70"
+                                       style="position: absolute; top: 0; left: 50%; transform: translateX(-50%) rotate(180deg); writing-mode: vertical-lr; direction: rtl; width: 40px; height: calc(100% - 16px); opacity: 0; cursor: pointer; touch-action: none;">
+                            </div>
+                            <div style="display: flex; flex-direction: column; justify-content: space-between; height: calc(100% - 16px); margin-left: 4px; font-size: 0.62em; font-weight: bold; color: #6b7280;">
+                                <span>110°</span>
+                                <span>90°</span>
+                                <span>70°</span>
+                                <span>50°</span>
+                                <span>30°</span>
+                                <span>10°</span>
+                                <span>0°</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <h3 style="color: #1e40af; margin-bottom: 4px;">💗 How do I feel today?</h3>
                 <div id="yesterdayMoodRecap" style="font-size: 0.8em; color: #6b7280; font-style: italic; margin-bottom: 8px;"></div>
@@ -1781,6 +1805,38 @@
             }
         }
 
+        function renderThermometer() {
+            const board = getTodayBoard();
+            const slider = document.getElementById('thermoSlider');
+            const value = (typeof board.temperature === 'number') ? board.temperature : 70;
+            slider.value = value;
+            updateThermometerVisual(value);
+        }
+
+        function updateThermometerVisual(value) {
+            const min = 0, max = 110;
+            const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
+            document.getElementById('thermoFill').style.height = pct + '%';
+            document.getElementById('thermoReadout').textContent = value + '°F';
+        }
+
+        function setupThermometer() {
+            const slider = document.getElementById('thermoSlider');
+            if (!slider) return;
+            
+            slider.addEventListener('input', (e) => {
+                updateThermometerVisual(Number(e.target.value));
+            });
+            
+            slider.addEventListener('change', (e) => {
+                const value = Number(e.target.value);
+                const board = getTodayBoard();
+                board.temperature = value;
+                syncBoardEntryToSheets(todayKey(), board);
+                renderTodayBoardSummary();
+            });
+        }
+
         function openCalendar() {
             renderFillableTopRow();
             renderCalendarDayGrid();
@@ -1788,6 +1844,7 @@
             renderCalendarDateGrid();
             renderWeatherGrid();
             renderWeatherSlot();
+            renderThermometer();
             renderMoodTracker();
             renderYesterdayRecaps();
             showCalendarTab('board');
@@ -1807,7 +1864,9 @@
             dateEl.textContent = `Yesterday was ${yWeekday}, ${yMonth} ${yDate}, ${yesterday.getFullYear()}.`;
             
             const weatherEl = document.getElementById('yesterdayWeatherRecap');
-            weatherEl.textContent = yBoard.weather ? `Yesterday it was ${yBoard.weatherEmoji} ${yBoard.weather}.` : "We didn't record yesterday's weather!";
+            weatherEl.textContent = yBoard.weather
+                ? `Yesterday it was ${yBoard.weatherEmoji} ${yBoard.weather}${typeof yBoard.temperature === 'number' ? ', ' + yBoard.temperature + '°F' : ''}.`
+                : "We didn't record yesterday's weather!";
             
             const moodEl = document.getElementById('yesterdayMoodRecap');
             moodEl.textContent = yBoard.mood ? `Yesterday I felt ${yBoard.moodEmoji} ${yBoard.mood}.` : "We didn't record yesterday's mood!";
@@ -2045,7 +2104,7 @@
             const board = todayBoard[todayKey()] || {};
             
             const parts = [];
-            if (board.weatherEmoji) parts.push(board.weatherEmoji + ' ' + board.weather);
+            if (board.weatherEmoji) parts.push(board.weatherEmoji + ' ' + board.weather + (typeof board.temperature === 'number' ? ' (' + board.temperature + '°F)' : ''));
             if (board.moodEmoji) parts.push(board.moodEmoji + ' ' + board.mood);
             
             if (parts.length === 0) {
@@ -4333,6 +4392,7 @@
         renderPottyButtons();
         renderGameButtons();
         checkSheetUrl();
+        setupThermometer();
         
         function hideAppLoadScreen() {
             const screen = document.getElementById('appLoadScreen');
