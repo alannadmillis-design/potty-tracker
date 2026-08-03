@@ -4426,6 +4426,16 @@
             }
         }, 300000);
         
+        // Refresh tasks/games/rewards every 5 minutes so Parent Settings changes made on
+        // another device show up here too, without needing a manual refresh. Skipped while
+        // the Parent Settings modal is open so it can't clobber an in-progress edit.
+        setInterval(() => {
+            const parentAreaOpen = document.getElementById('parentAreaModal').classList.contains('active');
+            if (sheetUrl && !gameActive && !parentAreaOpen) {
+                loadTaskConfig();
+            }
+        }, 300000);
+        
         // Keep task button cooldown dimming up to date
         setInterval(() => {
             if (kidModeEnabled) {
