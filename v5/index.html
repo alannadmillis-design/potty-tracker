@@ -887,16 +887,6 @@
                 <div id="todaySentence" style="font-size: 1.15em; font-weight: bold; color: #7c3aed; margin-bottom: 10px; text-align: center;"></div>
                 <div id="fillableTopRow" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 18px;"></div>
                 
-                <h3 style="color: #1e40af; margin-bottom: 8px;">🗓️ Pick the day</h3>
-                <div id="calendarDayGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
-                
-                <h3 style="color: #1e40af; margin-bottom: 8px;">🌙 Pick the month</h3>
-                <div id="calendarMonthGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;"></div>
-                
-                <h3 style="color: #1e40af; margin-bottom: 8px;">🔢 Pick the date</h3>
-                <div id="calendarDateGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 15px;"></div>
-                
-
                 <h3 style="color: #1e40af; margin-bottom: 4px;">🌤️ What's the weather like?</h3>
                 <div id="yesterdayWeatherRecap" style="font-size: 0.8em; color: #6b7280; font-style: italic; margin-bottom: 8px;"></div>
                 <div data-drop-slot="weather" id="weatherSlot" style="background: #e0f2fe; border-radius: 12px; padding: 10px; text-align: center; min-height: 50px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; border: 2px dashed transparent;">
@@ -960,6 +950,15 @@
             
             <button class="close-game-button" style="width: 100%; margin-top: 10px;" onclick="closeCalendar()">Close</button>
         </div>
+    </div>
+
+    <!-- Day/Month/Date picker sheet - slides up from the bottom, leaving the Yesterday/Today text and boxes above it visible -->
+    <div id="pickerSheet" style="position: fixed; left: 0; right: 0; bottom: 0; background: white; border-radius: 20px 20px 0 0; box-shadow: 0 -6px 24px rgba(0,0,0,0.35); z-index: 10000; max-height: 55vh; overflow-y: auto; padding: 16px; padding-bottom: 24px; transform: translateY(110%); transition: transform 0.25s ease; display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 id="pickerSheetTitle" style="color: #1e40af; margin: 0;">Pick!</h3>
+            <button onclick="closeFieldPicker()" style="background: #e5e7eb; border: none; border-radius: 50%; width: 34px; height: 34px; font-size: 1em; cursor: pointer; font-weight: bold; color: #374151;">✕</button>
+        </div>
+        <div id="pickerSheetGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;"></div>
     </div>
 
     <!-- Game Earned Modal -->
@@ -1723,15 +1722,16 @@
             `).join('');
         }
 
-        const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const JS_WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']; // matches Date.getDay() index - never reorder this one
+        const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']; // display order, Monday-first
         const WEEKDAY_COLORS = [
-            { bg: '#93c5fd', text: '#1e3a8a' }, // Sunday - light blue
             { bg: '#fca5a5', text: '#7f1d1d' }, // Monday - red
             { bg: '#fdba74', text: '#7c2d12' }, // Tuesday - orange
             { bg: '#fde047', text: '#713f12' }, // Wednesday - yellow
             { bg: '#86efac', text: '#14532d' }, // Thursday - green
             { bg: '#d8b4fe', text: '#581c87' }, // Friday - purple
-            { bg: '#1e3a8a', text: '#ffffff' }  // Saturday - dark blue
+            { bg: '#1e3a8a', text: '#ffffff' }, // Saturday - dark blue
+            { bg: '#93c5fd', text: '#1e3a8a' }  // Sunday - light blue
         ];
         const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         const MONTH_EMOJIS = ['❄️', '💘', '🌱', '🌧️', '🌷', '☀️', '🎆', '🏖️', '🍎', '🎃', '🍂', '🎄'];
@@ -1788,6 +1788,7 @@
             document.getElementById('calTabBoardBtn').style.color = tab === 'board' ? 'white' : '#374151';
             document.getElementById('calTabGridBtn').style.background = tab === 'grid' ? '#7c3aed' : '#e5e7eb';
             document.getElementById('calTabGridBtn').style.color = tab === 'grid' ? 'white' : '#374151';
+            closeFieldPicker();
             
             if (tab === 'grid') renderCalendarGrid();
         }
@@ -1839,9 +1840,6 @@
 
         function openCalendar() {
             renderFillableTopRow();
-            renderCalendarDayGrid();
-            renderCalendarMonthGrid();
-            renderCalendarDateGrid();
             renderWeatherGrid();
             renderWeatherSlot();
             renderThermometer();
@@ -1856,7 +1854,7 @@
             yesterday.setDate(yesterday.getDate() - 1);
             const yBoard = todayBoard[dateKeyFor(yesterday)] || {};
             
-            const yWeekday = WEEKDAYS[yesterday.getDay()];
+            const yWeekday = JS_WEEKDAYS[yesterday.getDay()];
             const yMonth = MONTHS[yesterday.getMonth()];
             const yDate = yesterday.getDate();
             
@@ -1874,6 +1872,7 @@
 
         function closeCalendar() {
             document.getElementById('calendarModal').classList.remove('active');
+            closeFieldPicker();
         }
 
         // ===== Fillable top row: Day / Date / Month / Year =====
@@ -1881,17 +1880,17 @@
             const board = getTodayBoard();
             const container = document.getElementById('fillableTopRow');
             const slots = [
-                { key: 'day', label: 'Day', value: board.day, color: '#dbeafe', textColor: '#1e40af', dropSlot: true },
-                { key: 'month', label: 'Month', value: board.month ? (MONTH_EMOJIS[MONTHS.indexOf(board.month)] + ' ' + board.month) : null, color: '#fce7f3', textColor: '#9d174d', dropSlot: true },
-                { key: 'date', label: 'Date', value: board.date ? (board.date + ordinalSuffix(board.date)) : null, color: '#fef3c7', textColor: '#92400e', dropSlot: true },
-                { key: 'year', label: 'Year', value: new Date().getFullYear(), color: '#ede9fe', textColor: '#5b21b6', dropSlot: false }
+                { key: 'day', label: 'Day', value: board.day, color: '#dbeafe', textColor: '#1e40af', tappable: true },
+                { key: 'month', label: 'Month', value: board.month ? (MONTH_EMOJIS[MONTHS.indexOf(board.month)] + ' ' + board.month) : null, color: '#fce7f3', textColor: '#9d174d', tappable: true },
+                { key: 'date', label: 'Date', value: board.date ? (board.date + ordinalSuffix(board.date)) : null, color: '#fef3c7', textColor: '#92400e', tappable: true },
+                { key: 'year', label: 'Year', value: new Date().getFullYear(), color: '#ede9fe', textColor: '#5b21b6', tappable: false }
             ];
             
             container.innerHTML = slots.map(slot => `
-                <div ${slot.dropSlot ? `data-drop-slot="${slot.key}"` : ''} style="background:${slot.color};border-radius:12px;padding:10px 4px;text-align:center;min-height:64px;display:flex;flex-direction:column;justify-content:center;border:2px dashed transparent;">
-                    <div style="font-size:0.65em;font-weight:bold;color:${slot.textColor};opacity:0.75;">${slot.label}</div>
+                <${slot.tappable ? 'button' : 'div'} ${slot.tappable ? `onclick="openFieldPicker('${slot.key}')"` : ''} style="background:${slot.color};border:none;border-radius:12px;padding:10px 4px;text-align:center;min-height:64px;display:flex;flex-direction:column;justify-content:center;font-family:inherit;${slot.tappable ? 'cursor:pointer;' : ''}">
+                    <div style="font-size:0.65em;font-weight:bold;color:${slot.textColor};opacity:0.75;">${slot.label}${slot.tappable && !slot.value ? ' 👆' : ''}</div>
                     <div style="font-size:${slot.value ? '0.95em' : '1.4em'};font-weight:bold;color:${slot.textColor};">${slot.value || '?'}</div>
-                </div>
+                </${slot.tappable ? 'button' : 'div'}>
             `).join('');
             
             renderTodayDate();
@@ -1967,50 +1966,8 @@
             document.addEventListener('pointerup', onUp, { once: true });
         }
 
-        function flashTileMiss(tileEl) {
-            if (!tileEl) return;
-            const original = tileEl.style.background;
-            tileEl.style.background = '#fecaca';
-            setTimeout(() => { tileEl.style.background = original; }, 400);
-        }
-
         function handleTileDrop(slotType, value, tileEl) {
-            const today = new Date();
-            
-            if (slotType === 'day') {
-                if (value === WEEKDAYS[today.getDay()]) {
-                    getTodayBoard().day = value;
-                    syncBoardEntryToSheets(todayKey(), getTodayBoard());
-                    renderCalendarDayGrid();
-                    renderFillableTopRow();
-                    renderTodayBoardSummary();
-                    celebrateCalendarTap('🌟 That\'s right!');
-                } else {
-                    flashTileMiss(tileEl);
-                }
-            } else if (slotType === 'month') {
-                if (value === MONTHS[today.getMonth()]) {
-                    getTodayBoard().month = value;
-                    syncBoardEntryToSheets(todayKey(), getTodayBoard());
-                    renderCalendarMonthGrid();
-                    renderFillableTopRow();
-                    renderTodayBoardSummary();
-                    celebrateCalendarTap('🌟 That\'s right!');
-                } else {
-                    flashTileMiss(tileEl);
-                }
-            } else if (slotType === 'date') {
-                if (Number(value) === today.getDate()) {
-                    getTodayBoard().date = Number(value);
-                    syncBoardEntryToSheets(todayKey(), getTodayBoard());
-                    renderCalendarDateGrid();
-                    renderFillableTopRow();
-                    renderTodayBoardSummary();
-                    celebrateCalendarTap('🌟 That\'s right!');
-                } else {
-                    flashTileMiss(tileEl);
-                }
-            } else if (slotType === 'weather') {
+            if (slotType === 'weather') {
                 const [emoji, label] = value.split('|');
                 const board = getTodayBoard();
                 board.weather = label;
@@ -2023,37 +1980,89 @@
             }
         }
 
-        function renderCalendarDayGrid() {
-            const board = getTodayBoard();
-            const container = document.getElementById('calendarDayGrid');
-            container.innerHTML = WEEKDAYS.map((day, i) => {
-                const isFilled = board.day === day;
-                const c = WEEKDAY_COLORS[i];
-                return `<button onpointerdown="startTileDrag(event, 'day', '${day}')" id="calday-${day}" style="padding:10px 4px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.8em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : c.bg};color:${isFilled ? 'white' : c.text};">${day.slice(0, 3)}${isFilled ? ' ✓' : ''}</button>`;
-            }).join('');
-        }
-
-        function renderCalendarMonthGrid() {
-            const board = getTodayBoard();
-            const container = document.getElementById('calendarMonthGrid');
-            container.innerHTML = MONTHS.map((month, i) => {
-                const isFilled = board.month === month;
-                return `<button onpointerdown="startTileDrag(event, 'month', '${month}')" id="calmonth-${month}" style="padding:10px 2px;border-radius:10px;border:none;font-family:inherit;font-weight:bold;font-size:0.72em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : '#fce7f3'};color:${isFilled ? 'white' : '#9d174d'};">${MONTH_EMOJIS[i]} ${month.slice(0, 3)}${isFilled ? ' ✓' : ''}</button>`;
-            }).join('');
-        }
-
-        function renderCalendarDateGrid() {
-            const today = new Date();
-            const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-            const board = getTodayBoard();
+        // ===== Day/Month/Date picker sheet (tap to open instead of drag) =====
+        function openFieldPicker(type) {
+            const sheet = document.getElementById('pickerSheet');
+            const anchor = document.getElementById('fillableTopRow');
+            const rect = anchor.getBoundingClientRect();
             
-            const container = document.getElementById('calendarDateGrid');
-            let html = '';
-            for (let d = 1; d <= daysInMonth; d++) {
-                const isFilled = board.date === d;
-                html += `<button onpointerdown="startTileDrag(event, 'date', '${d}')" id="caldate-${d}" style="padding:6px 0;border-radius:8px;border:none;font-family:inherit;font-weight:bold;font-size:0.72em;cursor:grab;touch-action:none;background:${isFilled ? '#10b981' : '#fef3c7'};color:${isFilled ? 'white' : '#92400e'};">${d}</button>`;
+            sheet.style.top = (rect.bottom + 10) + 'px';
+            document.getElementById('pickerSheetTitle').textContent =
+                type === 'day' ? '🗓️ Pick the Day!' :
+                type === 'month' ? '🌙 Pick the Month!' :
+                '🔢 Pick the Date!';
+            
+            renderPickerGrid(type);
+            
+            sheet.style.display = 'block';
+            void sheet.offsetHeight; // force reflow so the transition below actually animates
+            sheet.style.transform = 'translateY(0)';
+        }
+
+        function closeFieldPicker() {
+            const sheet = document.getElementById('pickerSheet');
+            sheet.style.transform = 'translateY(110%)';
+            setTimeout(() => {
+                if (sheet.style.transform === 'translateY(110%)') sheet.style.display = 'none';
+            }, 250);
+        }
+
+        function renderPickerGrid(type) {
+            const grid = document.getElementById('pickerSheetGrid');
+            const board = getTodayBoard();
+            const today = new Date();
+            
+            if (type === 'day') {
+                grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                grid.innerHTML = WEEKDAYS.map(day => {
+                    const idx = JS_WEEKDAYS.indexOf(day);
+                    const c = WEEKDAY_COLORS[WEEKDAYS.indexOf(day)];
+                    const isFilled = board.day === day;
+                    return `<button onclick="pickField(event, 'day', '${day}')" style="padding:18px 8px;border-radius:14px;border:none;font-family:inherit;font-weight:bold;font-size:1.05em;cursor:pointer;background:${isFilled ? '#10b981' : c.bg};color:${isFilled ? 'white' : c.text};">${day}</button>`;
+                }).join('');
+            } else if (type === 'month') {
+                grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                grid.innerHTML = MONTHS.map((month, i) => {
+                    const isFilled = board.month === month;
+                    return `<button onclick="pickField(event, 'month', '${month}')" style="padding:16px 4px;border-radius:14px;border:none;font-family:inherit;font-weight:bold;font-size:0.9em;cursor:pointer;background:${isFilled ? '#10b981' : '#fce7f3'};color:${isFilled ? 'white' : '#9d174d'};">${MONTH_EMOJIS[i]} ${month.slice(0, 3)}</button>`;
+                }).join('');
+            } else if (type === 'date') {
+                grid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+                const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                let html = '';
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const isFilled = board.date === d;
+                    html += `<button onclick="pickField(event, 'date', '${d}')" style="padding:14px 0;border-radius:12px;border:none;font-family:inherit;font-weight:bold;font-size:1em;cursor:pointer;background:${isFilled ? '#10b981' : '#fef3c7'};color:${isFilled ? 'white' : '#92400e'};">${d}</button>`;
+                }
+                grid.innerHTML = html;
             }
-            container.innerHTML = html;
+        }
+
+        function pickField(e, type, value) {
+            const today = new Date();
+            let correct = false;
+            
+            if (type === 'day') correct = value === JS_WEEKDAYS[today.getDay()];
+            else if (type === 'month') correct = value === MONTHS[today.getMonth()];
+            else if (type === 'date') correct = Number(value) === today.getDate();
+            
+            if (correct) {
+                const board = getTodayBoard();
+                if (type === 'day') board.day = value;
+                else if (type === 'month') board.month = value;
+                else if (type === 'date') board.date = Number(value);
+                
+                syncBoardEntryToSheets(todayKey(), board);
+                renderFillableTopRow();
+                renderTodayBoardSummary();
+                celebrateCalendarTap('🌟 That\'s right!');
+                closeFieldPicker();
+            } else if (e && e.currentTarget) {
+                const btn = e.currentTarget;
+                const original = btn.style.background;
+                btn.style.background = '#fecaca';
+                setTimeout(() => { btn.style.background = original; }, 400);
+            }
         }
 
         // ===== Weather (drag-and-drop, single-select) =====
@@ -2153,9 +2162,9 @@
             }
             
             const weekdayHeader = document.getElementById('calendarWeekdayHeader');
-            weekdayHeader.innerHTML = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => `<div>${d}</div>`).join('');
+            weekdayHeader.innerHTML = ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(d => `<div>${d}</div>`).join('');
             
-            const firstDayOfWeek = new Date(year, month, 1).getDay();
+            const firstDayOfWeek = (new Date(year, month, 1).getDay() + 6) % 7; // shift so Monday = 0
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             const todayStr = new Date().toDateString();
             
