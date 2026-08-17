@@ -327,6 +327,7 @@
         .history-item.cat-hygiene-border { border-left-color: #2563eb; }
         .history-item.cat-chores-border { border-left-color: #7c3aed; }
         .history-item.cat-bonus-border { border-left-color: #db2777; }
+        .history-item.cat-deduction-border { border-left-color: #dc2626; }
 
         .history-emoji-badge {
             font-size: 1.8em;
@@ -1297,6 +1298,14 @@
             renderPottyButtons();
         }
 
+        function renderStarRow(count) {
+            if (count < 0) return `<span style="color:#dc2626;">−${Math.abs(count)} ⭐</span>`;
+            if (count <= 5) return '⭐'.repeat(count);
+            const firstRow = 5;
+            const secondRow = count - 5;
+            return '⭐'.repeat(firstRow) + '<br>' + '⭐'.repeat(secondRow);
+        }
+
         function renderPottyButtons() {
             const container = document.getElementById('pottyButtonsContainer');
             container.innerHTML = '';
@@ -1314,9 +1323,8 @@
                 }
                 btn.onclick = () => trackEvent(action.id);
                 
-                const starEmoji = '⭐'.repeat(action.stars);
                 btn.innerHTML = `
-                    <div style="font-size: 1.4em;">${action.emoji}${starEmoji}</div>
+                    <div style="font-size: 1.4em; line-height: 1.25;">${action.emoji}${renderStarRow(action.stars)}</div>
                     <div class="task-label">${action.label}</div>
                     <div class="button-label">${action.subLabel}</div>
                 `;
@@ -3009,7 +3017,7 @@
                     div.className = 'history-item cat-' + category + '-border';
                     
                     const stars = event.stars || 1;
-                    const starEmoji = '⭐'.repeat(stars);
+                    const starEmoji = renderStarRow(stars);
                     const displayTime = friendlyEventTime(event);
                     div.innerHTML = `
                         <div class="history-emoji-badge">${emoji}</div>
@@ -3041,6 +3049,8 @@
         }
 
         function deductStars(amount) {
+            if (!confirm(`Take away ${amount} star${amount > 1 ? 's' : ''}?`)) return;
+            
             if (kidModeEnabled) {
                 openParentGate('deductStars', null, { amount });
                 return;
@@ -3049,10 +3059,38 @@
         }
 
         function applyStarDeduction(amount) {
-            data.totalStars = Math.max(0, data.totalStars - amount);
+            const actualAmount = Math.min(amount, data.totalStars);
+            if (actualAmount <= 0) return;
+            
+            data.totalStars = Math.max(0, data.totalStars - actualAmount);
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            
+            const event = {
+                actionId: 'star_deduction',
+                category: 'deduction',
+                method: 'deduction',
+                label: `Took Away ${actualAmount} Star${actualAmount > 1 ? 's' : ''}`,
+                subLabel: 'Correction',
+                emoji: '➖',
+                time: timeStr,
+                stars: -actualAmount,
+                timestamp: now.toISOString()
+            };
+            
+            data.events.push(event);
+            
             localStorage.setItem('pottyTrackerData', JSON.stringify(data));
-            if (sheetUrl) updateGameStatsToSheets();
             updateUI();
+            
+            if (sheetUrl) {
+                addEventToSheets(event);
+            }
         }
 
         function redeemReward(reward) {
