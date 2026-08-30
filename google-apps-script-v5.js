@@ -34,6 +34,13 @@ function doGet(e) {
     })).setMimeType(ContentService.MimeType.JSON);
   }
   
+  if (e.parameter.action === 'getMoodLog') {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      entries: getMoodLog()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
   return ContentService.createTextOutput(JSON.stringify({
     success: false,
     error: 'Invalid action'
@@ -113,6 +120,13 @@ function doPost(e) {
     
     if (request.action === 'removeCalendarEventRow') {
       removeCalendarEventRow(request.id);
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    if (request.action === 'addMoodLogEntry') {
+      addMoodLogEntry(request.entry);
       return ContentService.createTextOutput(JSON.stringify({
         success: true
       })).setMimeType(ContentService.MimeType.JSON);
@@ -537,6 +551,46 @@ function removeCalendarEventRow(id) {
   }
 }
 
+// ===== Mood Log sheet - separate from the calendar, supports multiple entries per day =====
+function getOrCreateMoodLogSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('MoodLog');
+  
+  if (!sheet) {
+    sheet = ss.insertSheet('MoodLog');
+    sheet.getRange('A1:D1').setValues([['Date', 'Emoji', 'Label', 'Time']]);
+    sheet.getRange('A1:D1').setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    sheet.setColumnWidth(3, 120);
+    sheet.setColumnWidth(4, 120);
+  }
+  
+  return sheet;
+}
+
+function getMoodLog() {
+  const sheet = getOrCreateMoodLogSheet();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];
+  
+  const rows = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
+  return rows
+    .filter(r => r[0] && r[2])
+    .map(r => ({
+      date: r[0] instanceof Date ? formatDateKey(r[0]) : r[0],
+      emoji: r[1],
+      label: r[2],
+      time: cellToText(r[3])
+    }));
+}
+
+function addMoodLogEntry(entry) {
+  const sheet = getOrCreateMoodLogSheet();
+  const nextRow = sheet.getLastRow() + 1;
+  sheet.getRange(nextRow, 4).setNumberFormat('@');
+  sheet.getRange(nextRow, 1, 1, 4).setValues([[entry.date, entry.emoji, entry.label, entry.time]]);
+}
+
 function sendRedemptionEmail(redemption) {
   // Get the email address from script properties (you'll set this)
   const properties = PropertiesService.getScriptProperties();
@@ -641,6 +695,7 @@ function setupSheet() {
   getOrCreateCalendarBoardSheet();
   getOrCreateCrossedOffSheet();
   getOrCreateCalendarEventsSheet();
+  getOrCreateMoodLogSheet();
   
   // Prompt for notification email
   const ui = SpreadsheetApp.getUi();

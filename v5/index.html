@@ -775,6 +775,8 @@
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;" id="todayDateBanner"></div>
         </div>
         <div id="todayBoardSummary" onclick="openCalendar()" style="display: none; text-align: center; background: rgba(255,255,255,0.7); border-radius: 14px; padding: 8px; margin-bottom: 15px; color: #4c1d95; font-weight: bold; font-size: 0.95em; cursor: pointer;"></div>
+        
+        <button onclick="openMoodModal()" id="moodEntryButton" style="width: 100%; text-align: center; background: rgba(255,255,255,0.85); border: none; border-radius: 16px; padding: 10px; margin-bottom: 15px; color: #4c1d95; font-weight: bold; font-size: 1em; box-shadow: 0 4px 10px rgba(0,0,0,0.15); cursor: pointer; font-family: inherit;">💗 How I'm Feeling</button>
 
         <div class="history">
             <h2>📅 Today's Adventures</h2>
@@ -915,10 +917,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <h3 style="color: #1e40af; margin-bottom: 4px;">💗 How do I feel today?</h3>
-                <div id="yesterdayMoodRecap" style="font-size: 0.8em; color: #6b7280; font-style: italic; margin-bottom: 8px;"></div>
-                <div id="moodTrackerGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px;"></div>
             </div>
             
             <!-- FULL GRID CALENDAR VIEW -->
@@ -957,6 +955,21 @@
             <button onclick="closeFieldPicker()" style="background: #e5e7eb; border: none; border-radius: 50%; width: 34px; height: 34px; font-size: 1em; cursor: pointer; font-weight: bold; color: #374151;">✕</button>
         </div>
         <div id="pickerSheetGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;"></div>
+    </div>
+
+    <!-- Standalone Mood Modal - separate from Calendar, supports multiple entries per day -->
+    <div class="game-modal" id="moodModal">
+        <div class="game-container" style="max-width: 460px; text-align: left;">
+            <h2 class="game-title" style="text-align: center;">💗 How I'm Feeling</h2>
+            <div class="game-instruction" style="text-align: center;">Tap a mood any time it changes today!</div>
+            
+            <div id="moodOptionsGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px;"></div>
+            
+            <h3 style="color: #1e40af; margin-bottom: 8px;">📋 Today's Mood Log</h3>
+            <div id="moodLogList" style="max-height: 220px; overflow-y: auto; margin-bottom: 15px;"></div>
+            
+            <button class="close-game-button" style="width: 100%;" onclick="closeMoodModal()">Close</button>
+        </div>
     </div>
 
     <!-- Game Earned Modal -->
@@ -1254,6 +1267,7 @@
         let todayBoard = {};
         let crossedOffDays = {};
         let calendarEvents = {};
+        let moodLog = {};
         let customTasks = [];
         let starActions = [];
 
@@ -1716,7 +1730,7 @@
                 { label: 'Day', value: board.day, color: 'rgba(219,234,254,0.9)', textColor: '#1e40af' },
                 { label: 'Month', value: board.month ? (MONTH_EMOJIS[MONTHS.indexOf(board.month)] + ' ' + board.month) : null, color: 'rgba(252,231,243,0.9)', textColor: '#9d174d' },
                 { label: 'Date', value: board.date ? (board.date + ordinalSuffix(board.date)) : null, color: 'rgba(254,243,199,0.9)', textColor: '#92400e' },
-                { label: 'Year', value: new Date().getFullYear(), color: 'rgba(237,233,254,0.9)', textColor: '#5b21b6' }
+                { label: 'Year', value: board.year, color: 'rgba(237,233,254,0.9)', textColor: '#5b21b6' }
             ];
             
             el.innerHTML = slots.map(slot => `
@@ -1850,7 +1864,6 @@
             renderFillableTopRow();
             renderWeatherGrid();
             renderThermometer();
-            renderMoodTracker();
             renderYesterdayRecaps();
             showCalendarTab('board');
             document.getElementById('calendarModal').classList.add('active');
@@ -1873,8 +1886,6 @@
                 ? `Yesterday it was ${yBoard.weatherEmoji} ${yBoard.weather}${typeof yBoard.temperature === 'number' ? ', ' + yBoard.temperature + '°F' : ''}.`
                 : "We didn't record yesterday's weather!";
             
-            const moodEl = document.getElementById('yesterdayMoodRecap');
-            moodEl.textContent = yBoard.mood ? `Yesterday I felt ${yBoard.moodEmoji} ${yBoard.mood}.` : "We didn't record yesterday's mood!";
         }
 
         function closeCalendar() {
@@ -1890,7 +1901,7 @@
                 { key: 'day', label: 'Day', value: board.day, color: '#dbeafe', textColor: '#1e40af', tappable: true },
                 { key: 'month', label: 'Month', value: board.month ? (MONTH_EMOJIS[MONTHS.indexOf(board.month)] + ' ' + board.month) : null, color: '#fce7f3', textColor: '#9d174d', tappable: true },
                 { key: 'date', label: 'Date', value: board.date ? (board.date + ordinalSuffix(board.date)) : null, color: '#fef3c7', textColor: '#92400e', tappable: true },
-                { key: 'year', label: 'Year', value: new Date().getFullYear(), color: '#ede9fe', textColor: '#5b21b6', tappable: false }
+                { key: 'year', label: 'Year', value: board.year, color: '#ede9fe', textColor: '#5b21b6', tappable: true }
             ];
             
             container.innerHTML = slots.map(slot => `
@@ -1912,7 +1923,7 @@
             const day = board.day || '___';
             const month = board.month || '___';
             const date = board.date ? (board.date + ordinalSuffix(board.date)) : '___';
-            const year = new Date().getFullYear();
+            const year = board.year || '___';
             
             el.textContent = `Today is ${day}, ${month} ${date}, ${year}.`;
         }
@@ -1927,7 +1938,8 @@
             document.getElementById('pickerSheetTitle').textContent =
                 type === 'day' ? '🗓️ Pick the Day!' :
                 type === 'month' ? '🌙 Pick the Month!' :
-                '🔢 Pick the Date!';
+                type === 'date' ? '🔢 Pick the Date!' :
+                '🎉 Pick the Year!';
             
             renderPickerGrid(type);
             
@@ -1972,6 +1984,14 @@
                     html += `<button onclick="pickField(event, 'date', '${d}')" style="padding:14px 0;border-radius:12px;border:none;font-family:inherit;font-weight:bold;font-size:1em;cursor:pointer;background:${isFilled ? '#10b981' : '#fef3c7'};color:${isFilled ? 'white' : '#92400e'};">${d}</button>`;
                 }
                 grid.innerHTML = html;
+            } else if (type === 'year') {
+                grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                const actualYear = today.getFullYear();
+                const years = [actualYear - 1, actualYear, actualYear + 1];
+                grid.innerHTML = years.map(year => {
+                    const isFilled = board.year === year;
+                    return `<button onclick="pickField(event, 'year', '${year}')" style="padding:18px 4px;border-radius:14px;border:none;font-family:inherit;font-weight:bold;font-size:1em;cursor:pointer;background:${isFilled ? '#10b981' : '#ede9fe'};color:${isFilled ? 'white' : '#5b21b6'};">${year}</button>`;
+                }).join('');
             }
         }
 
@@ -1982,12 +2002,14 @@
             if (type === 'day') correct = value === JS_WEEKDAYS[today.getDay()];
             else if (type === 'month') correct = value === MONTHS[today.getMonth()];
             else if (type === 'date') correct = Number(value) === today.getDate();
+            else if (type === 'year') correct = Number(value) === today.getFullYear();
             
             if (correct) {
                 const board = getTodayBoard();
                 if (type === 'day') board.day = value;
                 else if (type === 'month') board.month = value;
                 else if (type === 'date') board.date = Number(value);
+                else if (type === 'year') board.year = Number(value);
                 
                 syncBoardEntryToSheets(todayKey(), board);
                 renderFillableTopRow();
@@ -2028,31 +2050,6 @@
         }
 
         // ===== Mood (single-select) =====
-        function renderMoodTracker() {
-            const board = getTodayBoard();
-            const container = document.getElementById('moodTrackerGrid');
-            
-            container.innerHTML = MOODS.map(mood => {
-                const isSelected = board.mood === mood.label;
-                return `
-                    <button onclick="setMood('${mood.emoji}', '${mood.label}')" style="padding:12px 4px;border-radius:12px;border:${isSelected ? '3px solid #7c3aed' : '2px solid #e5e7eb'};font-family:inherit;cursor:pointer;background:${isSelected ? '#ede9fe' : 'white'};display:flex;flex-direction:column;align-items:center;gap:4px;">
-                        <div style="font-size:1.8em;">${mood.emoji}</div>
-                        <div style="font-size:0.7em;font-weight:bold;color:#4c1d95;">${mood.label}</div>
-                    </button>
-                `;
-            }).join('');
-        }
-
-        function setMood(emoji, label) {
-            const board = getTodayBoard();
-            board.mood = label;
-            board.moodEmoji = emoji;
-            syncBoardEntryToSheets(todayKey(), board);
-            renderMoodTracker();
-            renderTodayBoardSummary();
-            celebrateCalendarTap(emoji + ' Got it!');
-        }
-
         // ===== Main page summary strip =====
         function renderTodayBoardSummary() {
             const el = document.getElementById('todayBoardSummary');
@@ -2061,7 +2058,6 @@
             
             const parts = [];
             if (board.weatherEmoji) parts.push(board.weatherEmoji + ' ' + board.weather + (typeof board.temperature === 'number' ? ' (' + board.temperature + '°F)' : ''));
-            if (board.moodEmoji) parts.push(board.moodEmoji + ' ' + board.mood);
             
             if (parts.length === 0) {
                 el.style.display = 'none';
@@ -2388,6 +2384,129 @@
             
             renderTodayDate();
             renderTodayBoardSummary();
+        }
+
+        // ===== Mood tracker persistence - fully separate from the calendar's data =====
+        function saveMoodLocal() {
+            localStorage.setItem('pottyTrackerMoodLog', JSON.stringify(moodLog));
+        }
+
+        function loadMoodLocal() {
+            const saved = localStorage.getItem('pottyTrackerMoodLog');
+            if (saved) {
+                try {
+                    moodLog = JSON.parse(saved) || {};
+                } catch (error) {
+                    console.error('Error parsing local mood log:', error);
+                }
+            }
+        }
+
+        async function loadMoodLog() {
+            if (sheetUrl) {
+                try {
+                    const response = await fetch(sheetUrl + '?action=getMoodLog');
+                    const result = await response.json();
+                    if (result.success) {
+                        moodLog = {};
+                        (result.entries || []).forEach(entry => {
+                            if (!moodLog[entry.date]) moodLog[entry.date] = [];
+                            moodLog[entry.date].push({ emoji: entry.emoji, label: entry.label, time: entry.time });
+                        });
+                        saveMoodLocal();
+                    } else {
+                        loadMoodLocal();
+                    }
+                } catch (error) {
+                    console.error('Error loading mood log from sheets:', error);
+                    loadMoodLocal();
+                }
+            } else {
+                loadMoodLocal();
+            }
+            
+            renderMoodEntryButtonPreview();
+        }
+
+        function syncMoodEntryToSheets(dateKey, entry) {
+            saveMoodLocal();
+            if (!sheetUrl) return;
+            try {
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'addMoodLogEntry', entry: { date: dateKey, emoji: entry.emoji, label: entry.label, time: entry.time } })
+                });
+            } catch (error) {
+                console.error('Error syncing mood log entry:', error);
+            }
+        }
+
+        // ===== Mood modal =====
+        function openMoodModal() {
+            renderMoodOptions();
+            renderMoodLogList();
+            document.getElementById('moodModal').classList.add('active');
+        }
+
+        function closeMoodModal() {
+            document.getElementById('moodModal').classList.remove('active');
+        }
+
+        function renderMoodOptions() {
+            const grid = document.getElementById('moodOptionsGrid');
+            grid.innerHTML = MOODS.map(mood => `
+                <button onclick="logMoodEntry('${mood.emoji}', '${mood.label}')" style="padding:14px 4px;border-radius:12px;border:2px solid #e5e7eb;font-family:inherit;cursor:pointer;background:white;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                    <div style="font-size:1.9em;">${mood.emoji}</div>
+                    <div style="font-size:0.72em;font-weight:bold;color:#4c1d95;">${mood.label}</div>
+                </button>
+            `).join('');
+        }
+
+        function renderMoodLogList() {
+            const container = document.getElementById('moodLogList');
+            const entries = (moodLog[todayKey()] || []).slice().reverse();
+            
+            if (entries.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:10px;">No moods logged yet today!</div>';
+                return;
+            }
+            
+            container.innerHTML = entries.map(entry => `
+                <div style="display:flex;align-items:center;gap:10px;padding:8px;margin-bottom:6px;border-radius:10px;background:#f9fafb;">
+                    <div style="font-size:1.4em;">${entry.emoji}</div>
+                    <div style="flex:1;font-weight:bold;color:#374151;">${entry.label}</div>
+                    <div style="font-size:0.8em;color:#9ca3af;">${entry.time}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderMoodEntryButtonPreview() {
+            const btn = document.getElementById('moodEntryButton');
+            if (!btn) return;
+            const entries = moodLog[todayKey()] || [];
+            if (entries.length > 0) {
+                const latest = entries[entries.length - 1];
+                btn.textContent = `${latest.emoji} Feeling ${latest.label} - tap to update`;
+            } else {
+                btn.textContent = "💗 How I'm Feeling";
+            }
+        }
+
+        function logMoodEntry(emoji, label) {
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            const key = todayKey();
+            
+            if (!moodLog[key]) moodLog[key] = [];
+            const entry = { emoji, label, time };
+            moodLog[key].push(entry);
+            
+            syncMoodEntryToSheets(key, entry);
+            renderMoodLogList();
+            renderMoodEntryButtonPreview();
+            celebrateCalendarTap(emoji + ' Got it!');
         }
 
         function syncBoardEntryToSheets(dateKey, entry) {
@@ -4392,7 +4511,8 @@
             loadData(),
             loadTaskConfig(),
             loadCalendarData(),
-            loadRedemptionLog()
+            loadRedemptionLog(),
+            loadMoodLog()
         ]).then(hideAppLoadScreen);
         
         // Safety net so a slow or failed connection never traps the app behind the load screen
@@ -4419,6 +4539,14 @@
             const parentAreaOpen = document.getElementById('parentAreaModal').classList.contains('active');
             if (sheetUrl && !gameActive && !parentAreaOpen) {
                 loadTaskConfig();
+            }
+        }, 300000);
+        
+        // Refresh the mood log every 5 minutes so mood updates on other devices show up here too
+        setInterval(() => {
+            const moodModalOpen = document.getElementById('moodModal').classList.contains('active');
+            if (sheetUrl && !gameActive && !moodModalOpen) {
+                loadMoodLog();
             }
         }, 300000);
         
